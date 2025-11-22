@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, Target, Trophy, Users } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ArrowLeft, Calendar, Target, Trophy, Users, Award } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CampaignDetails() {
@@ -135,6 +136,25 @@ export default function CampaignDetails() {
   const progress = (campaign.current_amount / campaign.target_amount) * 100;
   const isComplete = progress >= 100;
   const isExpired = new Date(campaign.end_date) < new Date();
+  
+  // Calculate milestones
+  const milestones = [
+    { percentage: 25, message: "Great start! 25% funded!", icon: "🎯" },
+    { percentage: 50, message: "Halfway there! 50% funded!", icon: "🚀" },
+    { percentage: 75, message: "Almost there! 75% funded!", icon: "⭐" },
+    { percentage: 100, message: "Goal reached! Thank you!", icon: "🎉" },
+  ];
+  
+  const activeMilestones = milestones.filter(m => progress >= m.percentage);
+  const latestMilestone = activeMilestones[activeMilestones.length - 1];
+  
+  // Get badge variant for donor ranking
+  const getRankBadge = (index: number) => {
+    if (index === 0) return { variant: "gold" as const, label: "🥇 Top Donor" };
+    if (index === 1) return { variant: "silver" as const, label: "🥈 2nd Place" };
+    if (index === 2) return { variant: "bronze" as const, label: "🥉 3rd Place" };
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -205,6 +225,22 @@ export default function CampaignDetails() {
                 {progress.toFixed(1)}% of goal reached
               </div>
             </div>
+            
+            {latestMilestone && (
+              <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20 rounded-lg border border-purple-200 dark:border-purple-800 animate-fade-in">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{latestMilestone.icon}</span>
+                  <div>
+                    <Badge variant="milestone" className="mb-1">
+                      Milestone Reached!
+                    </Badge>
+                    <p className="text-sm font-semibold text-foreground">
+                      {latestMilestone.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {!isExpired && campaign.is_active && !isComplete && (
               <Button onClick={handleDonate} size="lg" className="w-full">
@@ -224,30 +260,69 @@ export default function CampaignDetails() {
           </CardHeader>
           <CardContent>
             {leaderboard && leaderboard.length > 0 ? (
-              <div className="space-y-4">
-                {leaderboard.map((donor, index) => (
-                  <div
-                    key={donor.user_id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors animate-fade-in"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 font-bold">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="font-medium">{donor.full_name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {donor.donation_count} donation{donor.donation_count !== 1 ? 's' : ''}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-lg font-bold text-primary">
-                      ${Number(donor.total_donated).toLocaleString()}
+              <>
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start gap-3">
+                    <Award className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Thank You to Our Generous Donors! 🙏</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Your support makes a real difference in our mission. Every contribution brings us closer to our goal and impacts lives in meaningful ways.
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+                
+                <div className="space-y-4">
+                  {leaderboard.map((donor, index) => {
+                    const rankBadge = getRankBadge(index);
+                    return (
+                      <div
+                        key={donor.user_id}
+                        className={`flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-all animate-fade-in ${
+                          rankBadge ? 'border-2 border-primary/30 bg-primary/5' : ''
+                        }`}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
+                                {donor.full_name?.charAt(0)?.toUpperCase() || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            {index < 3 && (
+                              <div className="absolute -top-1 -right-1 text-xl">
+                                {index === 0 && '🥇'}
+                                {index === 1 && '🥈'}
+                                {index === 2 && '🥉'}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="font-semibold">{donor.full_name || 'Anonymous'}</div>
+                              {rankBadge && (
+                                <Badge variant={rankBadge.variant} className="text-xs">
+                                  {rankBadge.label}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {donor.donation_count} donation{donor.donation_count !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-primary">
+                            ${Number(donor.total_donated).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />

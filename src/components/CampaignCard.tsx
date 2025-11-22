@@ -57,13 +57,24 @@ export const CampaignCard = ({ campaign, onDonate, onViewDetails }: CampaignCard
 
   const progress = (campaign.current_amount / campaign.target_amount) * 100;
   const isComplete = progress >= 100;
+  
+  // Get the latest milestone reached
+  const getMilestone = () => {
+    if (progress >= 100) return { label: "Goal Reached!", variant: "milestone" as const, icon: "🎉" };
+    if (progress >= 75) return { label: "75% Funded", variant: "secondary" as const, icon: "⭐" };
+    if (progress >= 50) return { label: "50% Funded", variant: "secondary" as const, icon: "🚀" };
+    if (progress >= 25) return { label: "25% Funded", variant: "secondary" as const, icon: "🎯" };
+    return null;
+  };
+  
+  const milestone = getMilestone();
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-fade-in">
       <CardHeader className="space-y-2">
         <div className="flex items-start justify-between">
           <CardTitle className="text-xl">{campaign.title}</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-1">
             {isComplete && (
               <Badge variant="default" className="bg-green-500">
                 <Target className="h-3 w-3 mr-1" />
@@ -78,6 +89,11 @@ export const CampaignCard = ({ campaign, onDonate, onViewDetails }: CampaignCard
             )}
             {isExpired && (
               <Badge variant="outline">Ended</Badge>
+            )}
+            {milestone && !isComplete && (
+              <Badge variant={milestone.variant} className="text-xs">
+                {milestone.icon} {milestone.label}
+              </Badge>
             )}
           </div>
         </div>
