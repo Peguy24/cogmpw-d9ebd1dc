@@ -11,6 +11,7 @@ import PendingApproval from "./pages/PendingApproval";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminUserManagement from "./pages/AdminUserManagement";
 import AdminGivingReports from "./pages/AdminGivingReports";
+import Giving from "./pages/Giving";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const AppContent = () => {
       <Route path="/admin/approvals" element={<AdminApprovals />} />
       <Route path="/admin/users" element={<AdminUserManagement />} />
       <Route path="/admin/giving" element={<AdminGivingReports />} />
+      <Route path="/giving" element={<Giving />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
