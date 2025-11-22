@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "./ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Label } from "./ui/label";
 import { toast } from "sonner";
 import { DollarSign, Loader2, CreditCard, Heart } from "lucide-react";
 
@@ -19,6 +21,8 @@ const donationSchema = z.object({
   }, { message: "Please enter a valid amount greater than 0" }),
   category: z.string().min(1, "Please select a category"),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
+  type: z.enum(["one-time", "recurring"]),
+  interval: z.enum(["month", "week"]).optional(),
 });
 
 type DonationFormValues = z.infer<typeof donationSchema>;
@@ -41,8 +45,12 @@ export const DonationForm = () => {
       amount: "",
       category: "",
       notes: "",
+      type: "one-time",
+      interval: "month",
     },
   });
+
+  const donationType = form.watch("type");
 
   const onSubmit = async (values: DonationFormValues) => {
     try {
@@ -56,23 +64,45 @@ export const DonationForm = () => {
 
       console.log("Creating donation checkout for:", values);
 
-      const { data, error } = await supabase.functions.invoke("create-donation-checkout", {
-        body: {
-          amount: parseFloat(values.amount),
-          category: values.category,
-          notes: values.notes || null,
-        },
-      });
+      if (values.type === "recurring") {
+        if (!values.interval) {
+          toast.error("Please select a recurring interval");
+          return;
+        }
 
-      if (error) throw error;
+        const { data, error } = await supabase.functions.invoke("create-recurring-donation", {
+          body: {
+            amount: parseFloat(values.amount),
+            category: values.category,
+            notes: values.notes || null,
+            interval: values.interval,
+          },
+        });
 
-      if (data?.url) {
-        // Store session ID for later recording
-        sessionStorage.setItem('pendingDonationSession', data.sessionId);
-        // Open Stripe checkout in new tab
-        window.open(data.url, '_blank');
-        toast.success("Opening donation checkout...");
-        form.reset();
+        if (error) throw error;
+
+        if (data?.url) {
+          window.open(data.url, '_blank');
+          toast.success("Opening recurring donation setup...");
+          form.reset();
+        }
+      } else {
+        const { data, error } = await supabase.functions.invoke("create-donation-checkout", {
+          body: {
+            amount: parseFloat(values.amount),
+            category: values.category,
+            notes: values.notes || null,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.url) {
+          sessionStorage.setItem('pendingDonationSession', data.sessionId);
+          window.open(data.url, '_blank');
+          toast.success("Opening donation checkout...");
+          form.reset();
+        }
       }
     } catch (error) {
       console.error("Error creating donation checkout:", error);
@@ -98,6 +128,60 @@ export const DonationForm = () => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Donation Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="one-time" id="one-time" />
+                        <Label htmlFor="one-time" className="cursor-pointer">One-Time</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="recurring" id="recurring" />
+                        <Label htmlFor="recurring" className="cursor-pointer">Recurring</Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {donationType === "recurring" && (
+              <FormField
+                control={form.control}
+                name="interval"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frequency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select frequency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="month">Monthly</SelectItem>
+                        <SelectItem value="week">Weekly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Your donation will automatically renew each {field.value === "month" ? "month" : "week"}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
               name="amount"
               render={({ field }) => (
                 <FormItem>
@@ -115,6 +199,11 @@ export const DonationForm = () => {
                       />
                     </div>
                   </FormControl>
+                  {donationType === "recurring" && (
+                    <FormDescription>
+                      This amount will be charged automatically
+                    </FormDescription>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -175,6 +264,11 @@ export const DonationForm = () => {
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Processing...
+                  </>
+                ) : donationType === "recurring" ? (
+                  <>
+                    <Heart className="mr-2 h-5 w-5" />
+                    Set Up Recurring Donation
                   </>
                 ) : (
                   <>

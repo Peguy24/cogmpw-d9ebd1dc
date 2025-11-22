@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { DonationForm } from "@/components/DonationForm";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, History } from "lucide-react";
+import { ArrowLeft, History, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,9 +12,9 @@ const Giving = () => {
 
   useEffect(() => {
     const donationStatus = searchParams.get("donation");
+    const subscriptionStatus = searchParams.get("subscription");
     
     if (donationStatus === "success") {
-      // Record the donation
       const sessionId = sessionStorage.getItem('pendingDonationSession');
       if (sessionId) {
         supabase.functions.invoke("record-donation", {
@@ -31,11 +31,15 @@ const Giving = () => {
       } else {
         toast.success("Thank you for your generous donation!");
       }
-      
-      // Clear the URL params
       navigate("/giving", { replace: true });
     } else if (donationStatus === "canceled") {
       toast.info("Donation canceled");
+      navigate("/giving", { replace: true });
+    } else if (subscriptionStatus === "success") {
+      toast.success("Recurring donation set up successfully!");
+      navigate("/giving", { replace: true });
+    } else if (subscriptionStatus === "canceled") {
+      toast.info("Subscription setup canceled");
       navigate("/giving", { replace: true });
     }
   }, [searchParams, navigate]);
@@ -51,13 +55,22 @@ const Giving = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Home
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/giving-history")}
-          >
-            <History className="mr-2 h-4 w-4" />
-            History
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/manage-subscriptions")}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Recurring
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/giving-history")}
+            >
+              <History className="mr-2 h-4 w-4" />
+              History
+            </Button>
+          </div>
         </div>
 
         <div className="text-center space-y-2 mb-8">
