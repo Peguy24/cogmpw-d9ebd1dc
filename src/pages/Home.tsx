@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video } from "lucide-react";
+import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -135,6 +135,11 @@ const Home = () => {
                 <Link to="/admin/users">
                   <Button variant="ghost" size="icon">
                     <Shield className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link to="/admin/giving">
+                  <Button variant="ghost" size="icon">
+                    <DollarSign className="h-5 w-5" />
                   </Button>
                 </Link>
               </>
