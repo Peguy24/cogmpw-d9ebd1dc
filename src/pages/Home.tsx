@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Bell, Calendar, Newspaper, Settings } from "lucide-react";
+import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -15,21 +15,73 @@ const Home = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
-    // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
+    const checkAuthAndApproval = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
         navigate("/auth");
+        setLoading(false);
+        return;
       }
+
+      // Check if user is approved
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_approved")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile && !profile.is_approved) {
+        navigate("/pending-approval");
+        setLoading(false);
+        return;
+      }
+
+      setUser(session.user);
+      
+      // Check if user is admin and load pending count
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .eq("role", "admin")
+        .single();
+
+      if (roles) {
+        setIsAdmin(true);
+        const { count } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("is_approved", false);
+        setPendingCount(count || 0);
+      }
+
       setLoading(false);
-    });
+    };
+
+    checkAuthAndApproval();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        setUser(session.user);
+        // Re-check approval status
+        setTimeout(() => {
+          supabase
+            .from("profiles")
+            .select("is_approved")
+            .eq("id", session.user.id)
+            .single()
+            .then(({ data: profile }) => {
+              if (profile && !profile.is_approved) {
+                navigate("/pending-approval");
+              } else {
+                setUser(session.user);
+              }
+            });
+        }, 0);
       } else {
         navigate("/auth");
       }
@@ -65,6 +117,18 @@ const Home = () => {
             <h1 className="text-xl font-bold">COGMPW</h1>
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Link to="/admin/approvals">
+                <Button variant="ghost" size="icon" className="relative">
+                  <UserCheck className="h-5 w-5" />
+                  {pendingCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                      {pendingCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+            )}
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
