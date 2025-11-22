@@ -5,11 +5,14 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield } from "lucide-react";
+import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
 import ProfileSettings from "@/components/ProfileSettings";
+import SermonsList from "@/components/SermonsList";
+import DevotionalsList from "@/components/DevotionalsList";
+import LivestreamSection from "@/components/LivestreamSection";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -167,7 +170,7 @@ const Home = () => {
       {/* Main Content */}
       <main className="container py-6">
         <Tabs defaultValue="news" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="news" className="flex items-center gap-2">
               <Newspaper className="h-4 w-4" />
               News
@@ -175,6 +178,10 @@ const Home = () => {
             <TabsTrigger value="events" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Events
+            </TabsTrigger>
+            <TabsTrigger value="media" className="flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              Media
             </TabsTrigger>
           </TabsList>
           
@@ -184,6 +191,28 @@ const Home = () => {
           
           <TabsContent value="events">
             <EventsCalendar />
+          </TabsContent>
+          
+          <TabsContent value="media">
+            <Tabs defaultValue="sermons" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
+                <TabsTrigger value="sermons">Sermons</TabsTrigger>
+                <TabsTrigger value="devotionals">Devotionals</TabsTrigger>
+                <TabsTrigger value="livestream">Livestream</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="sermons">
+                <SermonsList />
+              </TabsContent>
+              
+              <TabsContent value="devotionals">
+                <DevotionalsList />
+              </TabsContent>
+              
+              <TabsContent value="livestream">
+                <LivestreamSection />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
