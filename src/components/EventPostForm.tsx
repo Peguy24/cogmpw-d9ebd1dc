@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
@@ -46,6 +46,8 @@ interface EventPostFormProps {
 
 const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -56,6 +58,28 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
       location: "",
     },
   });
+
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 50MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setMediaFile(file);
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMediaPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const onSubmit = async (values: EventFormValues) => {
     try {
@@ -72,10 +96,30 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
         return;
       }
 
-      // Combine date and time into a single timestamp
       const [hours, minutes] = values.event_time.split(':').map(Number);
       const eventDateTime = new Date(values.event_date);
       eventDateTime.setHours(hours, minutes, 0, 0);
+
+      let mediaUrl: string | null = null;
+      let mediaType: string | null = null;
+
+      if (mediaFile) {
+        const fileExt = mediaFile.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('event-media')
+          .upload(fileName, mediaFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('event-media')
+          .getPublicUrl(fileName);
+
+        mediaUrl = publicUrl;
+        mediaType = mediaFile.type.startsWith('video/') ? 'video' : 'image';
+      }
 
       const { error } = await supabase.from("events").insert({
         title: values.title,
@@ -83,6 +127,8 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
         event_date: eventDateTime.toISOString(),
         location: values.location,
         created_by: user.id,
+        media_url: mediaUrl,
+        media_type: mediaType,
       });
 
       if (error) throw error;
@@ -93,6 +139,8 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
       });
 
       form.reset();
+      setMediaFile(null);
+      setMediaPreview(null);
       onSuccess();
     } catch (error) {
       console.error("Error creating event:", error);
@@ -220,6 +268,52 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
                 </FormItem>
               )}
             />
+
+            <FormItem>
+              <FormLabel>Image or Video (Optional)</FormLabel>
+              <FormControl>
+                <div className="space-y-4">
+                  <Input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={handleMediaChange}
+                    disabled={isSubmitting}
+                  />
+                  {mediaPreview && (
+                    <div className="relative">
+                      {mediaFile?.type.startsWith('video/') ? (
+                        <video 
+                          src={mediaPreview} 
+                          controls 
+                          className="w-full rounded-lg max-h-64 object-cover"
+                        />
+                      ) : (
+                        <img 
+                          src={mediaPreview} 
+                          alt="Preview" 
+                          className="w-full rounded-lg max-h-64 object-cover"
+                        />
+                      )}
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => {
+                          setMediaFile(null);
+                          setMediaPreview(null);
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </FormControl>
+              <FormDescription>
+                Upload an image or video (max 50MB). Supported formats: JPG, PNG, WEBP, GIF, MP4, WEBM
+              </FormDescription>
+            </FormItem>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? (

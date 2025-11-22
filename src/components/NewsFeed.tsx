@@ -12,6 +12,8 @@ interface NewsItem {
   content: string;
   is_pinned: boolean;
   created_at: string;
+  media_url: string | null;
+  media_type: string | null;
   author: {
     full_name: string;
   } | null;
@@ -65,7 +67,9 @@ const NewsFeed = () => {
           content,
           is_pinned,
           created_at,
-          author_id
+          author_id,
+          media_url,
+          media_type
         `)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false });
@@ -159,6 +163,23 @@ const NewsFeed = () => {
               </div>
             </CardHeader>
             <CardContent>
+              {item.media_url && (
+                <div className="mb-4">
+                  {item.media_type === 'video' ? (
+                    <video 
+                      src={item.media_url} 
+                      controls 
+                      className="w-full rounded-lg max-h-96 object-cover"
+                    />
+                  ) : (
+                    <img 
+                      src={item.media_url} 
+                      alt={item.title}
+                      className="w-full rounded-lg max-h-96 object-cover"
+                    />
+                  )}
+                </div>
+              )}
               <p className="text-foreground whitespace-pre-wrap">{item.content}</p>
             </CardContent>
           </Card>

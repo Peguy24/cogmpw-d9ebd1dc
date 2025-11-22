@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ImagePlus, Video } from "lucide-react";
 
 const newsSchema = z.object({
   title: z.string()
@@ -32,6 +32,8 @@ interface NewsPostFormProps {
 
 const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
   const form = useForm<NewsFormValues>({
     resolver: zodResolver(newsSchema),
@@ -41,6 +43,30 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
       is_pinned: false,
     },
   });
+
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "File size must be less than 50MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setMediaFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMediaPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const onSubmit = async (values: NewsFormValues) => {
     try {
@@ -57,11 +83,35 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
         return;
       }
 
+      let mediaUrl: string | null = null;
+      let mediaType: string | null = null;
+
+      // Upload media if present
+      if (mediaFile) {
+        const fileExt = mediaFile.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('news-media')
+          .upload(fileName, mediaFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('news-media')
+          .getPublicUrl(fileName);
+
+        mediaUrl = publicUrl;
+        mediaType = mediaFile.type.startsWith('video/') ? 'video' : 'image';
+      }
+
       const { error } = await supabase.from("news").insert({
         title: values.title,
         content: values.content,
         is_pinned: values.is_pinned,
         author_id: user.id,
+        media_url: mediaUrl,
+        media_type: mediaType,
       });
 
       if (error) throw error;
@@ -72,6 +122,8 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
       });
 
       form.reset();
+      setMediaFile(null);
+      setMediaPreview(null);
       onSuccess();
     } catch (error) {
       console.error("Error creating news post:", error);
@@ -124,6 +176,52 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
                 </FormItem>
               )}
             />
+
+            <FormItem>
+              <FormLabel>Image or Video (Optional)</FormLabel>
+              <FormControl>
+                <div className="space-y-4">
+                  <Input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={handleMediaChange}
+                    disabled={isSubmitting}
+                  />
+                  {mediaPreview && (
+                    <div className="relative">
+                      {mediaFile?.type.startsWith('video/') ? (
+                        <video 
+                          src={mediaPreview} 
+                          controls 
+                          className="w-full rounded-lg max-h-64 object-cover"
+                        />
+                      ) : (
+                        <img 
+                          src={mediaPreview} 
+                          alt="Preview" 
+                          className="w-full rounded-lg max-h-64 object-cover"
+                        />
+                      )}
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => {
+                          setMediaFile(null);
+                          setMediaPreview(null);
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </FormControl>
+              <FormDescription>
+                Upload an image or video (max 50MB). Supported formats: JPG, PNG, WEBP, GIF, MP4, WEBM
+              </FormDescription>
+            </FormItem>
 
             <FormField
               control={form.control}
