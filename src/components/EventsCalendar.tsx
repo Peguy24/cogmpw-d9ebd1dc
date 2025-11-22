@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users, Check } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import EventPostForm from "./EventPostForm";
 
 interface EventItem {
   id: string;
@@ -22,11 +23,42 @@ const EventsCalendar = () => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
     getCurrentUser();
     fetchEvents();
+    checkUserRole();
   }, []);
+
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setCheckingRole(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["admin", "leader"])
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setUserRole(data.role);
+      }
+    } catch (error) {
+      console.error("Error checking user role:", error);
+    } finally {
+      setCheckingRole(false);
+    }
+  };
 
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -137,8 +169,14 @@ const EventsCalendar = () => {
     );
   }
 
+  const canCreateEvent = userRole === "admin" || userRole === "leader";
+
   return (
     <div className="space-y-4">
+      {!checkingRole && canCreateEvent && (
+        <EventPostForm onSuccess={fetchEvents} />
+      )}
+      
       {events.map((event) => (
         <Card key={event.id}>
           <CardHeader>
