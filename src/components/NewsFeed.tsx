@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Pin } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import NewsPostForm from "./NewsPostForm";
 
 interface NewsItem {
   id: string;
@@ -19,10 +20,41 @@ interface NewsItem {
 const NewsFeed = () => {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
     fetchNews();
+    checkUserRole();
   }, []);
+
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setCheckingRole(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .in("role", ["admin", "leader"])
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setUserRole(data.role);
+      }
+    } catch (error) {
+      console.error("Error checking user role:", error);
+    } finally {
+      setCheckingRole(false);
+    }
+  };
 
   const fetchNews = async () => {
     try {
@@ -101,8 +133,14 @@ const NewsFeed = () => {
     );
   }
 
+  const canPostNews = userRole === "admin" || userRole === "leader";
+
   return (
     <div className="space-y-4">
+      {!checkingRole && canPostNews && (
+        <NewsPostForm onSuccess={fetchNews} />
+      )}
+      
       {news.map((item) => (
         <Card key={item.id} className={item.is_pinned ? "border-primary" : ""}>
           <CardHeader>
