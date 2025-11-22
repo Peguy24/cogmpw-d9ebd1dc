@@ -23,13 +23,17 @@ export const usePushNotifications = () => {
           // Save token to database
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            await supabase
+            const { error } = await supabase
               .from('push_tokens')
               .upsert({ 
                 user_id: user.id, 
                 token: token.value,
                 platform: 'mobile'
               });
+            
+            if (error) {
+              console.error('Error saving push token:', error);
+            }
           }
         });
 

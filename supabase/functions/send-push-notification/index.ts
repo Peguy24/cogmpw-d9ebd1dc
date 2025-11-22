@@ -28,6 +28,13 @@ serve(async (req) => {
       targetTokens = tokenData?.map((t: { token: string }) => t.token) || [];
     }
 
+    if (!targetTokens || targetTokens.length === 0) {
+      return new Response(
+        JSON.stringify({ message: 'No push tokens found', success: true }),
+        { headers: { "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     // For now, we'll use FCM HTTP v1 API
     // Note: You'll need to configure Firebase Cloud Messaging credentials
     const results = await Promise.allSettled(
@@ -54,8 +61,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { 
         headers: { "Content-Type": "application/json" },
         status: 500
