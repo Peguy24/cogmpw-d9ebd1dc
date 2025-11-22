@@ -16,26 +16,28 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   usePushNotifications();
-  return null;
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/home" element={<Home />} />
+      <Route path="/pending-approval" element={<PendingApproval />} />
+      <Route path="/admin/approvals" element={<AdminApprovals />} />
+      <Route path="/admin/users" element={<AdminUserManagement />} />
+      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 };
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AppContent />
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/pending-approval" element={<PendingApproval />} />
-          <Route path="/admin/approvals" element={<AdminApprovals />} />
-          <Route path="/admin/users" element={<AdminUserManagement />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
