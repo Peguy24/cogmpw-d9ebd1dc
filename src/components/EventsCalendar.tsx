@@ -45,13 +45,13 @@ const EventsCalendar = () => {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .in("role", ["admin", "leader"])
-        .maybeSingle();
+        .in("role", ["admin", "leader"]);
 
       if (error) throw error;
 
-      if (data) {
-        setUserRole(data.role);
+      if (data && data.length > 0) {
+        // If user has admin or leader role, set it
+        setUserRole(data[0].role);
       }
     } catch (error) {
       console.error("Error checking user role:", error);
