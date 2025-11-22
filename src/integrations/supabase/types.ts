@@ -50,6 +50,7 @@ export type Database = {
       donations: {
         Row: {
           amount: number
+          campaign_id: string | null
           category: string
           created_at: string
           id: string
@@ -62,6 +63,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          campaign_id?: string | null
           category: string
           created_at?: string
           id?: string
@@ -74,6 +76,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          campaign_id?: string | null
           category?: string
           created_at?: string
           id?: string
@@ -84,7 +87,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giving_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_reminders_sent: {
         Row: {
@@ -178,6 +189,48 @@ export type Database = {
           location?: string
           media_type?: string | null
           media_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      giving_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_amount: number
+          description: string
+          end_date: string
+          id: string
+          is_active: boolean
+          start_date: string
+          target_amount: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_amount?: number
+          description: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          start_date: string
+          target_amount: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_amount?: number
+          description?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          target_amount?: number
           title?: string
           updated_at?: string
         }
@@ -374,7 +427,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      campaign_donor_stats: {
+        Row: {
+          campaign_id: string | null
+          donation_count: number | null
+          full_name: string | null
+          last_donation_date: string | null
+          total_donated: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "giving_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
