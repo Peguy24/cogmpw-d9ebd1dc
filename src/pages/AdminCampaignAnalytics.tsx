@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, DollarSign, Users, Target } from "lucide-react";
+import { ArrowLeft, TrendingUp, DollarSign, Users, Target, Download, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
 import {
   LineChart,
   Line,
@@ -20,7 +22,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#8884d8', '#82ca9d', '#ffc658'];
 
@@ -152,6 +154,213 @@ export default function AdminCampaignAnalytics() {
     }));
   };
 
+  // Export to CSV
+  const exportToCSV = () => {
+    if (!donations || !campaigns) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      // Prepare CSV data
+      const csvRows = [];
+      
+      // Header
+      csvRows.push([
+        "Campaign Analytics Report",
+        `Generated: ${format(new Date(), "MMM dd, yyyy HH:mm")}`
+      ].join(","));
+      csvRows.push([]);
+      
+      // Summary Stats
+      csvRows.push(["Summary Statistics"]);
+      csvRows.push(["Total Raised", `$${totalDonations.toFixed(2)}`]);
+      csvRows.push(["Average Donation", `$${averageDonation.toFixed(2)}`]);
+      csvRows.push(["Unique Donors", uniqueDonors]);
+      csvRows.push(["Active Campaigns", activeCampaigns]);
+      csvRows.push([]);
+      
+      // Donation Trends
+      csvRows.push(["Monthly Donation Trends"]);
+      csvRows.push(["Month", "Amount", "Count"]);
+      donationTrendData().forEach(row => {
+        csvRows.push([row.month, row.amount.toFixed(2), row.count]);
+      });
+      csvRows.push([]);
+      
+      // Campaign Performance
+      csvRows.push(["Campaign Performance"]);
+      csvRows.push(["Campaign", "Raised", "Goal", "Percentage"]);
+      campaignPerformanceData().forEach(row => {
+        csvRows.push([
+          row.name,
+          row.raised.toFixed(2),
+          row.goal.toFixed(2),
+          row.percentage.toFixed(1) + "%"
+        ]);
+      });
+      csvRows.push([]);
+      
+      // Category Distribution
+      csvRows.push(["Donation Categories"]);
+      csvRows.push(["Category", "Amount"]);
+      categoryDistributionData().forEach(row => {
+        csvRows.push([row.name, row.value.toFixed(2)]);
+      });
+      csvRows.push([]);
+      
+      // Donor Frequency
+      csvRows.push(["Donor Engagement"]);
+      csvRows.push(["Frequency", "Count"]);
+      donorFrequencyData().forEach(row => {
+        csvRows.push([row.name, row.value]);
+      });
+      
+      // Create CSV content
+      const csvContent = csvRows.map(row => row.join(",")).join("\n");
+      
+      // Download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `campaign-analytics-${format(new Date(), "yyyy-MM-dd")}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success("CSV report exported successfully");
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      toast.error("Failed to export CSV");
+    }
+  };
+
+  // Export to PDF
+  const exportToPDF = async () => {
+    if (!donations || !campaigns) {
+      toast.error("No data to export");
+      return;
+    }
+
+    try {
+      toast.info("Generating PDF report...");
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
+      
+      // Title
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Campaign Analytics Report", pageWidth / 2, yPosition, { align: "center" });
+      
+      yPosition += 10;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Generated: ${format(new Date(), "MMMM dd, yyyy HH:mm")}`, pageWidth / 2, yPosition, { align: "center" });
+      
+      yPosition += 15;
+      
+      // Summary Statistics
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Summary Statistics", 15, yPosition);
+      
+      yPosition += 8;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      
+      const stats = [
+        [`Total Raised: $${totalDonations.toFixed(2)}`, `Average Donation: $${averageDonation.toFixed(2)}`],
+        [`Unique Donors: ${uniqueDonors}`, `Active Campaigns: ${activeCampaigns}`]
+      ];
+      
+      stats.forEach(row => {
+        pdf.text(row[0], 15, yPosition);
+        pdf.text(row[1], pageWidth / 2 + 5, yPosition);
+        yPosition += 6;
+      });
+      
+      yPosition += 10;
+      
+      // Monthly Trends Table
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Monthly Donation Trends", 15, yPosition);
+      
+      yPosition += 8;
+      pdf.setFontSize(9);
+      
+      const trendData = donationTrendData();
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Month", 15, yPosition);
+      pdf.text("Amount", 70, yPosition);
+      pdf.text("Count", 120, yPosition);
+      
+      yPosition += 6;
+      pdf.setFont("helvetica", "normal");
+      
+      trendData.forEach(row => {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.text(row.month, 15, yPosition);
+        pdf.text(`$${row.amount.toFixed(2)}`, 70, yPosition);
+        pdf.text(row.count.toString(), 120, yPosition);
+        yPosition += 6;
+      });
+      
+      yPosition += 10;
+      
+      // Campaign Performance
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Top Campaigns", 15, yPosition);
+      
+      yPosition += 8;
+      pdf.setFontSize(9);
+      
+      const perfData = campaignPerformanceData().slice(0, 8);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Campaign", 15, yPosition);
+      pdf.text("Raised", 100, yPosition);
+      pdf.text("Goal", 140, yPosition);
+      pdf.text("%", 180, yPosition);
+      
+      yPosition += 6;
+      pdf.setFont("helvetica", "normal");
+      
+      perfData.forEach(row => {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.text(row.name, 15, yPosition);
+        pdf.text(`$${row.raised.toFixed(0)}`, 100, yPosition);
+        pdf.text(`$${row.goal.toFixed(0)}`, 140, yPosition);
+        pdf.text(`${row.percentage.toFixed(1)}%`, 180, yPosition);
+        yPosition += 6;
+      });
+      
+      // Save PDF
+      pdf.save(`campaign-analytics-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      
+      toast.success("PDF report generated successfully");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to generate PDF");
+    }
+  };
+
   const isLoading = donationsLoading || campaignsLoading;
 
   if (isLoading) {
@@ -173,17 +382,29 @@ export default function AdminCampaignAnalytics() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/admin/campaigns")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Campaign Analytics</h1>
-            <p className="text-muted-foreground">Insights and trends for giving campaigns</p>
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/admin/campaigns")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">Campaign Analytics</h1>
+              <p className="text-muted-foreground">Insights and trends for giving campaigns</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={exportToCSV}>
+              <FileText className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button variant="outline" onClick={exportToPDF}>
+              <Download className="h-4 w-4 mr-2" />
+              Export PDF
+            </Button>
           </div>
         </div>
 
