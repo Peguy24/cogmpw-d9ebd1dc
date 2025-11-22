@@ -135,15 +135,40 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
 
       // Send push notification
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
         await supabase.functions.invoke('send-push-notification', {
           body: {
             title: '📅 New Church Event',
             body: `${values.title} - ${format(eventDateTime, 'PPP')}`,
-          }
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
         });
       } catch (notifError) {
         console.error('Error sending push notification:', notifError);
         // Don't fail the whole operation if notification fails
+      }
+
+      // Send email notifications to all members
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        await supabase.functions.invoke("send-event-email", {
+          body: {
+            eventTitle: values.title,
+            eventDescription: values.description,
+            eventDate: eventDateTime.toISOString(),
+            eventLocation: values.location,
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send event emails:", emailError);
+        // Don't show error to user - event was created successfully
       }
 
       toast({
