@@ -87,6 +87,33 @@ const AdminApprovals = () => {
       return;
     }
 
+    // Get user's push tokens for notification
+    const { data: tokens } = await supabase
+      .from("push_tokens")
+      .select("token")
+      .eq("user_id", userId);
+
+    // Send welcome notification if user has push tokens
+    if (tokens && tokens.length > 0) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            title: "Welcome to COGMPW! 🎉",
+            body: "Your account has been approved. You now have full access to the church app!",
+            tokens: tokens.map(t => t.token),
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+      } catch (notifError) {
+        console.error("Failed to send welcome notification:", notifError);
+        // Don't show error to admin - approval was successful
+      }
+    }
+
     toast.success("User approved successfully");
     await loadPendingUsers();
   };
