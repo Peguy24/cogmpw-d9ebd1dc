@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      devotionals: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          devotional_date: string
+          id: string
+          scripture_reference: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          devotional_date: string
+          id?: string
+          scripture_reference?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          devotional_date?: string
+          id?: string
+          scripture_reference?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_reminders_sent: {
         Row: {
           event_id: string
@@ -108,6 +141,33 @@ export type Database = {
           media_url?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      livestream_links: {
+        Row: {
+          id: string
+          is_active: boolean
+          platform: string
+          title: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          id?: string
+          is_active?: boolean
+          platform: string
+          title?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          id?: string
+          is_active?: boolean
+          platform?: string
+          title?: string | null
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -210,6 +270,45 @@ export type Database = {
           token?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      sermons: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          media_type: string
+          media_url: string | null
+          sermon_date: string
+          speaker: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          media_type: string
+          media_url?: string | null
+          sermon_date: string
+          speaker?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          media_type?: string
+          media_url?: string | null
+          sermon_date?: string
+          speaker?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
