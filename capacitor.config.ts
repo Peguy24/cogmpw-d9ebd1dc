@@ -12,6 +12,14 @@ const config: CapacitorConfig = {
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert']
     }
+  },
+  // iOS Configuration
+  ios: {
+    contentInset: 'always',
+  },
+  // Android Configuration  
+  android: {
+    allowMixedContent: true,
   }
 };
 
