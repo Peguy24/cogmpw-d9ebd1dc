@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,144 @@ const corsHeaders = {
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[RECORD-DONATION] ${step}${detailsStr}`);
+};
+
+const generateReceiptHtml = ({
+  donorName,
+  amount,
+  category,
+  date,
+  transactionId,
+  notes,
+}: {
+  donorName: string;
+  amount: number;
+  category: string;
+  date: string;
+  transactionId: string;
+  notes?: string;
+}) => {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Donation Receipt</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #f6f9fc; margin: 0; padding: 0;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px;">
+    <h1 style="color: #333; font-size: 28px; font-weight: bold; margin: 40px 0; text-align: center;">Donation Receipt</h1>
+    
+    <p style="color: #333; font-size: 16px; line-height: 26px; margin: 16px 0;">Dear ${donorName},</p>
+    
+    <p style="color: #333; font-size: 16px; line-height: 26px; margin: 16px 0;">
+      Thank you for your generous donation to COGMPW. Your support helps us continue our mission and ministry.
+    </p>
+    
+    <div style="margin: 32px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+      <h2 style="color: #333; font-size: 20px; font-weight: bold; margin: 0 0 20px 0;">Transaction Details</h2>
+      <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 20px 0;">
+      
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Amount:</td>
+          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">$${amount.toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Category:</td>
+          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">${category}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Date:</td>
+          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">${date}</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Transaction ID:</td>
+          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right; word-break: break-all;">${transactionId}</td>
+        </tr>
+        ${notes ? `
+        <tr>
+          <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Notes:</td>
+          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">${notes}</td>
+        </tr>
+        ` : ''}
+      </table>
+    </div>
+    
+    <div style="margin: 32px 0; padding: 20px; background-color: #fff4e6; border-radius: 8px;">
+      <h2 style="color: #333; font-size: 20px; font-weight: bold; margin: 0 0 20px 0;">Tax Information</h2>
+      <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 20px 0;">
+      
+      <p style="color: #333; font-size: 16px; line-height: 26px; margin: 16px 0;">
+        COGMPW is a 501(c)(3) tax-exempt organization. This receipt serves as documentation of your charitable contribution for tax purposes. No goods or services were provided in exchange for this donation.
+      </p>
+      
+      <p style="color: #333; font-size: 16px; line-height: 26px; margin: 16px 0;">
+        Please retain this receipt for your tax records.
+      </p>
+    </div>
+    
+    <p style="color: #8898aa; font-size: 14px; line-height: 24px; margin-top: 32px;">
+      God bless you,<br>
+      COGMPW Ministry Team
+    </p>
+  </div>
+</body>
+</html>
+  `;
+};
+
+const sendDonationReceipt = async ({
+  email,
+  donorName,
+  amount,
+  category,
+  transactionId,
+  notes,
+}: {
+  email: string;
+  donorName: string;
+  amount: number;
+  category: string;
+  transactionId: string;
+  notes?: string;
+}) => {
+  try {
+    logStep("Sending donation receipt", { email, amount, category });
+    
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY") as string);
+    
+    const html = generateReceiptHtml({
+      donorName,
+      amount,
+      category,
+      date: new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
+      transactionId,
+      notes,
+    });
+
+    const { error } = await resend.emails.send({
+      from: 'COGMPW <onboarding@resend.dev>',
+      to: [email],
+      subject: `Donation Receipt - $${amount.toFixed(2)} to COGMPW`,
+      html,
+    });
+
+    if (error) {
+      logStep("Error sending receipt email", { error });
+      throw error;
+    }
+
+    logStep("Receipt email sent successfully", { email });
+  } catch (error) {
+    logStep("Failed to send receipt email", { error: error instanceof Error ? error.message : String(error) });
+    // Don't throw - we don't want email failures to fail the donation recording
+  }
 };
 
 serve(async (req) => {
@@ -77,6 +216,20 @@ serve(async (req) => {
     }
 
     logStep("Donation recorded successfully", { amount, category });
+
+    // Send email receipt in background (non-blocking)
+    if (user.email) {
+      sendDonationReceipt({
+        email: user.email,
+        donorName: user.user_metadata?.full_name || 'Donor',
+        amount,
+        category,
+        transactionId: session.payment_intent as string,
+        notes: notes || undefined,
+      }).catch((err) => {
+        logStep("Background email task failed", { error: err });
+      });
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
