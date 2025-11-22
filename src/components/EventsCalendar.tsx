@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Users, Check } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Calendar, MapPin, Users, Check, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import EventPostForm from "./EventPostForm";
+import EventEditDialog from "./EventEditDialog";
 
 interface EventItem {
   id: string;
@@ -27,6 +29,8 @@ const EventsCalendar = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [checkingRole, setCheckingRole] = useState(true);
+  const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUser();
@@ -137,6 +141,36 @@ const EventsCalendar = () => {
     }
   };
 
+  const handleDelete = async (eventId: string, mediaUrl: string | null) => {
+    try {
+      // Delete media from storage if exists
+      if (mediaUrl) {
+        const fileName = mediaUrl.split('/').pop();
+        if (fileName) {
+          await supabase.storage
+            .from('event-media')
+            .remove([fileName]);
+        }
+      }
+
+      // Delete event
+      const { error } = await supabase
+        .from("events")
+        .delete()
+        .eq("id", eventId);
+
+      if (error) throw error;
+
+      toast.success("Event deleted successfully");
+      fetchEvents();
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Failed to delete event");
+    } finally {
+      setDeletingEventId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -175,7 +209,7 @@ const EventsCalendar = () => {
         events.map((event) => (
           <Card key={event.id}>
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1 flex-1">
                   <CardTitle>{event.title}</CardTitle>
                   <CardDescription className="flex items-center gap-4 flex-wrap">
@@ -189,6 +223,24 @@ const EventsCalendar = () => {
                     </span>
                   </CardDescription>
                 </div>
+                {canCreateEvent && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingEvent(event)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeletingEventId(event.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -244,6 +296,39 @@ const EventsCalendar = () => {
           </Card>
         ))
       )}
+
+      {editingEvent && (
+        <EventEditDialog
+          event={editingEvent}
+          open={!!editingEvent}
+          onOpenChange={(open) => !open && setEditingEvent(null)}
+          onSuccess={fetchEvents}
+        />
+      )}
+
+      <AlertDialog open={!!deletingEventId} onOpenChange={(open) => !open && setDeletingEventId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Event</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this event? This action cannot be undone and will also remove all RSVPs.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const event = events.find(e => e.id === deletingEventId);
+                if (event) {
+                  handleDelete(event.id, event.media_url);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
