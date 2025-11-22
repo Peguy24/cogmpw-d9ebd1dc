@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,6 +23,7 @@ const donationSchema = z.object({
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
   type: z.enum(["one-time", "recurring"]),
   interval: z.enum(["month", "week"]).optional(),
+  campaign_id: z.string().optional(),
 });
 
 type DonationFormValues = z.infer<typeof donationSchema>;
@@ -38,6 +39,14 @@ const DONATION_CATEGORIES = [
 
 export const DonationForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCampaignFromStorage, setSelectedCampaignFromStorage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const campaignId = sessionStorage.getItem('selectedCampaignId');
+    if (campaignId) {
+      setSelectedCampaignFromStorage(campaignId);
+    }
+  }, []);
 
   const form = useForm<DonationFormValues>({
     resolver: zodResolver(donationSchema),
@@ -47,6 +56,7 @@ export const DonationForm = () => {
       notes: "",
       type: "one-time",
       interval: "month",
+      campaign_id: selectedCampaignFromStorage || undefined,
     },
   });
 
@@ -92,6 +102,7 @@ export const DonationForm = () => {
             amount: parseFloat(values.amount),
             category: values.category,
             notes: values.notes || null,
+            campaign_id: values.campaign_id || selectedCampaignFromStorage || null,
           },
         });
 
@@ -99,6 +110,7 @@ export const DonationForm = () => {
 
         if (data?.url) {
           sessionStorage.setItem('pendingDonationSession', data.sessionId);
+          sessionStorage.removeItem('selectedCampaignId'); // Clear after use
           window.open(data.url, '_blank');
           toast.success("Opening donation checkout...");
           form.reset();

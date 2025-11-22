@@ -13,6 +13,8 @@ import AdminUserManagement from "./pages/AdminUserManagement";
 import AdminGivingReports from "./pages/AdminGivingReports";
 import Giving from "./pages/Giving";
 import GivingHistory from "./pages/GivingHistory";
+import GivingCampaigns from "./pages/GivingCampaigns";
+import CampaignDetails from "./pages/CampaignDetails";
 import ManageSubscriptions from "./pages/ManageSubscriptions";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +34,8 @@ const AppContent = () => {
       <Route path="/admin/giving" element={<AdminGivingReports />} />
       <Route path="/giving" element={<Giving />} />
       <Route path="/giving-history" element={<GivingHistory />} />
+      <Route path="/campaigns" element={<GivingCampaigns />} />
+      <Route path="/campaign/:id" element={<CampaignDetails />} />
       <Route path="/manage-subscriptions" element={<ManageSubscriptions />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
