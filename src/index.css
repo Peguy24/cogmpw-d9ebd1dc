@@ -101,5 +101,30 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-size: 16px; /* Base font size for better mobile readability */
+    line-height: 1.6; /* Improved line height for readability */
+  }
+
+  /* Mobile-optimized typography */
+  h1 {
+    @apply text-2xl md:text-3xl lg:text-4xl font-bold leading-tight;
+  }
+
+  h2 {
+    @apply text-xl md:text-2xl lg:text-3xl font-semibold leading-tight;
+  }
+
+  h3 {
+    @apply text-lg md:text-xl lg:text-2xl font-semibold leading-snug;
+  }
+
+  p {
+    @apply text-base leading-relaxed;
+  }
+
+  /* Improved touch targets for mobile */
+  button, a {
+    min-height: 44px; /* Apple's recommended touch target size */
+    min-width: 44px;
   }
 }
