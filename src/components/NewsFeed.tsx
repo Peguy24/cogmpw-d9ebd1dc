@@ -2,9 +2,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Pin, Pencil, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import NewsPostForm from "./NewsPostForm";
+import NewsEditDialog from "./NewsEditDialog";
+import { toast } from "@/hooks/use-toast";
 
 interface NewsItem {
   id: string;
@@ -24,6 +28,8 @@ const NewsFeed = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [checkingRole, setCheckingRole] = useState(true);
+  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+  const [deletingNewsId, setDeletingNewsId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNews();
@@ -124,6 +130,44 @@ const NewsFeed = () => {
     );
   }
 
+  const handleDelete = async (newsId: string, mediaUrl: string | null) => {
+    try {
+      // Delete media from storage if exists
+      if (mediaUrl) {
+        const fileName = mediaUrl.split('/').pop();
+        if (fileName) {
+          await supabase.storage
+            .from('news-media')
+            .remove([fileName]);
+        }
+      }
+
+      // Delete news post
+      const { error } = await supabase
+        .from("news")
+        .delete()
+        .eq("id", newsId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "News post deleted successfully",
+      });
+
+      fetchNews();
+    } catch (error) {
+      console.error("Error deleting news post:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete news post. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingNewsId(null);
+    }
+  };
+
   const canPostNews = userRole === "admin" || userRole === "leader";
 
   return (
@@ -144,7 +188,7 @@ const NewsFeed = () => {
         news.map((item) => (
           <Card key={item.id} className={item.is_pinned ? "border-primary" : ""}>
             <CardHeader>
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1 flex-1">
                   <CardTitle className="flex items-center gap-2">
                     {item.is_pinned && (
@@ -157,9 +201,29 @@ const NewsFeed = () => {
                     {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
                   </CardDescription>
                 </div>
-                {item.is_pinned && (
-                  <Badge variant="default">Pinned</Badge>
-                )}
+                <div className="flex items-center gap-2">
+                  {item.is_pinned && (
+                    <Badge variant="default">Pinned</Badge>
+                  )}
+                  {canPostNews && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setEditingNews(item)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeletingNewsId(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -185,6 +249,39 @@ const NewsFeed = () => {
           </Card>
         ))
       )}
+
+      {editingNews && (
+        <NewsEditDialog
+          news={editingNews}
+          open={!!editingNews}
+          onOpenChange={(open) => !open && setEditingNews(null)}
+          onSuccess={fetchNews}
+        />
+      )}
+
+      <AlertDialog open={!!deletingNewsId} onOpenChange={(open) => !open && setDeletingNewsId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete News Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this news post? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const newsItem = news.find(n => n.id === deletingNewsId);
+                if (newsItem) {
+                  handleDelete(newsItem.id, newsItem.media_url);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
