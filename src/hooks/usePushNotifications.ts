@@ -18,7 +18,7 @@ export const usePushNotifications = () => {
 
         // Register listeners
         await PushNotifications.addListener('registration', async (token) => {
-          console.log('Push registration success, token: ' + token.value);
+          console.log('Push registration successful');
           
           // Save token to database
           const { data: { user } } = await supabase.auth.getUser();

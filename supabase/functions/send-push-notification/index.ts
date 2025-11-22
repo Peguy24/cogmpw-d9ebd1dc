@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const FCM_API_URL = "https://fcm.googleapis.com/v1/projects/YOUR_PROJECT_ID/messages:send";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 interface NotificationPayload {
   title: string;
@@ -9,21 +15,60 @@ interface NotificationPayload {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   try {
+    // Extract and verify authorization
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - No authorization header' }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    // Create authenticated Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Verify user is authenticated
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
+    }
+
+    // Check if user has admin or leader role
+    const { data: roleData, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .in('role', ['admin', 'leader'])
+      .single();
+
+    if (roleError || !roleData) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Only admins and leaders can send notifications' }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+
     const { title, body, tokens } = await req.json() as NotificationPayload;
 
     // If no specific tokens provided, get all tokens from database
     let targetTokens = tokens;
     if (!targetTokens || targetTokens.length === 0) {
-      const { data: tokenData } = await fetch(
-        `${Deno.env.get('SUPABASE_URL')}/rest/v1/push_tokens?select=token`,
-        {
-          headers: {
-            'apikey': Deno.env.get('SUPABASE_ANON_KEY') || '',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''}`
-          }
-        }
-      ).then(res => res.json());
+      const { data: tokenData } = await supabaseClient
+        .from('push_tokens')
+        .select('token');
       
       targetTokens = tokenData?.map((t: { token: string }) => t.token) || [];
     }
@@ -31,7 +76,7 @@ serve(async (req) => {
     if (!targetTokens || targetTokens.length === 0) {
       return new Response(
         JSON.stringify({ message: 'No push tokens found', success: true }),
-        { headers: { "Content-Type": "application/json" }, status: 200 }
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
@@ -40,11 +85,10 @@ serve(async (req) => {
     const results = await Promise.allSettled(
       targetTokens.map(async (token) => {
         // This is a placeholder - actual FCM implementation requires OAuth2 token
-        console.log(`Would send notification to token: ${token}`);
-        console.log(`Title: ${title}, Body: ${body}`);
+        console.log(`Sending notification - Title: ${title}, Tokens count: ${targetTokens.length}`);
         
         // TODO: Implement actual FCM sending with OAuth2 credentials
-        return { success: true, token };
+        return { success: true };
       })
     );
 
@@ -55,17 +99,18 @@ serve(async (req) => {
         success: true
       }),
       { 
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200 
       }
     );
 
   } catch (error) {
+    console.error('Error in send-push-notification:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { 
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500
       }
     );
