@@ -125,6 +125,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          is_approved: boolean
           ministry: string | null
           phone: string | null
           phone_visible: boolean
@@ -136,6 +137,7 @@ export type Database = {
           created_at?: string
           full_name: string
           id: string
+          is_approved?: boolean
           ministry?: string | null
           phone?: string | null
           phone_visible?: boolean
@@ -147,6 +149,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          is_approved?: boolean
           ministry?: string | null
           phone?: string | null
           phone_visible?: boolean

@@ -7,6 +7,8 @@ import { usePushNotifications } from "@/hooks/usePushNotifications";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
+import PendingApproval from "./pages/PendingApproval";
+import AdminApprovals from "./pages/AdminApprovals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/home" element={<Home />} />
+          <Route path="/pending-approval" element={<PendingApproval />} />
+          <Route path="/admin/approvals" element={<AdminApprovals />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
