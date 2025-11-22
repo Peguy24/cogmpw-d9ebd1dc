@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Home from "./pages/Home";
 import PendingApproval from "./pages/PendingApproval";
 import AdminApprovals from "./pages/AdminApprovals";
+import AdminUserManagement from "./pages/AdminUserManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/home" element={<Home />} />
           <Route path="/pending-approval" element={<PendingApproval />} />
           <Route path="/admin/approvals" element={<AdminApprovals />} />
+          <Route path="/admin/users" element={<AdminUserManagement />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

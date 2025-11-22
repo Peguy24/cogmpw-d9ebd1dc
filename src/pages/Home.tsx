@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck } from "lucide-react";
+import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -118,16 +118,23 @@ const Home = () => {
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && (
-              <Link to="/admin/approvals">
-                <Button variant="ghost" size="icon" className="relative">
-                  <UserCheck className="h-5 w-5" />
-                  {pendingCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
-                      {pendingCount}
-                    </span>
-                  )}
-                </Button>
-              </Link>
+              <>
+                <Link to="/admin/approvals">
+                  <Button variant="ghost" size="icon" className="relative">
+                    <UserCheck className="h-5 w-5" />
+                    {pendingCount > 0 && (
+                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                        {pendingCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+                <Link to="/admin/users">
+                  <Button variant="ghost" size="icon">
+                    <Shield className="h-5 w-5" />
+                  </Button>
+                </Link>
+              </>
             )}
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
