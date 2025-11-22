@@ -5,7 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target } from "lucide-react";
+import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -115,55 +115,81 @@ const Home = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">COGMPW</h1>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="container flex h-14 items-center justify-between px-4">
+          <h1 className="text-lg font-bold">COGMPW</h1>
+          
+          <div className="flex items-center gap-1">
             <Link to="/giving">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
                 <HandHeart className="h-5 w-5" />
               </Button>
             </Link>
+            
             {isAdmin && (
-              <>
-                <Link to="/admin/approvals">
-                  <Button variant="ghost" size="icon" className="relative">
-                    <UserCheck className="h-5 w-5" />
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 relative">
+                    <Menu className="h-5 w-5" />
                     {pendingCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-white text-[10px] flex items-center justify-center">
                         {pendingCount}
                       </span>
                     )}
                   </Button>
-                </Link>
-                <Link to="/admin/users">
-                  <Button variant="ghost" size="icon">
-                    <Shield className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link to="/admin/giving">
-                  <Button variant="ghost" size="icon">
-                    <DollarSign className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link to="/admin/campaigns">
-                  <Button variant="ghost" size="icon">
-                    <Target className="h-5 w-5" />
-                  </Button>
-                </Link>
-              </>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64">
+                  <SheetHeader>
+                    <SheetTitle>Admin Menu</SheetTitle>
+                    <SheetDescription>
+                      Manage church operations
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-2">
+                    <Link to="/admin/approvals" className="block">
+                      <Button variant="ghost" className="w-full justify-start relative">
+                        <UserCheck className="h-5 w-5 mr-3" />
+                        Approvals
+                        {pendingCount > 0 && (
+                          <span className="ml-auto h-5 w-5 rounded-full bg-destructive text-white text-xs flex items-center justify-center">
+                            {pendingCount}
+                          </span>
+                        )}
+                      </Button>
+                    </Link>
+                    <Link to="/admin/users" className="block">
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Shield className="h-5 w-5 mr-3" />
+                        User Management
+                      </Button>
+                    </Link>
+                    <Link to="/admin/giving" className="block">
+                      <Button variant="ghost" className="w-full justify-start">
+                        <DollarSign className="h-5 w-5 mr-3" />
+                        Giving Reports
+                      </Button>
+                    </Link>
+                    <Link to="/admin/campaigns" className="block">
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Target className="h-5 w-5 mr-3" />
+                        Campaigns
+                      </Button>
+                    </Link>
+                  </div>
+                </SheetContent>
+              </Sheet>
             )}
-            <Button variant="ghost" size="icon">
+
+            <Button variant="ghost" size="icon" className="h-9 w-9">
               <Bell className="h-5 w-5" />
             </Button>
+            
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-9 w-9">
                   <Settings className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent>
+              <SheetContent side="right" className="w-80">
                 <SheetHeader>
                   <SheetTitle>Settings</SheetTitle>
                   <SheetDescription>
@@ -173,30 +199,37 @@ const Home = () => {
                 <div className="mt-6">
                   {user && <ProfileSettings user={user} />}
                 </div>
+                <div className="mt-6 pt-6 border-t">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-destructive hover:text-destructive"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="h-5 w-5 mr-3" />
+                    Sign Out
+                  </Button>
+                </div>
               </SheetContent>
             </Sheet>
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
-              <LogOut className="h-5 w-5" />
-            </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container py-6">
+      <main className="container py-4 px-4">
         <Tabs defaultValue="news" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="news" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
+            <TabsTrigger value="news" className="flex flex-col items-center gap-1 py-2">
               <Newspaper className="h-4 w-4" />
-              News
+              <span className="text-xs">News</span>
             </TabsTrigger>
-            <TabsTrigger value="events" className="flex items-center gap-2">
+            <TabsTrigger value="events" className="flex flex-col items-center gap-1 py-2">
               <Calendar className="h-4 w-4" />
-              Events
+              <span className="text-xs">Events</span>
             </TabsTrigger>
-            <TabsTrigger value="media" className="flex items-center gap-2">
+            <TabsTrigger value="media" className="flex flex-col items-center gap-1 py-2">
               <Video className="h-4 w-4" />
-              Media
+              <span className="text-xs">Media</span>
             </TabsTrigger>
           </TabsList>
           
@@ -210,10 +243,10 @@ const Home = () => {
           
           <TabsContent value="media">
             <Tabs defaultValue="sermons" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="sermons">Sermons</TabsTrigger>
-                <TabsTrigger value="devotionals">Devotionals</TabsTrigger>
-                <TabsTrigger value="livestream">Livestream</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
+                <TabsTrigger value="sermons" className="text-xs py-2">Sermons</TabsTrigger>
+                <TabsTrigger value="devotionals" className="text-xs py-2">Devotionals</TabsTrigger>
+                <TabsTrigger value="livestream" className="text-xs py-2">Live</TabsTrigger>
               </TabsList>
               
               <TabsContent value="sermons">
