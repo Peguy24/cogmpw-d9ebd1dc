@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { DonationForm } from "@/components/DonationForm";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, History } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,14 +43,22 @@ const Giving = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/home")}
-          className="mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Home
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/home")}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/giving-history")}
+          >
+            <History className="mr-2 h-4 w-4" />
+            History
+          </Button>
+        </div>
 
         <div className="text-center space-y-2 mb-8">
           <h1 className="text-4xl font-bold">Online Giving</h1>
