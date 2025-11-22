@@ -13,6 +13,7 @@ import ProfileSettings from "@/components/ProfileSettings";
 import SermonsList from "@/components/SermonsList";
 import DevotionalsList from "@/components/DevotionalsList";
 import LivestreamSection from "@/components/LivestreamSection";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [activeTab, setActiveTab] = useState("news");
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkAuthAndApproval = async () => {
@@ -216,22 +219,24 @@ const Home = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container py-4 px-4">
-        <Tabs defaultValue="news" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
-            <TabsTrigger value="news" className="flex flex-col items-center gap-1 py-2">
-              <Newspaper className="h-4 w-4" />
-              <span className="text-xs">News</span>
-            </TabsTrigger>
-            <TabsTrigger value="events" className="flex flex-col items-center gap-1 py-2">
-              <Calendar className="h-4 w-4" />
-              <span className="text-xs">Events</span>
-            </TabsTrigger>
-            <TabsTrigger value="media" className="flex flex-col items-center gap-1 py-2">
-              <Video className="h-4 w-4" />
-              <span className="text-xs">Media</span>
-            </TabsTrigger>
-          </TabsList>
+      <main className={`container py-4 px-4 ${isMobile ? 'pb-20' : ''}`}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {!isMobile && (
+            <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
+              <TabsTrigger value="news" className="flex flex-col items-center gap-1 py-2">
+                <Newspaper className="h-4 w-4" />
+                <span className="text-xs">News</span>
+              </TabsTrigger>
+              <TabsTrigger value="events" className="flex flex-col items-center gap-1 py-2">
+                <Calendar className="h-4 w-4" />
+                <span className="text-xs">Events</span>
+              </TabsTrigger>
+              <TabsTrigger value="media" className="flex flex-col items-center gap-1 py-2">
+                <Video className="h-4 w-4" />
+                <span className="text-xs">Media</span>
+              </TabsTrigger>
+            </TabsList>
+          )}
           
           <TabsContent value="news">
             <NewsFeed />
@@ -264,6 +269,45 @@ const Home = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Bottom Navigation Bar - Mobile Only */}
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
+          <div className="grid grid-cols-4 h-16">
+            <button
+              onClick={() => setActiveTab("news")}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === "news" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Newspaper className="h-5 w-5" />
+              <span className="text-xs font-medium">News</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("events")}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === "events" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="text-xs font-medium">Events</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("media")}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === "media" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Video className="h-5 w-5" />
+              <span className="text-xs font-medium">Media</span>
+            </button>
+            <Link to="/giving" className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary">
+              <HandHeart className="h-5 w-5" />
+              <span className="text-xs font-medium">Giving</span>
+            </Link>
+          </div>
+        </nav>
+      )}
     </div>
   );
 };
