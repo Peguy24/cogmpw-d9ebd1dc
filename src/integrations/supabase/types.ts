@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      donations: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          notes: string | null
+          payment_method: string
+          status: string
+          stripe_payment_intent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_reminders_sent: {
         Row: {
           event_id: string
