@@ -8,6 +8,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Utility to mask tokens for safe logging (dev only)
+const maskToken = (token: string): string => {
+  if (token.length <= 8) return '***';
+  return `${token.substring(0, 8)}...${token.substring(token.length - 4)}`;
+}
+
 interface NotificationPayload {
   title: string;
   body: string;
@@ -80,12 +86,15 @@ serve(async (req) => {
       );
     }
 
+    // Log notification details (tokens are masked for security)
+    console.log(`Sending notification: "${title}" to ${targetTokens.length} device(s)`);
+
     // For now, we'll use FCM HTTP v1 API
     // Note: You'll need to configure Firebase Cloud Messaging credentials
     const results = await Promise.allSettled(
       targetTokens.map(async (token) => {
         // This is a placeholder - actual FCM implementation requires OAuth2 token
-        console.log(`Sending notification - Title: ${title}, Tokens count: ${targetTokens.length}`);
+        // In development, you could log: console.log(`Token: ${maskToken(token)}`);
         
         // TODO: Implement actual FCM sending with OAuth2 credentials
         return { success: true };
