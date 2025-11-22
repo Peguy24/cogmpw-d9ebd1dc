@@ -15,6 +15,8 @@ interface EventItem {
   event_date: string;
   location: string;
   created_at: string;
+  media_url: string | null;
+  media_type: string | null;
   rsvp_count?: number;
   user_rsvp?: boolean;
 }
@@ -190,6 +192,23 @@ const EventsCalendar = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {event.media_url && (
+                <div className="mb-4">
+                  {event.media_type === 'video' ? (
+                    <video 
+                      src={event.media_url} 
+                      controls 
+                      className="w-full rounded-lg max-h-96 object-cover"
+                    />
+                  ) : (
+                    <img 
+                      src={event.media_url} 
+                      alt={event.title}
+                      className="w-full rounded-lg max-h-96 object-cover"
+                    />
+                  )}
+                </div>
+              )}
               <p className="text-foreground">{event.description}</p>
 
               <div className="flex items-center justify-between">
