@@ -116,6 +116,19 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
 
       if (error) throw error;
 
+      // Send push notification
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            title: '📰 New Church News',
+            body: values.title,
+          }
+        });
+      } catch (notifError) {
+        console.error('Error sending push notification:', notifError);
+        // Don't fail the whole operation if notification fails
+      }
+
       toast({
         title: "Success",
         description: "News post created successfully",

@@ -133,6 +133,19 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
 
       if (error) throw error;
 
+      // Send push notification
+      try {
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            title: '📅 New Church Event',
+            body: `${values.title} - ${format(eventDateTime, 'PPP')}`,
+          }
+        });
+      } catch (notifError) {
+        console.error('Error sending push notification:', notifError);
+        // Don't fail the whole operation if notification fails
+      }
+
       toast({
         title: "Success",
         description: "Event created successfully",
