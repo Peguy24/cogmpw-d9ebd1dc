@@ -118,15 +118,39 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
 
       // Send push notification
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
         await supabase.functions.invoke('send-push-notification', {
           body: {
             title: '📰 New Church News',
             body: values.title,
-          }
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
         });
       } catch (notifError) {
         console.error('Error sending push notification:', notifError);
         // Don't fail the whole operation if notification fails
+      }
+
+      // Send email notifications to all members
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        await supabase.functions.invoke("send-news-email", {
+          body: {
+            newsTitle: values.title,
+            newsContent: values.content,
+            isPinned: values.is_pinned,
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send news emails:", emailError);
+        // Don't show error to user - news post was created successfully
       }
 
       toast({
