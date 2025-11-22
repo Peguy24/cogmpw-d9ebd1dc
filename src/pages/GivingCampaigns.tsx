@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Radio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CampaignCard } from "@/components/CampaignCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 export default function GivingCampaigns() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState(false);
 
   const { data: campaigns, isLoading, refetch } = useQuery({
     queryKey: ["giving-campaigns"],
@@ -29,16 +30,32 @@ export default function GivingCampaigns() {
 
   // Real-time updates for campaigns
   useEffect(() => {
+    setIsLive(true);
+    
     const channel = supabase
       .channel('campaign-updates')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'giving_campaigns'
         },
-        () => {
+        (payload) => {
+          console.log('Campaign updated:', payload);
+          const oldAmount = Number(payload.old.current_amount);
+          const newAmount = Number(payload.new.current_amount);
+          
+          if (newAmount > oldAmount && payload.new.is_active) {
+            const increase = newAmount - oldAmount;
+            toast.success(
+              `"${payload.new.title}" received $${increase.toFixed(2)}`,
+              {
+                duration: 4000,
+                icon: '📈'
+              }
+            );
+          }
           refetch();
         }
       )
@@ -46,6 +63,7 @@ export default function GivingCampaigns() {
 
     return () => {
       supabase.removeChannel(channel);
+      setIsLive(false);
     };
   }, [refetch]);
 
@@ -70,7 +88,15 @@ export default function GivingCampaigns() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Active Campaigns</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">Active Campaigns</h1>
+              {isLive && (
+                <Badge variant="outline" className="bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700 animate-pulse">
+                  <Radio className="h-3 w-3 mr-1" />
+                  Live
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground">Support our special giving initiatives</p>
           </div>
         </div>
