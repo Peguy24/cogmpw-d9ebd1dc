@@ -35,7 +35,7 @@ serve(async (req) => {
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { amount, category, notes } = await req.json();
+    const { amount, category, notes, interval, campaign_id } = await req.json();
     
     if (!amount || amount <= 0) {
       throw new Error("Invalid donation amount");
@@ -89,6 +89,7 @@ serve(async (req) => {
         user_id: user.id,
         category: category,
         notes: notes || '',
+        campaign_id: campaign_id || '',
       },
     });
 

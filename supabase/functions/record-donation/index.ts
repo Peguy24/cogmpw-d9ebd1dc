@@ -194,7 +194,7 @@ serve(async (req) => {
     logStep("Payment verified", { sessionId, status: session.payment_status });
 
     // Get metadata from session
-    const { user_id, category, notes } = session.metadata || {};
+    const { user_id, category, notes, campaign_id } = session.metadata || {};
     const amount = (session.amount_total || 0) / 100; // Convert from cents
 
     // Insert donation record
@@ -208,6 +208,7 @@ serve(async (req) => {
         status: 'completed',
         stripe_payment_intent_id: session.payment_intent as string,
         notes: notes || null,
+        campaign_id: campaign_id || null,
       });
 
     if (insertError) {
