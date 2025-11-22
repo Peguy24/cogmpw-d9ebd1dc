@@ -97,6 +97,8 @@ const AdminUserManagement = () => {
   };
 
   const toggleLeaderRole = async (userId: string, currentlyLeader: boolean) => {
+    const action = currentlyLeader ? 'revoked' : 'granted';
+    
     if (currentlyLeader) {
       // Remove leader role
       const { error } = await supabase
@@ -123,6 +125,30 @@ const AdminUserManagement = () => {
       }
 
       toast.success("Leader role assigned");
+    }
+
+    // Send notification to the user
+    try {
+      const { error: notifError } = await supabase.functions.invoke(
+        'notify-role-change',
+        {
+          body: {
+            userId,
+            role: 'leader',
+            action,
+          },
+        }
+      );
+
+      if (notifError) {
+        console.error('Failed to send role change notification:', notifError);
+        // Don't show error to admin, as the role change was successful
+      } else {
+        console.log('Role change notification sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      // Don't show error to admin, as the role change was successful
     }
 
     await loadUsers();
