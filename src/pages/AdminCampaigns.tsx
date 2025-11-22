@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, Pencil, Trash2, Target } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Target, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CampaignForm } from "@/components/CampaignForm";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -97,10 +97,16 @@ export default function AdminCampaigns() {
               <p className="text-muted-foreground">Create and manage giving campaigns</p>
             </div>
           </div>
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Campaign
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/admin/campaigns/analytics")}>
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Campaign
+            </Button>
+          </div>
         </div>
 
         {showForm && (
