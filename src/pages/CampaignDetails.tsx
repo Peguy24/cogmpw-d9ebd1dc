@@ -7,15 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowLeft, Calendar, Target, Trophy, Users, Award } from "lucide-react";
+import { ArrowLeft, Calendar, Target, Trophy, Users, Award, Radio } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function CampaignDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState("");
+  const [isLive, setIsLive] = useState(false);
 
-  const { data: campaign, isLoading } = useQuery({
+  const { data: campaign, isLoading, refetch: refetchCampaign } = useQuery({
     queryKey: ["campaign", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,7 +32,7 @@ export default function CampaignDetails() {
     enabled: !!id,
   });
 
-  const { data: leaderboard } = useQuery({
+  const { data: leaderboard, refetch: refetchLeaderboard } = useQuery({
     queryKey: ["campaign-leaderboard", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,26 +52,58 @@ export default function CampaignDetails() {
   useEffect(() => {
     if (!id) return;
 
+    setIsLive(true);
+
     const channel = supabase
       .channel(`campaign-${id}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'giving_campaigns',
           filter: `id=eq.${id}`
         },
+        (payload) => {
+          console.log('Campaign updated:', payload);
+          const oldAmount = Number(payload.old.current_amount);
+          const newAmount = Number(payload.new.current_amount);
+          
+          if (newAmount > oldAmount) {
+            const increase = newAmount - oldAmount;
+            toast.success(
+              `New donation received: $${increase.toFixed(2)}`,
+              {
+                duration: 4000,
+                icon: '🎉'
+              }
+            );
+          }
+          
+          refetchCampaign();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'donations',
+          filter: `campaign_id=eq.${id}`
+        },
         () => {
-          // Refetch handled by React Query
+          console.log('New donation for this campaign');
+          refetchCampaign();
+          refetchLeaderboard();
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      setIsLive(false);
     };
-  }, [id]);
+  }, [id, refetchCampaign, refetchLeaderboard]);
 
   useEffect(() => {
     if (!campaign) return;
@@ -171,7 +205,15 @@ export default function CampaignDetails() {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="space-y-2">
-                <CardTitle className="text-3xl">{campaign.title}</CardTitle>
+                <div className="flex items-center gap-3">
+                  <CardTitle className="text-3xl">{campaign.title}</CardTitle>
+                  {isLive && (
+                    <Badge variant="outline" className="bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700 animate-pulse">
+                      <Radio className="h-3 w-3 mr-1" />
+                      Live
+                    </Badge>
+                  )}
+                </div>
                 <CardDescription className="text-base">{campaign.description}</CardDescription>
               </div>
               {isComplete && (

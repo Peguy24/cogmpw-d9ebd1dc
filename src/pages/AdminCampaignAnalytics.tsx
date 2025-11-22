@@ -2,11 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, TrendingUp, DollarSign, Users, Target, Download, FileText } from "lucide-react";
+import { ArrowLeft, TrendingUp, DollarSign, Users, Target, Download, FileText, Radio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -28,9 +29,11 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accen
 
 export default function AdminCampaignAnalytics() {
   const navigate = useNavigate();
+  const [isLive, setIsLive] = useState(false);
+  const [recentDonation, setRecentDonation] = useState<any>(null);
 
   // Fetch all donations for analytics
-  const { data: donations, isLoading: donationsLoading } = useQuery({
+  const { data: donations, isLoading: donationsLoading, refetch: refetchDonations } = useQuery({
     queryKey: ["analytics-donations"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -48,7 +51,7 @@ export default function AdminCampaignAnalytics() {
   });
 
   // Fetch campaigns for analytics
-  const { data: campaigns, isLoading: campaignsLoading } = useQuery({
+  const { data: campaigns, isLoading: campaignsLoading, refetch: refetchCampaigns } = useQuery({
     queryKey: ["analytics-campaigns"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -60,6 +63,91 @@ export default function AdminCampaignAnalytics() {
       return data;
     },
   });
+
+  // Set up realtime subscriptions for live updates
+  useEffect(() => {
+    setIsLive(true);
+    
+    // Subscribe to donations
+    const donationsChannel = supabase
+      .channel('analytics-donations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'donations',
+          filter: 'status=eq.completed'
+        },
+        async (payload) => {
+          console.log('New donation received:', payload);
+          
+          // Fetch donor name
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', payload.new.user_id)
+            .single();
+          
+          const donationAmount = Number(payload.new.amount);
+          const donorName = profile?.full_name || 'Anonymous';
+          
+          setRecentDonation({
+            amount: donationAmount,
+            donor: donorName,
+            timestamp: new Date()
+          });
+          
+          toast.success(
+            `New donation: $${donationAmount.toFixed(2)} from ${donorName}`,
+            {
+              duration: 5000,
+              icon: '🎉'
+            }
+          );
+          
+          // Refetch data
+          refetchDonations();
+          refetchCampaigns();
+          
+          // Clear recent donation after animation
+          setTimeout(() => setRecentDonation(null), 5000);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'giving_campaigns'
+        },
+        (payload) => {
+          console.log('Campaign updated:', payload);
+          
+          const oldAmount = Number(payload.old.current_amount);
+          const newAmount = Number(payload.new.current_amount);
+          
+          if (newAmount > oldAmount) {
+            const increase = newAmount - oldAmount;
+            toast.info(
+              `Campaign "${payload.new.title}" increased by $${increase.toFixed(2)}`,
+              {
+                duration: 4000,
+                icon: '📈'
+              }
+            );
+          }
+          
+          refetchCampaigns();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(donationsChannel);
+      setIsLive(false);
+    };
+  }, [refetchDonations, refetchCampaigns]);
 
   // Calculate statistics
   const totalDonations = donations?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
@@ -392,7 +480,15 @@ export default function AdminCampaignAnalytics() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Campaign Analytics</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">Campaign Analytics</h1>
+                {isLive && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-full text-sm font-medium animate-pulse">
+                    <Radio className="h-4 w-4" />
+                    Live
+                  </div>
+                )}
+              </div>
               <p className="text-muted-foreground">Insights and trends for giving campaigns</p>
             </div>
           </div>
@@ -407,6 +503,28 @@ export default function AdminCampaignAnalytics() {
             </Button>
           </div>
         </div>
+
+        {/* Live Donation Alert */}
+        {recentDonation && (
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center text-white text-xl animate-scale-in">
+                  🎉
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-foreground">New Donation Received!</h3>
+                  <p className="text-sm text-muted-foreground">
+                    ${recentDonation.amount.toFixed(2)} from {recentDonation.donor}
+                  </p>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Just now
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Summary Stats */}
         <div className="grid gap-4 md:grid-cols-4">
