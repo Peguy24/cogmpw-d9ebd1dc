@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, Bell, Calendar, Newspaper } from "lucide-react";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { LogOut, Bell, Calendar, Newspaper, Settings } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
+import ProfileSettings from "@/components/ProfileSettings";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -66,6 +68,24 @@ const Home = () => {
             <Button variant="ghost" size="icon">
               <Bell className="h-5 w-5" />
             </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Settings</SheetTitle>
+                  <SheetDescription>
+                    Manage your profile and privacy settings
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-6">
+                  {user && <ProfileSettings user={user} />}
+                </div>
+              </SheetContent>
+            </Sheet>
             <Button variant="ghost" size="icon" onClick={handleSignOut}>
               <LogOut className="h-5 w-5" />
             </Button>
