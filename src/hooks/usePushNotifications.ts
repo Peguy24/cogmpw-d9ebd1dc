@@ -16,9 +16,15 @@ export const usePushNotifications = () => {
           await PushNotifications.register();
         }
 
+        // Utility to mask tokens for safe logging
+        const maskToken = (token: string): string => {
+          if (token.length <= 8) return '***';
+          return `${token.substring(0, 8)}...${token.substring(token.length - 4)}`;
+        };
+
         // Register listeners
         await PushNotifications.addListener('registration', async (token) => {
-          console.log('Push registration successful');
+          console.log(`Push registration successful: ${maskToken(token.value)}`);
           
           // Save token to database
           const { data: { user } } = await supabase.auth.getUser();
