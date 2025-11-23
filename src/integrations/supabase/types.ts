@@ -305,6 +305,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          devotionals_enabled: boolean
+          events_enabled: boolean
+          id: string
+          news_enabled: boolean
+          sermons_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          devotionals_enabled?: boolean
+          events_enabled?: boolean
+          id?: string
+          news_enabled?: boolean
+          sermons_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          devotionals_enabled?: boolean
+          events_enabled?: boolean
+          id?: string
+          news_enabled?: boolean
+          sermons_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -147,6 +147,7 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
           body: {
             title: '📅 New Church Event',
             body: `${values.title} - ${format(eventDateTime, 'PPP')}`,
+            notificationType: 'events',
           },
           headers: {
             Authorization: `Bearer ${session?.access_token}`,

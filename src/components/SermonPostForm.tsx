@@ -93,6 +93,7 @@ const SermonPostForm = ({ onSuccess, onCancel }: SermonPostFormProps) => {
           body: {
             title: '🎤 New Sermon Available',
             body: `${title}${speaker ? ` by ${speaker}` : ''}`,
+            notificationType: 'sermons',
           },
           headers: {
             Authorization: `Bearer ${session?.access_token}`,

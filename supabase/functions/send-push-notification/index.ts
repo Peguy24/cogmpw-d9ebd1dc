@@ -67,14 +67,37 @@ serve(async (req) => {
       );
     }
 
-    const { title, body, tokens } = await req.json() as NotificationPayload;
+    const { title, body, tokens, notificationType } = await req.json() as NotificationPayload & { notificationType?: 'news' | 'events' | 'sermons' | 'devotionals' };
 
-    // If no specific tokens provided, get all tokens from database
+    // If no specific tokens provided, get all tokens from database with preferences
     let targetTokens = tokens;
     if (!targetTokens || targetTokens.length === 0) {
-      const { data: tokenData } = await supabaseClient
+      // Build query based on notification type
+      let query = supabaseClient
         .from('push_tokens')
-        .select('token');
+        .select(`
+          token,
+          user_id,
+          notification_preferences!inner(
+            news_enabled,
+            events_enabled,
+            sermons_enabled,
+            devotionals_enabled
+          )
+        `);
+
+      // Filter based on notification type preference
+      if (notificationType === 'news') {
+        query = query.eq('notification_preferences.news_enabled', true);
+      } else if (notificationType === 'events') {
+        query = query.eq('notification_preferences.events_enabled', true);
+      } else if (notificationType === 'sermons') {
+        query = query.eq('notification_preferences.sermons_enabled', true);
+      } else if (notificationType === 'devotionals') {
+        query = query.eq('notification_preferences.devotionals_enabled', true);
+      }
+
+      const { data: tokenData } = await query;
       
       targetTokens = tokenData?.map((t: { token: string }) => t.token) || [];
     }
