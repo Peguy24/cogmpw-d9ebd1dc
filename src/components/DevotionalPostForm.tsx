@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -19,6 +20,7 @@ const DevotionalPostForm = ({ onSuccess, onCancel }: DevotionalPostFormProps) =>
   const [content, setContent] = useState("");
   const [scriptureReference, setScriptureReference] = useState("");
   const [devotionalDate, setDevotionalDate] = useState("");
+  const [visibility, setVisibility] = useState<"guest" | "member" | "both">("member");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,7 @@ const DevotionalPostForm = ({ onSuccess, onCancel }: DevotionalPostFormProps) =>
           content: content.trim(),
           scripture_reference: scriptureReference.trim() || null,
           devotional_date: devotionalDate,
+          visibility,
           created_by: user?.id,
         });
 
@@ -94,6 +97,20 @@ const DevotionalPostForm = ({ onSuccess, onCancel }: DevotionalPostFormProps) =>
               placeholder="e.g., John 3:16, Psalm 23:1-6"
               maxLength={100}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="visibility">Visibility *</Label>
+            <Select value={visibility} onValueChange={(value: "guest" | "member" | "both") => setVisibility(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select visibility" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="guest">Guests Only</SelectItem>
+                <SelectItem value="member">Members Only</SelectItem>
+                <SelectItem value="both">Everyone (Guests & Members)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

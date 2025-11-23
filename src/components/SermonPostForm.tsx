@@ -23,6 +23,7 @@ const SermonPostForm = ({ onSuccess, onCancel }: SermonPostFormProps) => {
   const [mediaType, setMediaType] = useState<"video" | "audio" | "pdf">("video");
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [visibility, setVisibility] = useState<"guest" | "member" | "both">("member");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -78,6 +79,7 @@ const SermonPostForm = ({ onSuccess, onCancel }: SermonPostFormProps) => {
           sermon_date: sermonDate,
           media_type: mediaType,
           media_url: mediaUrl,
+          visibility,
           created_by: user?.id,
         });
 
@@ -157,6 +159,20 @@ const SermonPostForm = ({ onSuccess, onCancel }: SermonPostFormProps) => {
                 <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="audio">Audio</SelectItem>
                 <SelectItem value="pdf">PDF</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="visibility">Visibility *</Label>
+            <Select value={visibility} onValueChange={(value: "guest" | "member" | "both") => setVisibility(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select visibility" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="guest">Guests Only</SelectItem>
+                <SelectItem value="member">Members Only</SelectItem>
+                <SelectItem value="both">Everyone (Guests & Members)</SelectItem>
               </SelectContent>
             </Select>
           </div>
