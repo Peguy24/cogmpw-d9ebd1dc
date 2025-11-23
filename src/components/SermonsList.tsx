@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Video, Music, FileText, Plus, Edit2, Trash2 } from "lucide-react";
+import { Video, Music, FileText, Plus, Edit2, Trash2, Eye, Lock, Globe } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import SermonPostForm from "./SermonPostForm";
@@ -131,12 +131,39 @@ const SermonsList = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <CardTitle>{sermon.title}</CardTitle>
                         <Badge variant="secondary" className="gap-1">
                           {getMediaIcon(sermon.media_type)}
                           {sermon.media_type}
                         </Badge>
+                        {isLeaderOrAdmin && (
+                          <Badge 
+                            variant={
+                              sermon.visibility === "guest" ? "secondary" :
+                              sermon.visibility === "member" ? "default" :
+                              "outline"
+                            }
+                            className="gap-1"
+                          >
+                            {sermon.visibility === "guest" ? (
+                              <>
+                                <Eye className="h-3 w-3" />
+                                Guests Only
+                              </>
+                            ) : sermon.visibility === "member" ? (
+                              <>
+                                <Lock className="h-3 w-3" />
+                                Members Only
+                              </>
+                            ) : (
+                              <>
+                                <Globe className="h-3 w-3" />
+                                Everyone
+                              </>
+                            )}
+                          </Badge>
+                        )}
                       </div>
                       <CardDescription>
                         {format(new Date(sermon.sermon_date), "MMMM d, yyyy")}
