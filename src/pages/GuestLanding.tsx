@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Church, Calendar, DollarSign, Video, LogIn } from "lucide-react";
+import { Church, Calendar, DollarSign, Video, LogIn, BookOpen } from "lucide-react";
 import LivestreamSection from "@/components/LivestreamSection";
 
 const GuestLanding = () => {
@@ -26,7 +26,7 @@ const GuestLanding = () => {
         <LivestreamSection />
 
         {/* Quick Actions */}
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/giving")}>
             <CardHeader>
               <div className="flex items-center gap-4">
@@ -35,7 +35,7 @@ const GuestLanding = () => {
                 </div>
                 <div>
                   <CardTitle>Give Online</CardTitle>
-                  <CardDescription>Support our ministry with your donation</CardDescription>
+                  <CardDescription>Support our ministry</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -49,7 +49,7 @@ const GuestLanding = () => {
                 </div>
                 <div>
                   <CardTitle>View Events</CardTitle>
-                  <CardDescription>See our upcoming church events</CardDescription>
+                  <CardDescription>Upcoming events</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -63,7 +63,21 @@ const GuestLanding = () => {
                 </div>
                 <div>
                   <CardTitle>Watch Sermons</CardTitle>
-                  <CardDescription>Listen to our latest messages</CardDescription>
+                  <CardDescription>Latest messages</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/guest/devotionals")}>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 rounded-full">
+                  <BookOpen className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Daily Devotionals</CardTitle>
+                  <CardDescription>Spiritual insights</CardDescription>
                 </div>
               </div>
             </CardHeader>
