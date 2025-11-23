@@ -300,10 +300,20 @@ const Home = () => {
           <TabsContent value="prayer">
             <div className="max-w-2xl mx-auto">
               <div className="mb-6">
-                <h2 className="text-2xl font-bold mb-2">Prayer Requests</h2>
-                <p className="text-muted-foreground">
-                  Share your prayer needs with our church leadership. Your request will be kept confidential.
-                </p>
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Prayer Requests</h2>
+                    <p className="text-muted-foreground">
+                      Share your prayer needs with our church leadership. Your request will be kept confidential.
+                    </p>
+                  </div>
+                  <Link to="/my-prayer-requests">
+                    <Button variant="outline" size="sm" className="shrink-0">
+                      <Heart className="h-4 w-4 mr-2" />
+                      My Requests
+                    </Button>
+                  </Link>
+                </div>
               </div>
               <PrayerRequestForm />
             </div>
