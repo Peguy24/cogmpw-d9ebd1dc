@@ -38,6 +38,13 @@ export default function PrayerRequestForm() {
         return;
       }
 
+      // Get user profile for name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
       const { error } = await supabase
         .from("prayer_requests")
         .insert({
@@ -48,6 +55,22 @@ export default function PrayerRequestForm() {
         });
 
       if (error) throw error;
+
+      // Send email alert if urgent
+      if (values.is_urgent) {
+        try {
+          await supabase.functions.invoke("send-urgent-prayer-alert", {
+            body: {
+              memberName: profile?.full_name || "A member",
+              title: values.title,
+              content: values.content,
+            },
+          });
+        } catch (emailError) {
+          console.error("Error sending urgent prayer alert:", emailError);
+          // Don't fail the submission if email fails
+        }
+      }
 
       toast.success("Prayer request submitted successfully");
       form.reset();
