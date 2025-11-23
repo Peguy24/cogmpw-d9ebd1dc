@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import EventPostForm from "./EventPostForm";
 import EventEditDialog from "./EventEditDialog";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface EventItem {
   id: string;
@@ -192,8 +193,13 @@ const EventsCalendar = () => {
 
   const canCreateEvent = userRole === "admin" || userRole === "leader";
 
+  const handleRefresh = async () => {
+    await fetchEvents();
+  };
+
   return (
-    <div className="space-y-3 md:space-y-4">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="space-y-3 md:space-y-4">
       {!checkingRole && canCreateEvent && (
         <EventPostForm onSuccess={fetchEvents} />
       )}
@@ -361,7 +367,8 @@ const EventsCalendar = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 

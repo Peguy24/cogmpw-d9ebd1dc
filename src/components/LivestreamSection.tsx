@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { ExternalLink, Loader2, Video, Radio, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface LivestreamLink {
   id: string;
@@ -222,8 +223,13 @@ const LivestreamSection = () => {
     return <div className="text-center py-8 text-muted-foreground">Loading livestream...</div>;
   }
 
+  const handleRefresh = async () => {
+    await loadLivestreams();
+  };
+
   return (
-    <div className="space-y-4 md:space-y-6">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="space-y-4 md:space-y-6">
       {/* Radio Section */}
       {activeRadio && (
         <Card>
@@ -470,7 +476,8 @@ const LivestreamSection = () => {
           </Card>
         </>
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 

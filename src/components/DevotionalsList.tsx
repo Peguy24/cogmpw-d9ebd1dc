@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import DevotionalPostForm from "./DevotionalPostForm";
 import DevotionalEditDialog from "./DevotionalEditDialog";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface Devotional {
   id: string;
@@ -81,8 +82,13 @@ const DevotionalsList = () => {
     return <div className="text-center py-8 text-muted-foreground">Loading devotionals...</div>;
   }
 
+  const handleRefresh = async () => {
+    await loadDevotionals();
+  };
+
   return (
-    <div className="space-y-4 md:space-y-6">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="space-y-4 md:space-y-6">
       {isLeaderOrAdmin && (
         <div className="flex justify-end">
           <Button onClick={() => setShowForm(!showForm)} className="gap-2 text-sm md:text-base h-9 md:h-10">
@@ -198,7 +204,8 @@ const DevotionalsList = () => {
           }}
         />
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 
