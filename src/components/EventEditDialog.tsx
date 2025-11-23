@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
@@ -36,6 +37,9 @@ const eventSchema = z.object({
     .trim()
     .min(1, { message: "Location is required" })
     .max(300, { message: "Location must be less than 300 characters" }),
+  visibility: z.enum(["guest", "member", "both"], {
+    required_error: "Please select who can view this event",
+  }),
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
@@ -48,6 +52,7 @@ interface EventItem {
   location: string;
   media_url: string | null;
   media_type: string | null;
+  visibility: string;
 }
 
 interface EventEditDialogProps {
@@ -74,6 +79,7 @@ const EventEditDialog = ({ event, open, onOpenChange, onSuccess }: EventEditDial
       event_date: eventDate,
       event_time: eventTime,
       location: event.location,
+      visibility: event.visibility as "guest" | "member" | "both",
     },
   });
 
@@ -88,6 +94,7 @@ const EventEditDialog = ({ event, open, onOpenChange, onSuccess }: EventEditDial
         event_date: eventDate,
         event_time: eventTime,
         location: event.location,
+        visibility: event.visibility as "guest" | "member" | "both",
       });
       setMediaPreview(event.media_url);
       setMediaFile(null);
@@ -192,6 +199,7 @@ const EventEditDialog = ({ event, open, onOpenChange, onSuccess }: EventEditDial
           location: values.location,
           media_url: mediaUrl,
           media_type: mediaType,
+          visibility: values.visibility,
         })
         .eq("id", event.id);
 
@@ -326,6 +334,32 @@ const EventEditDialog = ({ event, open, onOpenChange, onSuccess }: EventEditDial
                   <FormControl>
                     <Input placeholder="Enter event location" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="visibility"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Who Can View This Event?</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select visibility" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="guest">Guests Only</SelectItem>
+                      <SelectItem value="member">Members Only</SelectItem>
+                      <SelectItem value="both">Everyone (Guests & Members)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Choose who can see this event in the app
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
