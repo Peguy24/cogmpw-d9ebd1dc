@@ -231,6 +231,70 @@ const AdminUserManagement = () => {
     await loadUsers();
   };
 
+  const toggleSuperLeaderRole = async (userId: string, currentlySuperLeader: boolean) => {
+    const action = currentlySuperLeader ? 'revoked' : 'granted';
+    
+    if (currentlySuperLeader) {
+      // Remove super_leader role
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", "super_leader" as any);
+
+      if (error) {
+        toast.error("Failed to remove super leader role");
+        return;
+      }
+
+      toast.success("Super Leader role removed");
+    } else {
+      // Add super_leader role
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: "super_leader" as any });
+
+      if (error) {
+        toast.error("Failed to add super leader role");
+        return;
+      }
+
+      toast.success("Super Leader role assigned");
+    }
+
+    // Log the role change
+    await supabase.from("role_change_logs").insert({
+      changed_by_user_id: currentUserId,
+      target_user_id: userId,
+      role: 'super_leader',
+      action
+    });
+
+    // Send notification to the user
+    try {
+      const { error: notifError } = await supabase.functions.invoke(
+        'notify-role-change',
+        {
+          body: {
+            userId,
+            role: 'super_leader',
+            action,
+          },
+        }
+      );
+
+      if (notifError) {
+        console.error('Failed to send role change notification:', notifError);
+      } else {
+        console.log('Role change notification sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+
+    await loadUsers();
+  };
+
   const toggleUserSelection = (userId: string) => {
     const newSelected = new Set(selectedUsers);
     if (newSelected.has(userId)) {
@@ -249,7 +313,7 @@ const AdminUserManagement = () => {
     }
   };
 
-  const bulkAssignRole = async (role: 'admin' | 'leader') => {
+  const bulkAssignRole = async (role: 'admin' | 'leader' | 'super_leader') => {
     if (selectedUsers.size === 0) {
       toast.error("No users selected");
       return;
@@ -267,13 +331,13 @@ const AdminUserManagement = () => {
       if (!user) continue;
 
       // Skip if already has the role
-      if ((role === 'admin' && user.isAdmin) || (role === 'leader' && user.isLeader)) {
+      if ((role === 'admin' && user.isAdmin) || (role === 'leader' && user.isLeader) || (role === 'super_leader' && user.isSuperLeader)) {
         continue;
       }
 
       const { error } = await supabase
         .from("user_roles")
-        .insert({ user_id: userId, role });
+        .insert({ user_id: userId, role: role as any });
 
       if (error) {
         errorCount++;
@@ -311,7 +375,7 @@ const AdminUserManagement = () => {
     }
   };
 
-  const bulkRemoveRole = async (role: 'admin' | 'leader') => {
+  const bulkRemoveRole = async (role: 'admin' | 'leader' | 'super_leader') => {
     if (selectedUsers.size === 0) {
       toast.error("No users selected");
       return;
@@ -329,7 +393,7 @@ const AdminUserManagement = () => {
       if (!user) continue;
 
       // Skip if doesn't have the role
-      if ((role === 'admin' && !user.isAdmin) || (role === 'leader' && !user.isLeader)) {
+      if ((role === 'admin' && !user.isAdmin) || (role === 'leader' && !user.isLeader) || (role === 'super_leader' && !user.isSuperLeader)) {
         continue;
       }
 
@@ -337,7 +401,7 @@ const AdminUserManagement = () => {
         .from("user_roles")
         .delete()
         .eq("user_id", userId)
-        .eq("role", role);
+        .eq("role", role as any);
 
       if (error) {
         errorCount++;
@@ -463,6 +527,15 @@ const AdminUserManagement = () => {
                 </Button>
                 <Button
                   size="sm"
+                  variant="secondary"
+                  onClick={() => bulkAssignRole('super_leader')}
+                  disabled={processing}
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Make Super Leader
+                </Button>
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => bulkRemoveRole('admin')}
                   disabled={processing}
@@ -478,6 +551,15 @@ const AdminUserManagement = () => {
                 >
                   <UserMinus className="h-4 w-4 mr-1" />
                   Remove Leader
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => bulkRemoveRole('super_leader')}
+                  disabled={processing}
+                >
+                  <UserMinus className="h-4 w-4 mr-1" />
+                  Remove Super Leader
                 </Button>
                 <Button
                   size="sm"
@@ -591,6 +673,24 @@ const AdminUserManagement = () => {
                     />
                   </div>
 
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b">
+                    <div className="space-y-0.5 flex-1">
+                      <Label htmlFor={`super-leader-${user.id}`} className="text-sm md:text-base">
+                        Super Leader Permissions
+                      </Label>
+                      <div className="text-xs md:text-sm text-muted-foreground">
+                        Can view and manage prayer requests (pastor-level access)
+                      </div>
+                    </div>
+                    <Switch
+                      id={`super-leader-${user.id}`}
+                      checked={user.isSuperLeader}
+                      disabled={user.isAdmin || user.id === currentUserId}
+                      onCheckedChange={() => toggleSuperLeaderRole(user.id, user.isSuperLeader)}
+                      className="shrink-0"
+                    />
+                  </div>
+
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="space-y-0.5 flex-1">
                       <Label htmlFor={`leader-${user.id}`} className="text-sm md:text-base">
@@ -603,7 +703,7 @@ const AdminUserManagement = () => {
                     <Switch
                       id={`leader-${user.id}`}
                       checked={user.isLeader}
-                      disabled={user.isAdmin || user.id === currentUserId}
+                      disabled={user.isAdmin || user.isSuperLeader || user.id === currentUserId}
                       onCheckedChange={() => toggleLeaderRole(user.id, user.isLeader)}
                       className="shrink-0"
                     />
@@ -612,6 +712,11 @@ const AdminUserManagement = () => {
                   {user.isAdmin && (
                     <p className="text-xs text-muted-foreground">
                       Admins automatically have all permissions
+                    </p>
+                  )}
+                  {user.isSuperLeader && !user.isAdmin && (
+                    <p className="text-xs text-muted-foreground">
+                      Super Leaders have leader permissions plus prayer request access
                     </p>
                   )}
                   {user.id === currentUserId && (
