@@ -23,10 +23,14 @@ const LivestreamSection = () => {
   const [isLeaderOrAdmin, setIsLeaderOrAdmin] = useState(false);
   const [saving, setSaving] = useState(false);
   
-  // Form state
-  const [platform, setPlatform] = useState<"youtube" | "facebook" | "custom" | "radio">("youtube");
-  const [url, setUrl] = useState("");
-  const [title, setTitle] = useState("");
+  // Livestream Form state
+  const [livestreamPlatform, setLivestreamPlatform] = useState<"youtube" | "facebook" | "custom">("youtube");
+  const [livestreamUrl, setLivestreamUrl] = useState("");
+  const [livestreamTitle, setLivestreamTitle] = useState("");
+  
+  // Radio Form state
+  const [radioUrl, setRadioUrl] = useState("");
+  const [radioTitle, setRadioTitle] = useState("");
 
   useEffect(() => {
     checkRole();
@@ -61,10 +65,10 @@ const LivestreamSection = () => {
     setLoading(false);
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSaveLivestream = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!url.trim()) {
+    if (!livestreamUrl.trim()) {
       toast.error("Please enter a livestream URL");
       return;
     }
@@ -72,33 +76,78 @@ const LivestreamSection = () => {
     setSaving(true);
 
     try {
-      // First, deactivate all existing links
+      // Deactivate existing livestream links (not radio)
       const { error: deactivateError } = await supabase
         .from("livestream_links")
         .update({ is_active: false })
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .neq("platform", "radio");
 
       if (deactivateError) throw deactivateError;
 
-      // Then insert the new active link
+      // Insert the new active livestream link
       const { error: insertError } = await supabase
         .from("livestream_links")
         .insert({
-          platform,
-          url: url.trim(),
-          title: title.trim() || null,
+          platform: livestreamPlatform,
+          url: livestreamUrl.trim(),
+          title: livestreamTitle.trim() || null,
           is_active: true,
         });
 
       if (insertError) throw insertError;
 
       toast.success("Livestream link updated successfully");
-      setUrl("");
-      setTitle("");
+      setLivestreamUrl("");
+      setLivestreamTitle("");
       loadLivestreams();
     } catch (error) {
       console.error("Error saving livestream:", error);
       toast.error("Failed to save livestream link");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveRadio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!radioUrl.trim()) {
+      toast.error("Please enter a radio stream URL");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // Deactivate existing radio links
+      const { error: deactivateError } = await supabase
+        .from("livestream_links")
+        .update({ is_active: false })
+        .eq("is_active", true)
+        .eq("platform", "radio");
+
+      if (deactivateError) throw deactivateError;
+
+      // Insert the new active radio link
+      const { error: insertError } = await supabase
+        .from("livestream_links")
+        .insert({
+          platform: "radio",
+          url: radioUrl.trim(),
+          title: radioTitle.trim() || null,
+          is_active: true,
+        });
+
+      if (insertError) throw insertError;
+
+      toast.success("Radio stream updated successfully");
+      setRadioUrl("");
+      setRadioTitle("");
+      loadLivestreams();
+    } catch (error) {
+      console.error("Error saving radio:", error);
+      toast.error("Failed to save radio stream");
     } finally {
       setSaving(false);
     }
@@ -226,72 +275,116 @@ const LivestreamSection = () => {
       )}
 
       {isLeaderOrAdmin && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Update Livestream Link</CardTitle>
-            <CardDescription>
-              Set the active livestream link that members will see
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="platform">Platform</Label>
-                <Select value={platform} onValueChange={(value: any) => setPlatform(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="youtube">YouTube</SelectItem>
-                    <SelectItem value="facebook">Facebook</SelectItem>
-                    <SelectItem value="radio">Radio</SelectItem>
-                    <SelectItem value="custom">Custom</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <>
+          {/* Livestream Management Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Update Livestream Link</CardTitle>
+              <CardDescription>
+                Set the active livestream link that members will see
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveLivestream} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="livestream-platform">Platform</Label>
+                  <Select value={livestreamPlatform} onValueChange={(value: any) => setLivestreamPlatform(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="youtube">YouTube</SelectItem>
+                      <SelectItem value="facebook">Facebook</SelectItem>
+                      <SelectItem value="custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="title">Title (Optional)</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g., Sunday Morning Service"
-                  maxLength={100}
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="livestream-title">Title (Optional)</Label>
+                  <Input
+                    id="livestream-title"
+                    value={livestreamTitle}
+                    onChange={(e) => setLivestreamTitle(e.target.value)}
+                    placeholder="e.g., Sunday Morning Service"
+                    maxLength={100}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="url">{platform === "radio" ? "Radio Stream URL *" : "Livestream URL *"}</Label>
-                <Input
-                  id="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder={platform === "radio" ? "Direct audio stream URL (e.g., .mp3, .aac)" : "https://..."}
-                  required
-                />
-                {platform === "radio" && (
+                <div className="space-y-2">
+                  <Label htmlFor="livestream-url">Livestream URL *</Label>
+                  <Input
+                    id="livestream-url"
+                    value={livestreamUrl}
+                    onChange={(e) => setLivestreamUrl(e.target.value)}
+                    placeholder="https://..."
+                    required
+                  />
+                </div>
+
+                <Button type="submit" disabled={saving} className="w-full">
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Set Active Livestream"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Radio Management Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Update Radio Stream</CardTitle>
+              <CardDescription>
+                Set the active radio stream link that members can listen to
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSaveRadio} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="radio-title">Title (Optional)</Label>
+                  <Input
+                    id="radio-title"
+                    value={radioTitle}
+                    onChange={(e) => setRadioTitle(e.target.value)}
+                    placeholder="e.g., Church Radio 24/7"
+                    maxLength={100}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="radio-url">Radio Stream URL *</Label>
+                  <Input
+                    id="radio-url"
+                    value={radioUrl}
+                    onChange={(e) => setRadioUrl(e.target.value)}
+                    placeholder="Direct audio stream URL (e.g., .mp3, .aac)"
+                    required
+                  />
                   <p className="text-xs text-muted-foreground">
                     Enter the direct audio stream URL for your radio station
                   </p>
-                )}
-              </div>
+                </div>
 
-              <Button type="submit" disabled={saving} className="w-full">
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : platform === "radio" ? (
-                  "Set Active Radio"
-                ) : (
-                  "Set Active Livestream"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <Button type="submit" disabled={saving} className="w-full">
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Set Active Radio Stream"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </>
       )}
     </div>
   );
