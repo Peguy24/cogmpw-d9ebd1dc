@@ -30,8 +30,13 @@ const Index = () => {
     },
   ];
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const heroSection = (
-    <section className="container px-4 py-8">
+    <section id="hero" className="container px-4 py-8 scroll-mt-4">
       <div className="mx-auto max-w-5xl space-y-6">
         <img 
           src={churchBanner} 
@@ -54,7 +59,7 @@ const Index = () => {
   );
 
   const featuresSection = (
-    <section className="container px-4 py-12">
+    <section id="features" className="container px-4 py-12 scroll-mt-4">
       <div className="text-center mb-8">
         <h2 className="text-2xl md:text-3xl font-bold mb-3">Everything You Need</h2>
         <p className="text-muted-foreground text-sm md:text-base">Stay connected with your church community</p>
@@ -79,7 +84,7 @@ const Index = () => {
   );
 
   const ctaSection = (
-    <section className="container px-4 py-12 pb-16">
+    <section id="join" className="container px-4 py-12 pb-16 scroll-mt-4">
       <Card className="bg-primary text-primary-foreground">
         <CardContent className="py-10 text-center px-4">
           <Users className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4" />
@@ -100,6 +105,25 @@ const Index = () => {
       {heroSection}
       {featuresSection}
       {ctaSection}
+      
+      {/* Section Navigation Dots */}
+      <div className="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-50">
+        <button
+          onClick={() => scrollToSection('hero')}
+          className="w-3 h-3 rounded-full bg-primary/30 hover:bg-primary transition-colors"
+          aria-label="Go to welcome section"
+        />
+        <button
+          onClick={() => scrollToSection('features')}
+          className="w-3 h-3 rounded-full bg-primary/30 hover:bg-primary transition-colors"
+          aria-label="Go to features section"
+        />
+        <button
+          onClick={() => scrollToSection('join')}
+          className="w-3 h-3 rounded-full bg-primary/30 hover:bg-primary transition-colors"
+          aria-label="Go to join section"
+        />
+      </div>
     </div>
   );
 };
