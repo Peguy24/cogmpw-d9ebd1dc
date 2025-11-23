@@ -19,6 +19,7 @@ interface EventItem {
   created_at: string;
   media_url: string | null;
   media_type: string | null;
+  visibility: string;
   rsvp_count?: number;
   user_rsvp?: boolean;
 }
