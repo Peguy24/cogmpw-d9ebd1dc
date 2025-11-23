@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Loader2, Video } from "lucide-react";
+import { ExternalLink, Loader2, Video, Radio } from "lucide-react";
 import { toast } from "sonner";
 
 interface LivestreamLink {
@@ -24,7 +24,7 @@ const LivestreamSection = () => {
   const [saving, setSaving] = useState(false);
   
   // Form state
-  const [platform, setPlatform] = useState<"youtube" | "facebook" | "custom">("youtube");
+  const [platform, setPlatform] = useState<"youtube" | "facebook" | "custom" | "radio">("youtube");
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
 
@@ -104,7 +104,8 @@ const LivestreamSection = () => {
     }
   };
 
-  const activeLivestream = livestreams.find((ls) => ls.is_active);
+  const activeLivestream = livestreams.find((ls) => ls.is_active && ls.platform !== "radio");
+  const activeRadio = livestreams.find((ls) => ls.is_active && ls.platform === "radio");
 
   const getYouTubeEmbedUrl = (url: string): string | null => {
     try {
@@ -133,6 +134,37 @@ const LivestreamSection = () => {
 
   return (
     <div className="space-y-6">
+      {/* Radio Section */}
+      {activeRadio && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Radio className="h-5 w-5" />
+                  {activeRadio.title || "Church Radio"}
+                </CardTitle>
+                <CardDescription>
+                  Listen to our church radio station
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted rounded-lg p-6">
+              <audio 
+                controls 
+                className="w-full"
+                src={activeRadio.url}
+              >
+                Your browser does not support the audio element.
+              </audio>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Livestream Section */}
       {activeLivestream ? (
         <Card>
           <CardHeader>
@@ -212,6 +244,7 @@ const LivestreamSection = () => {
                   <SelectContent>
                     <SelectItem value="youtube">YouTube</SelectItem>
                     <SelectItem value="facebook">Facebook</SelectItem>
+                    <SelectItem value="radio">Radio</SelectItem>
                     <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
@@ -229,14 +262,19 @@ const LivestreamSection = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="url">Livestream URL *</Label>
+                <Label htmlFor="url">{platform === "radio" ? "Radio Stream URL *" : "Livestream URL *"}</Label>
                 <Input
                   id="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://..."
+                  placeholder={platform === "radio" ? "Direct audio stream URL (e.g., .mp3, .aac)" : "https://..."}
                   required
                 />
+                {platform === "radio" && (
+                  <p className="text-xs text-muted-foreground">
+                    Enter the direct audio stream URL for your radio station
+                  </p>
+                )}
               </div>
 
               <Button type="submit" disabled={saving} className="w-full">
@@ -245,6 +283,8 @@ const LivestreamSection = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
                   </>
+                ) : platform === "radio" ? (
+                  "Set Active Radio"
                 ) : (
                   "Set Active Livestream"
                 )}
