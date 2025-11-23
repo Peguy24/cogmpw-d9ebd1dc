@@ -106,6 +106,27 @@ const LivestreamSection = () => {
 
   const activeLivestream = livestreams.find((ls) => ls.is_active);
 
+  const getYouTubeEmbedUrl = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      let videoId = "";
+
+      // Handle different YouTube URL formats
+      if (urlObj.hostname.includes("youtube.com")) {
+        videoId = urlObj.searchParams.get("v") || "";
+      } else if (urlObj.hostname.includes("youtu.be")) {
+        videoId = urlObj.pathname.slice(1);
+      }
+
+      if (videoId) {
+        return `https://www.youtube-nocookie.com/embed/${videoId}`;
+      }
+    } catch (error) {
+      console.error("Invalid URL:", error);
+    }
+    return null;
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-muted-foreground">Loading livestream...</div>;
   }
@@ -139,16 +160,28 @@ const LivestreamSection = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <Button
-                size="lg"
-                onClick={() => window.open(activeLivestream.url, "_blank")}
-                className="gap-2"
-              >
-                <Video className="h-5 w-5" />
-                Join Livestream
-              </Button>
-            </div>
+            {activeLivestream.platform === "youtube" && getYouTubeEmbedUrl(activeLivestream.url) ? (
+              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                <iframe
+                  src={getYouTubeEmbedUrl(activeLivestream.url)!}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="YouTube Livestream"
+                />
+              </div>
+            ) : (
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <Button
+                  size="lg"
+                  onClick={() => window.open(activeLivestream.url, "_blank")}
+                  className="gap-2"
+                >
+                  <Video className="h-5 w-5" />
+                  Join Livestream
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       ) : (
