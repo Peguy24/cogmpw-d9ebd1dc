@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Church, Calendar, DollarSign, Video, Users } from "lucide-react";
+import { Church, Calendar, DollarSign, Video, Users, ArrowUp } from "lucide-react";
 import churchBanner from "@/assets/church-banner-new.jpg";
 import { useEffect, useRef, useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -27,6 +28,19 @@ const Index = () => {
 
     return () => observerRef.current?.disconnect();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const features = [
     {
@@ -141,6 +155,18 @@ const Index = () => {
       {heroSection}
       {featuresSection}
       {ctaSection}
+      
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <Button
+          onClick={scrollToTop}
+          size="icon"
+          className="fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full shadow-lg transition-opacity hover:opacity-90"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </Button>
+      )}
     </div>
   );
 };
