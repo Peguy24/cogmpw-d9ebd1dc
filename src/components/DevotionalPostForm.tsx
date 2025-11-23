@@ -56,6 +56,7 @@ const DevotionalPostForm = ({ onSuccess, onCancel }: DevotionalPostFormProps) =>
           body: {
             title: '📖 New Daily Devotional',
             body: title.trim(),
+            notificationType: 'devotionals',
           },
           headers: {
             Authorization: `Bearer ${session?.access_token}`,

@@ -124,6 +124,7 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
           body: {
             title: '📰 New Church News',
             body: values.title,
+            notificationType: 'news',
           },
           headers: {
             Authorization: `Bearer ${session?.access_token}`,
