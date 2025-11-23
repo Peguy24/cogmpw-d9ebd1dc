@@ -48,6 +48,24 @@ const DevotionalPostForm = ({ onSuccess, onCancel }: DevotionalPostFormProps) =>
 
       if (error) throw error;
 
+      // Send push notification
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            title: '📖 New Daily Devotional',
+            body: title.trim(),
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+      } catch (notifError) {
+        console.error('Error sending push notification:', notifError);
+        // Don't fail the whole operation if notification fails
+      }
+
       toast.success("Devotional added successfully");
       onSuccess();
     } catch (error) {

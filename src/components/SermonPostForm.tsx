@@ -85,6 +85,24 @@ const SermonPostForm = ({ onSuccess, onCancel }: SermonPostFormProps) => {
 
       if (insertError) throw insertError;
 
+      // Send push notification
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            title: '🎤 New Sermon Available',
+            body: `${title}${speaker ? ` by ${speaker}` : ''}`,
+          },
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+        });
+      } catch (notifError) {
+        console.error('Error sending push notification:', notifError);
+        // Don't fail the whole operation if notification fails
+      }
+
       toast.success("Sermon added successfully");
       onSuccess();
     } catch (error) {
