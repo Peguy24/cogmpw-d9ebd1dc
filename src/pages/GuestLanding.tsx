@@ -16,7 +16,7 @@ const GuestLanding = () => {
           <img 
             src={churchBanner} 
             alt="Church of God - Ministry of Prayer and the Word" 
-            className="w-full rounded-lg shadow-lg"
+            className="w-full rounded-lg shadow-lg animate-fade-in"
           />
           <Button 
             onClick={() => navigate("/auth")} 
