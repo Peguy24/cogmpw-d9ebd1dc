@@ -18,6 +18,7 @@ import GivingHistory from "./pages/GivingHistory";
 import GivingCampaigns from "./pages/GivingCampaigns";
 import CampaignDetails from "./pages/CampaignDetails";
 import ManageSubscriptions from "./pages/ManageSubscriptions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const AppContent = () => {
       <Route path="/campaigns" element={<GivingCampaigns />} />
       <Route path="/campaign/:id" element={<CampaignDetails />} />
       <Route path="/manage-subscriptions" element={<ManageSubscriptions />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
