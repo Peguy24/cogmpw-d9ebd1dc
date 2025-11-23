@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Calendar, MapPin, Users, Check, Pencil, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Users, Check, Pencil, Trash2, Eye, Lock, Globe } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import EventPostForm from "./EventPostForm";
@@ -212,7 +212,36 @@ const EventsCalendar = () => {
             <CardHeader>
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1 flex-1">
-                  <CardTitle>{event.title}</CardTitle>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <CardTitle>{event.title}</CardTitle>
+                    {canCreateEvent && (
+                      <Badge 
+                        variant={
+                          event.visibility === "guest" ? "secondary" :
+                          event.visibility === "member" ? "default" :
+                          "outline"
+                        }
+                        className="gap-1"
+                      >
+                        {event.visibility === "guest" ? (
+                          <>
+                            <Eye className="h-3 w-3" />
+                            Guests Only
+                          </>
+                        ) : event.visibility === "member" ? (
+                          <>
+                            <Lock className="h-3 w-3" />
+                            Members Only
+                          </>
+                        ) : (
+                          <>
+                            <Globe className="h-3 w-3" />
+                            Everyone
+                          </>
+                        )}
+                      </Badge>
+                    )}
+                  </div>
                   <CardDescription className="flex items-center gap-4 flex-wrap">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
