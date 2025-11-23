@@ -19,6 +19,7 @@ interface UserWithRole {
   created_at: string;
   isLeader: boolean;
   isAdmin: boolean;
+  isSuperLeader: boolean;
 }
 
 const AdminUserManagement = () => {
@@ -95,6 +96,7 @@ const AdminUserManagement = () => {
         ...profile,
         isLeader: roles.some(r => r.role === "leader"),
         isAdmin: roles.some(r => r.role === "admin"),
+        isSuperLeader: roles.some(r => (r.role as string) === "super_leader"),
       };
     });
 
@@ -545,21 +547,27 @@ const AdminUserManagement = () => {
                           Admin
                         </Badge>
                       )}
-                      {user.isLeader && !user.isAdmin && (
+                      {user.isSuperLeader && !user.isAdmin && (
+                        <Badge variant="default" className="text-xs">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Super Leader
+                        </Badge>
+                      )}
+                      {user.isLeader && !user.isAdmin && !user.isSuperLeader && (
                         <Badge variant="secondary" className="text-xs">Leader</Badge>
                       )}
                     </CardTitle>
-                    <CardDescription className="space-y-1 mt-2 text-xs md:text-sm">
+                    <div className="space-y-1 mt-2 text-xs md:text-sm text-muted-foreground">
                       {user.ministry && (
                         <div>Ministry: {user.ministry}</div>
                       )}
                       {user.phone && (
                         <div>Phone: {user.phone}</div>
                       )}
-                      <div className="text-muted-foreground">
+                      <div>
                         Member since {new Date(user.created_at).toLocaleDateString()}
                       </div>
-                    </CardDescription>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
