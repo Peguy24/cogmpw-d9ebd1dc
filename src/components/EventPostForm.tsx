@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
@@ -36,6 +37,9 @@ const eventSchema = z.object({
     .trim()
     .min(1, { message: "Location is required" })
     .max(300, { message: "Location must be less than 300 characters" }),
+  visibility: z.enum(["guest", "member", "both"], {
+    required_error: "Please select who can view this event",
+  }),
 });
 
 type EventFormValues = z.infer<typeof eventSchema>;
@@ -56,6 +60,7 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
       description: "",
       event_time: "",
       location: "",
+      visibility: "member",
     },
   });
 
@@ -129,6 +134,7 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
         created_by: user.id,
         media_url: mediaUrl,
         media_type: mediaType,
+        visibility: values.visibility,
       });
 
       if (error) throw error;
@@ -302,6 +308,32 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
                   <FormControl>
                     <Input placeholder="Enter event location" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="visibility"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Who Can View This Event?</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select visibility" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="guest">Guests Only</SelectItem>
+                      <SelectItem value="member">Members Only</SelectItem>
+                      <SelectItem value="both">Everyone (Guests & Members)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Choose who can see this event in the app
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

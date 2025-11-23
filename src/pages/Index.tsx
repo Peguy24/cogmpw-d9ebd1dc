@@ -41,6 +41,9 @@ const Index = () => {
             Connect with our community, stay informed, and grow in faith together
           </p>
           <div className="flex gap-4 justify-center">
+            <Button size="lg" onClick={() => navigate("/guest")}>
+              Continue as Guest
+            </Button>
             <Button size="lg" onClick={() => navigate("/auth")}>
               Get Started
             </Button>
