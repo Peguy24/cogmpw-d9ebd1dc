@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, LogIn, BookOpen } from "lucide-react";
 import LivestreamSection from "@/components/LivestreamSection";
-import churchBanner from "@/assets/church-banner.jpg";
+import pastorPhoto from "@/assets/pastor-photo.jpg";
 
 const GuestLanding = () => {
   const navigate = useNavigate();
@@ -14,9 +14,9 @@ const GuestLanding = () => {
         {/* Header */}
         <div className="relative">
           <img 
-            src={churchBanner} 
-            alt="Church of God - Ministry of Prayer and the Word" 
-            className="w-full rounded-lg shadow-lg animate-fade-in"
+            src={pastorPhoto} 
+            alt="Church Pastor - Church of God - Ministry of Prayer and the Word" 
+            className="w-full h-48 md:h-64 object-cover rounded-lg shadow-lg animate-fade-in"
           />
           <Button 
             onClick={() => navigate("/auth")} 
