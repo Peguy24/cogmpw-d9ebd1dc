@@ -132,6 +132,14 @@ const AdminUserManagement = () => {
       toast.success("Leader role assigned");
     }
 
+    // Log the role change
+    await supabase.from("role_change_logs").insert({
+      changed_by_user_id: currentUserId,
+      target_user_id: userId,
+      role: 'leader',
+      action
+    });
+
     // Send notification to the user
     try {
       const { error: notifError } = await supabase.functions.invoke(
@@ -187,6 +195,14 @@ const AdminUserManagement = () => {
 
       toast.success("Admin role assigned");
     }
+
+    // Log the role change
+    await supabase.from("role_change_logs").insert({
+      changed_by_user_id: currentUserId,
+      target_user_id: userId,
+      role: 'admin',
+      action
+    });
 
     // Send notification to the user
     try {
@@ -261,6 +277,15 @@ const AdminUserManagement = () => {
         errorCount++;
       } else {
         successCount++;
+        
+        // Log the role change
+        await supabase.from("role_change_logs").insert({
+          changed_by_user_id: currentUserId,
+          target_user_id: userId,
+          role,
+          action: 'granted'
+        });
+
         // Send notification
         try {
           await supabase.functions.invoke('notify-role-change', {
@@ -316,6 +341,15 @@ const AdminUserManagement = () => {
         errorCount++;
       } else {
         successCount++;
+        
+        // Log the role change
+        await supabase.from("role_change_logs").insert({
+          changed_by_user_id: currentUserId,
+          target_user_id: userId,
+          role,
+          action: 'revoked'
+        });
+
         // Send notification
         try {
           await supabase.functions.invoke('notify-role-change', {
