@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Shield, Users, UserPlus, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -28,6 +29,7 @@ const AdminUserManagement = () => {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
+  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'leader' | 'member'>('all');
 
   useEffect(() => {
     checkAdminAndLoadUsers();
@@ -337,6 +339,25 @@ const AdminUserManagement = () => {
     }
   };
 
+  const filteredUsers = users.filter(user => {
+    if (roleFilter === 'all') return true;
+    if (roleFilter === 'admin') return user.isAdmin;
+    if (roleFilter === 'leader') return user.isLeader && !user.isAdmin;
+    if (roleFilter === 'member') return !user.isAdmin && !user.isLeader;
+    return true;
+  });
+
+  const getUserCounts = () => {
+    return {
+      all: users.length,
+      admin: users.filter(u => u.isAdmin).length,
+      leader: users.filter(u => u.isLeader && !u.isAdmin).length,
+      member: users.filter(u => !u.isAdmin && !u.isLeader).length,
+    };
+  };
+
+  const counts = getUserCounts();
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -435,21 +456,44 @@ const AdminUserManagement = () => {
           )}
         </Card>
 
-        {users.length > 0 && (
+        <Tabs value={roleFilter} onValueChange={(v) => setRoleFilter(v as any)} className="mb-4 md:mb-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="all" className="text-xs md:text-sm">
+              All ({counts.all})
+            </TabsTrigger>
+            <TabsTrigger value="admin" className="text-xs md:text-sm">
+              Admins ({counts.admin})
+            </TabsTrigger>
+            <TabsTrigger value="leader" className="text-xs md:text-sm">
+              Leaders ({counts.leader})
+            </TabsTrigger>
+            <TabsTrigger value="member" className="text-xs md:text-sm">
+              Members ({counts.member})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {filteredUsers.length > 0 && (
           <div className="flex items-center gap-2 mb-3 md:mb-4 px-1">
             <Checkbox
               id="select-all"
-              checked={selectedUsers.size === users.length}
-              onCheckedChange={toggleSelectAll}
+              checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
+              onCheckedChange={() => {
+                if (selectedUsers.size === filteredUsers.length) {
+                  setSelectedUsers(new Set());
+                } else {
+                  setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+                }
+              }}
             />
             <Label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
-              Select All Users
+              Select All {roleFilter !== 'all' ? `${roleFilter.charAt(0).toUpperCase() + roleFilter.slice(1)}s` : 'Users'}
             </Label>
           </div>
         )}
 
         <div className="space-y-3 md:space-y-4">
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <Card key={user.id}>
               <CardHeader className="pb-3 md:pb-6">
                 <div className="flex items-start gap-3">
@@ -538,6 +582,16 @@ const AdminUserManagement = () => {
             </Card>
           ))}
         </div>
+
+        {filteredUsers.length === 0 && users.length > 0 && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground text-sm md:text-base">
+                No {roleFilter !== 'all' ? roleFilter + 's' : 'users'} found
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {users.length === 0 && (
           <Card>
