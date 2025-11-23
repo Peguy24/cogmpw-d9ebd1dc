@@ -222,19 +222,19 @@ const Home = () => {
 
       {/* Pastor Banner */}
       <section className="relative w-full bg-gradient-to-br from-primary/5 via-background to-accent/5">
-        <div className="container px-4 py-6">
+        <div className="container px-3 md:px-4 py-4 md:py-6">
           <div className="mx-auto max-w-4xl">
             <img 
               src={pastorPhoto} 
               alt="Church Pastor" 
-              className="w-full h-48 md:h-64 object-cover rounded-lg shadow-lg animate-fade-in"
+              className="w-full h-40 md:h-64 object-cover rounded-lg shadow-lg animate-fade-in"
             />
           </div>
         </div>
       </section>
 
       {/* Main Content */}
-      <main className={`container py-4 px-4 ${isMobile ? 'pb-20' : ''}`}>
+      <main className={`container py-3 md:py-4 px-3 md:px-4 ${isMobile ? 'pb-20' : ''}`}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {!isMobile && (
             <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
