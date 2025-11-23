@@ -3,23 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, Users } from "lucide-react";
 import churchBanner from "@/assets/church-banner-new.jpg";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useState, useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [api, setApi] = useState<any>();
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    if (!api) return;
-
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-    });
-  }, [api]);
 
   const features = [
     {
@@ -111,40 +97,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
-      {isMobile ? (
-        <div className="relative">
-          <Carousel 
-            setApi={setApi}
-            opts={{ loop: false }}
-            className="w-full"
-          >
-            <CarouselContent>
-              <CarouselItem>{heroSection}</CarouselItem>
-              <CarouselItem>{featuresSection}</CarouselItem>
-              <CarouselItem>{ctaSection}</CarouselItem>
-            </CarouselContent>
-          </Carousel>
-          
-          <div className="flex justify-center gap-2 py-4">
-            {[0, 1, 2].map((index) => (
-              <button
-                key={index}
-                onClick={() => api?.scrollTo(index)}
-                className={`h-2 rounded-full transition-all ${
-                  current === index ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30"
-                }`}
-                aria-label={`Go to section ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <>
-          {heroSection}
-          {featuresSection}
-          {ctaSection}
-        </>
-      )}
+      {heroSection}
+      {featuresSection}
+      {ctaSection}
     </div>
   );
 };
