@@ -128,36 +128,43 @@ const Giving = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted p-3 md:p-8">
+      <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
         {stripeMode?.isTestMode && (
           <Alert className="bg-amber-50 dark:bg-amber-950/50 border-amber-500 dark:border-amber-600">
             <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            <AlertDescription className="text-amber-800 dark:text-amber-200">
+            <AlertDescription className="text-amber-800 dark:text-amber-200 text-xs md:text-sm">
               <span className="font-semibold">Test Mode:</span> You're using Stripe test mode. Use test card <code className="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded text-xs">4242 4242 4242 4242</code> for testing. No real charges will be made.
             </AlertDescription>
           </Alert>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => navigate("/home")}
+            className="w-full sm:w-auto"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Home
           </Button>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => navigate("/manage-subscriptions")}
+              className="flex-1 sm:flex-none"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Recurring
+              <span className="hidden sm:inline">Recurring</span>
+              <span className="sm:hidden">Subscriptions</span>
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => navigate("/giving-history")}
+              className="flex-1 sm:flex-none"
             >
               <History className="mr-2 h-4 w-4" />
               History
@@ -165,31 +172,31 @@ const Giving = () => {
           </div>
         </div>
 
-        <div className="text-center space-y-2 mb-8">
-          <h1 className="text-4xl font-bold">Online Giving</h1>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+        <div className="text-center space-y-2 mb-4 md:mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold">Online Giving</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base px-2">
             "Each of you should give what you have decided in your heart to give, not reluctantly or under compulsion, for God loves a cheerful giver." - 2 Corinthians 9:7
           </p>
         </div>
 
         {activeCampaigns && activeCampaigns.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          <Card className="mb-4 md:mb-8">
+            <CardHeader className="pb-3 md:pb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                     <Target className="h-5 w-5" />
                     Active Campaigns
                   </CardTitle>
-                  <CardDescription>Support our special giving initiatives</CardDescription>
+                  <CardDescription className="text-xs md:text-sm">Support our special giving initiatives</CardDescription>
                 </div>
-                <Button variant="outline" onClick={() => navigate("/campaigns")}>
+                <Button variant="outline" size="sm" onClick={() => navigate("/campaigns")} className="w-full sm:w-auto">
                   View All
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
+            <CardContent className="px-3 md:px-6">
+              <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {activeCampaigns.map((campaign) => (
                   <CampaignCard
                     key={campaign.id}
