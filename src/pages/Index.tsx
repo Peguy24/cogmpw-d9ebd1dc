@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, Users } from "lucide-react";
+import churchBanner from "@/assets/church-banner.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -32,15 +33,14 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
       {/* Hero Section */}
-      <section className="container py-20 text-center">
-        <div className="mx-auto max-w-3xl space-y-6">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-            Welcome to <span className="text-primary">COGMPW Church</span>
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Connect with our community, stay informed, and grow in faith together
-          </p>
-          <div className="flex gap-4 justify-center">
+      <section className="container py-10">
+        <div className="mx-auto max-w-5xl space-y-6">
+          <img 
+            src={churchBanner} 
+            alt="Church of God - Ministry of Prayer and the Word" 
+            className="w-full rounded-lg shadow-lg animate-fade-in"
+          />
+          <div className="flex gap-4 justify-center flex-wrap">
             <Button size="lg" onClick={() => navigate("/guest")}>
               Continue as Guest
             </Button>
