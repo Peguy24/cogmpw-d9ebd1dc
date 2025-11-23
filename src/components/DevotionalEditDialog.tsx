@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -14,6 +15,7 @@ interface Devotional {
   content: string;
   devotional_date: string;
   scripture_reference: string | null;
+  visibility: "guest" | "member" | "both";
 }
 
 interface DevotionalEditDialogProps {
@@ -29,12 +31,14 @@ const DevotionalEditDialog = ({ devotional, open, onOpenChange, onSuccess }: Dev
   const [content, setContent] = useState(devotional.content);
   const [scriptureReference, setScriptureReference] = useState(devotional.scripture_reference || "");
   const [devotionalDate, setDevotionalDate] = useState(devotional.devotional_date);
+  const [visibility, setVisibility] = useState<"guest" | "member" | "both">(devotional.visibility);
 
   useEffect(() => {
     setTitle(devotional.title);
     setContent(devotional.content);
     setScriptureReference(devotional.scripture_reference || "");
     setDevotionalDate(devotional.devotional_date);
+    setVisibility(devotional.visibility);
   }, [devotional]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,6 +59,7 @@ const DevotionalEditDialog = ({ devotional, open, onOpenChange, onSuccess }: Dev
           content: content.trim(),
           scripture_reference: scriptureReference.trim() || null,
           devotional_date: devotionalDate,
+          visibility,
         })
         .eq("id", devotional.id);
 
@@ -109,6 +114,20 @@ const DevotionalEditDialog = ({ devotional, open, onOpenChange, onSuccess }: Dev
               placeholder="e.g., John 3:16, Psalm 23:1-6"
               maxLength={100}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-visibility">Visibility *</Label>
+            <Select value={visibility} onValueChange={(value: "guest" | "member" | "both") => setVisibility(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select visibility" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="guest">Guests Only</SelectItem>
+                <SelectItem value="member">Members Only</SelectItem>
+                <SelectItem value="both">Everyone (Guests & Members)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

@@ -19,6 +19,7 @@ interface Sermon {
   media_type: string;
   media_url: string | null;
   created_at: string;
+  visibility: "guest" | "member" | "both";
 }
 
 const SermonsList = () => {
@@ -56,7 +57,7 @@ const SermonsList = () => {
       toast.error("Failed to load sermons");
       console.error(error);
     } else {
-      setSermons(data || []);
+      setSermons((data as Sermon[]) || []);
     }
     setLoading(false);
   };

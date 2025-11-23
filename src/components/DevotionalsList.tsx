@@ -17,6 +17,7 @@ interface Devotional {
   devotional_date: string;
   scripture_reference: string | null;
   created_at: string;
+  visibility: "guest" | "member" | "both";
 }
 
 const DevotionalsList = () => {
@@ -54,7 +55,7 @@ const DevotionalsList = () => {
       toast.error("Failed to load devotionals");
       console.error(error);
     } else {
-      setDevotionals(data || []);
+      setDevotionals((data as Devotional[]) || []);
     }
     setLoading(false);
   };

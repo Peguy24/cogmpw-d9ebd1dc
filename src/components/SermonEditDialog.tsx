@@ -17,6 +17,7 @@ interface Sermon {
   speaker: string | null;
   media_type: string;
   media_url: string | null;
+  visibility: "guest" | "member" | "both";
 }
 
 interface SermonEditDialogProps {
@@ -36,6 +37,7 @@ const SermonEditDialog = ({ sermon, open, onOpenChange, onSuccess }: SermonEditD
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [removeMedia, setRemoveMedia] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [visibility, setVisibility] = useState<"guest" | "member" | "both">(sermon.visibility);
 
   useEffect(() => {
     setTitle(sermon.title);
@@ -45,6 +47,7 @@ const SermonEditDialog = ({ sermon, open, onOpenChange, onSuccess }: SermonEditD
     setMediaType(sermon.media_type as any);
     setMediaFile(null);
     setRemoveMedia(false);
+    setVisibility(sermon.visibility);
   }, [sermon]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,6 +104,7 @@ const SermonEditDialog = ({ sermon, open, onOpenChange, onSuccess }: SermonEditD
           sermon_date: sermonDate,
           media_type: mediaType,
           media_url: mediaUrl,
+          visibility,
         })
         .eq("id", sermon.id);
 
@@ -180,6 +184,20 @@ const SermonEditDialog = ({ sermon, open, onOpenChange, onSuccess }: SermonEditD
                 <SelectItem value="video">Video</SelectItem>
                 <SelectItem value="audio">Audio</SelectItem>
                 <SelectItem value="pdf">PDF</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-visibility">Visibility *</Label>
+            <Select value={visibility} onValueChange={(value: "guest" | "member" | "both") => setVisibility(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select visibility" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="guest">Guests Only</SelectItem>
+                <SelectItem value="member">Members Only</SelectItem>
+                <SelectItem value="both">Everyone (Guests & Members)</SelectItem>
               </SelectContent>
             </Select>
           </div>

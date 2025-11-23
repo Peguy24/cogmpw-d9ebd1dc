@@ -24,6 +24,7 @@ export type Database = {
           scripture_reference: string | null
           title: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           content: string
@@ -34,6 +35,7 @@ export type Database = {
           scripture_reference?: string | null
           title: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           content?: string
@@ -44,6 +46,7 @@ export type Database = {
           scripture_reference?: string | null
           title?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -380,6 +383,7 @@ export type Database = {
           speaker: string | null
           title: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           created_at?: string
@@ -392,6 +396,7 @@ export type Database = {
           speaker?: string | null
           title: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           created_at?: string
@@ -404,6 +409,7 @@ export type Database = {
           speaker?: string | null
           title?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: []
       }
