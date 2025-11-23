@@ -5,11 +5,12 @@ import { DonationForm } from "@/components/DonationForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, History, RefreshCw, Target, CheckCircle, Mail, Download } from "lucide-react";
+import { ArrowLeft, History, RefreshCw, Target, CheckCircle, Mail, Download, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CampaignCard } from "@/components/CampaignCard";
 import { format } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Giving = () => {
   const navigate = useNavigate();
@@ -29,6 +30,15 @@ const Giving = () => {
         .order("end_date", { ascending: true })
         .limit(3);
 
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: stripeMode } = useQuery({
+    queryKey: ["stripe-mode"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("check-stripe-mode");
       if (error) throw error;
       return data;
     },
@@ -120,6 +130,15 @@ const Giving = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
+        {stripeMode?.isTestMode && (
+          <Alert className="bg-amber-50 dark:bg-amber-950/50 border-amber-500 dark:border-amber-600">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              <span className="font-semibold">Test Mode:</span> You're using Stripe test mode. Use test card <code className="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded text-xs">4242 4242 4242 4242</code> for testing. No real charges will be made.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
