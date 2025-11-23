@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Shield, Users } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Shield, Users, UserPlus, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserWithRole {
@@ -25,6 +26,8 @@ const AdminUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoadUsers();
@@ -208,6 +211,132 @@ const AdminUserManagement = () => {
     await loadUsers();
   };
 
+  const toggleUserSelection = (userId: string) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(users.map(u => u.id)));
+    }
+  };
+
+  const bulkAssignRole = async (role: 'admin' | 'leader') => {
+    if (selectedUsers.size === 0) {
+      toast.error("No users selected");
+      return;
+    }
+
+    setProcessing(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const userId of selectedUsers) {
+      // Skip current user
+      if (userId === currentUserId) continue;
+
+      const user = users.find(u => u.id === userId);
+      if (!user) continue;
+
+      // Skip if already has the role
+      if ((role === 'admin' && user.isAdmin) || (role === 'leader' && user.isLeader)) {
+        continue;
+      }
+
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role });
+
+      if (error) {
+        errorCount++;
+      } else {
+        successCount++;
+        // Send notification
+        try {
+          await supabase.functions.invoke('notify-role-change', {
+            body: { userId, role, action: 'granted' }
+          });
+        } catch (e) {
+          console.error('Notification error:', e);
+        }
+      }
+    }
+
+    setProcessing(false);
+    setSelectedUsers(new Set());
+    await loadUsers();
+
+    if (successCount > 0) {
+      toast.success(`${role} role assigned to ${successCount} user${successCount > 1 ? 's' : ''}`);
+    }
+    if (errorCount > 0) {
+      toast.error(`Failed to assign role to ${errorCount} user${errorCount > 1 ? 's' : ''}`);
+    }
+  };
+
+  const bulkRemoveRole = async (role: 'admin' | 'leader') => {
+    if (selectedUsers.size === 0) {
+      toast.error("No users selected");
+      return;
+    }
+
+    setProcessing(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const userId of selectedUsers) {
+      // Skip current user
+      if (userId === currentUserId) continue;
+
+      const user = users.find(u => u.id === userId);
+      if (!user) continue;
+
+      // Skip if doesn't have the role
+      if ((role === 'admin' && !user.isAdmin) || (role === 'leader' && !user.isLeader)) {
+        continue;
+      }
+
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", role);
+
+      if (error) {
+        errorCount++;
+      } else {
+        successCount++;
+        // Send notification
+        try {
+          await supabase.functions.invoke('notify-role-change', {
+            body: { userId, role, action: 'revoked' }
+          });
+        } catch (e) {
+          console.error('Notification error:', e);
+        }
+      }
+    }
+
+    setProcessing(false);
+    setSelectedUsers(new Set());
+    await loadUsers();
+
+    if (successCount > 0) {
+      toast.success(`${role} role removed from ${successCount} user${successCount > 1 ? 's' : ''}`);
+    }
+    if (errorCount > 0) {
+      toast.error(`Failed to remove role from ${errorCount} user${errorCount > 1 ? 's' : ''}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -240,18 +369,95 @@ const AdminUserManagement = () => {
       <main className="container py-4 md:py-6 px-3 md:px-4">
         <Card className="mb-4 md:mb-6">
           <CardHeader className="pb-3 md:pb-6">
-            <CardTitle className="text-base md:text-lg">Manage User Roles</CardTitle>
-            <CardDescription className="text-xs md:text-sm">
-              Assign admin or leader roles to users. Admins have full access and can manage other users.
-            </CardDescription>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <CardTitle className="text-base md:text-lg">Manage User Roles</CardTitle>
+                <CardDescription className="text-xs md:text-sm">
+                  Assign admin or leader roles to users. Select multiple users for batch actions.
+                </CardDescription>
+              </div>
+              {selectedUsers.size > 0 && (
+                <Badge variant="secondary" className="w-fit">
+                  {selectedUsers.size} selected
+                </Badge>
+              )}
+            </div>
           </CardHeader>
+          {selectedUsers.size > 0 && (
+            <CardContent className="pt-0">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => bulkAssignRole('admin')}
+                  disabled={processing}
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Make Admin
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => bulkAssignRole('leader')}
+                  disabled={processing}
+                >
+                  <UserPlus className="h-4 w-4 mr-1" />
+                  Make Leader
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => bulkRemoveRole('admin')}
+                  disabled={processing}
+                >
+                  <UserMinus className="h-4 w-4 mr-1" />
+                  Remove Admin
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => bulkRemoveRole('leader')}
+                  disabled={processing}
+                >
+                  <UserMinus className="h-4 w-4 mr-1" />
+                  Remove Leader
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedUsers(new Set())}
+                  disabled={processing}
+                >
+                  Clear Selection
+                </Button>
+              </div>
+            </CardContent>
+          )}
         </Card>
+
+        {users.length > 0 && (
+          <div className="flex items-center gap-2 mb-3 md:mb-4 px-1">
+            <Checkbox
+              id="select-all"
+              checked={selectedUsers.size === users.length}
+              onCheckedChange={toggleSelectAll}
+            />
+            <Label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+              Select All Users
+            </Label>
+          </div>
+        )}
 
         <div className="space-y-3 md:space-y-4">
           {users.map((user) => (
             <Card key={user.id}>
               <CardHeader className="pb-3 md:pb-6">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedUsers.has(user.id)}
+                    onCheckedChange={() => toggleUserSelection(user.id)}
+                    className="mt-1"
+                  />
                   <div className="flex-1 min-w-0">
                     <CardTitle className="flex flex-wrap items-center gap-2 text-base md:text-lg">
                       <span className="truncate">{user.full_name}</span>
