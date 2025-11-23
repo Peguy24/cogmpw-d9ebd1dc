@@ -97,10 +97,10 @@ const SermonsList = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {isLeaderOrAdmin && (
         <div className="flex justify-end">
-          <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+          <Button onClick={() => setShowForm(!showForm)} className="gap-2 text-sm md:text-base h-9 md:h-10">
             <Plus className="h-4 w-4" />
             Add Sermon
           </Button>
@@ -117,25 +117,25 @@ const SermonsList = () => {
         />
       )}
 
-      <ScrollArea className="h-[600px]">
-        <div className="space-y-4">
+      <ScrollArea className="h-[500px] md:h-[600px]">
+        <div className="space-y-3 md:space-y-4 pr-3 md:pr-4">
           {sermons.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
+              <CardContent className="py-6 md:py-8 text-center text-sm md:text-base text-muted-foreground">
                 No sermons available yet
               </CardContent>
             </Card>
           ) : (
             sermons.map((sermon) => (
               <Card key={sermon.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1 flex-1">
+                <CardHeader className="pb-3 md:pb-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <CardTitle>{sermon.title}</CardTitle>
-                        <Badge variant="secondary" className="gap-1">
+                        <CardTitle className="text-base md:text-lg break-words">{sermon.title}</CardTitle>
+                        <Badge variant="secondary" className="gap-1 text-xs shrink-0">
                           {getMediaIcon(sermon.media_type)}
-                          {sermon.media_type}
+                          <span className="capitalize">{sermon.media_type}</span>
                         </Badge>
                         {isLeaderOrAdmin && (
                           <Badge 
@@ -144,37 +144,38 @@ const SermonsList = () => {
                               sermon.visibility === "member" ? "default" :
                               "outline"
                             }
-                            className="gap-1"
+                            className="gap-1 text-xs shrink-0"
                           >
                             {sermon.visibility === "guest" ? (
                               <>
                                 <Eye className="h-3 w-3" />
-                                Guests Only
+                                Guests
                               </>
                             ) : sermon.visibility === "member" ? (
                               <>
                                 <Lock className="h-3 w-3" />
-                                Members Only
+                                Members
                               </>
                             ) : (
                               <>
                                 <Globe className="h-3 w-3" />
-                                Everyone
+                                All
                               </>
                             )}
                           </Badge>
                         )}
                       </div>
-                      <CardDescription>
+                      <CardDescription className="text-xs md:text-sm break-words">
                         {format(new Date(sermon.sermon_date), "MMMM d, yyyy")}
                         {sermon.speaker && ` • ${sermon.speaker}`}
                       </CardDescription>
                     </div>
                     {isLeaderOrAdmin && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-1 md:gap-2 shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 md:h-9 md:w-9"
                           onClick={() => setEditingSermon(sermon)}
                         >
                           <Edit2 className="h-4 w-4" />
@@ -182,6 +183,7 @@ const SermonsList = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 md:h-9 md:w-9"
                           onClick={() => handleDelete(sermon.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -190,9 +192,9 @@ const SermonsList = () => {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3 md:space-y-4">
                   {sermon.description && (
-                    <p className="text-muted-foreground mb-4">{sermon.description}</p>
+                    <p className="text-sm md:text-base text-muted-foreground break-words">{sermon.description}</p>
                   )}
                   {sermon.media_url && (
                     <div className="space-y-2">
@@ -211,7 +213,7 @@ const SermonsList = () => {
                       {sermon.media_type === "pdf" && (
                         <Button
                           variant="outline"
-                          className="w-full gap-2"
+                          className="w-full gap-2 text-sm md:text-base h-10 md:h-11"
                           onClick={() => window.open(sermon.media_url!, "_blank")}
                         >
                           <FileText className="h-4 w-4" />

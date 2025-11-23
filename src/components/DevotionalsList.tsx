@@ -82,10 +82,10 @@ const DevotionalsList = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {isLeaderOrAdmin && (
         <div className="flex justify-end">
-          <Button onClick={() => setShowForm(!showForm)} className="gap-2">
+          <Button onClick={() => setShowForm(!showForm)} className="gap-2 text-sm md:text-base h-9 md:h-10">
             <Plus className="h-4 w-4" />
             Add Devotional
           </Button>
@@ -102,23 +102,23 @@ const DevotionalsList = () => {
         />
       )}
 
-      <ScrollArea className="h-[600px]">
-        <div className="space-y-4">
+      <ScrollArea className="h-[500px] md:h-[600px]">
+        <div className="space-y-3 md:space-y-4 pr-3 md:pr-4">
           {devotionals.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
+              <CardContent className="py-6 md:py-8 text-center text-sm md:text-base text-muted-foreground">
                 No devotionals available yet
               </CardContent>
             </Card>
           ) : (
             devotionals.map((devotional) => (
               <Card key={devotional.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1 flex-1">
+                <CardHeader className="pb-3 md:pb-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                        <CardTitle>{devotional.title}</CardTitle>
+                        <BookOpen className="h-4 w-4 md:h-5 md:w-5 shrink-0 text-primary" />
+                        <CardTitle className="text-base md:text-lg break-words">{devotional.title}</CardTitle>
                         {isLeaderOrAdmin && (
                           <Badge 
                             variant={
@@ -126,36 +126,37 @@ const DevotionalsList = () => {
                               devotional.visibility === "member" ? "default" :
                               "outline"
                             }
-                            className="gap-1"
+                            className="gap-1 text-xs shrink-0"
                           >
                             {devotional.visibility === "guest" ? (
                               <>
                                 <Eye className="h-3 w-3" />
-                                Guests Only
+                                Guests
                               </>
                             ) : devotional.visibility === "member" ? (
                               <>
                                 <Lock className="h-3 w-3" />
-                                Members Only
+                                Members
                               </>
                             ) : (
                               <>
                                 <Globe className="h-3 w-3" />
-                                Everyone
+                                All
                               </>
                             )}
                           </Badge>
                         )}
                       </div>
-                      <CardDescription>
+                      <CardDescription className="text-xs md:text-sm">
                         {format(new Date(devotional.devotional_date), "MMMM d, yyyy")}
                       </CardDescription>
                     </div>
                     {isLeaderOrAdmin && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-1 md:gap-2 shrink-0">
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 md:h-9 md:w-9"
                           onClick={() => setEditingDevotional(devotional)}
                         >
                           <Edit2 className="h-4 w-4" />
@@ -163,6 +164,7 @@ const DevotionalsList = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-8 w-8 md:h-9 md:w-9"
                           onClick={() => handleDelete(devotional.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -171,13 +173,13 @@ const DevotionalsList = () => {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 md:space-y-4">
                   {devotional.scripture_reference && (
-                    <Badge variant="outline" className="font-mono">
+                    <Badge variant="outline" className="font-mono text-xs">
                       {devotional.scripture_reference}
                     </Badge>
                   )}
-                  <p className="text-foreground whitespace-pre-wrap">{devotional.content}</p>
+                  <p className="text-sm md:text-base text-foreground whitespace-pre-wrap break-words">{devotional.content}</p>
                 </CardContent>
               </Card>
             ))
