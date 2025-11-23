@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, LogIn, BookOpen } from "lucide-react";
 import LivestreamSection from "@/components/LivestreamSection";
+import churchBanner from "@/assets/church-banner.jpg";
 
 const GuestLanding = () => {
   const navigate = useNavigate();
@@ -11,12 +12,17 @@ const GuestLanding = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
       <div className="container py-8 space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Welcome to COGMPW Church</h1>
-            <p className="text-muted-foreground">Connect with our community</p>
-          </div>
-          <Button onClick={() => navigate("/auth")} size="lg">
+        <div className="relative">
+          <img 
+            src={churchBanner} 
+            alt="Church of God - Ministry of Prayer and the Word" 
+            className="w-full rounded-lg shadow-lg"
+          />
+          <Button 
+            onClick={() => navigate("/auth")} 
+            size="lg"
+            className="absolute top-4 right-4 md:static md:mt-4 md:ml-auto md:block"
+          >
             <LogIn className="mr-2 h-4 w-4" />
             Sign In / Sign Up
           </Button>
