@@ -14,6 +14,7 @@ import SermonsList from "@/components/SermonsList";
 import DevotionalsList from "@/components/DevotionalsList";
 import LivestreamSection from "@/components/LivestreamSection";
 import { useIsMobile } from "@/hooks/use-mobile";
+import churchLogo from "@/assets/church-logo.webp";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -119,7 +120,7 @@ const Home = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between px-4">
-          <h1 className="text-lg font-bold">COGMPW</h1>
+          <img src={churchLogo} alt="COGMPW Church Logo" className="h-10 w-10 object-contain" />
           
           <div className="flex items-center gap-1">
             <Link to="/giving">
