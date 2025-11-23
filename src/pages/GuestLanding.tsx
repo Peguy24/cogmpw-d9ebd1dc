@@ -41,7 +41,7 @@ const GuestLanding = () => {
             </CardHeader>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/campaigns")}>
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/guest/events")}>
             <CardHeader>
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-primary/10 rounded-full">
