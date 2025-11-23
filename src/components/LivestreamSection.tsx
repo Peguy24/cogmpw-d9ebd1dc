@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Loader2, Video, Radio } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { ExternalLink, Loader2, Video, Radio, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 
 interface LivestreamLink {
@@ -31,6 +32,12 @@ const LivestreamSection = () => {
   // Radio Form state
   const [radioUrl, setRadioUrl] = useState("");
   const [radioTitle, setRadioTitle] = useState("");
+  
+  // Radio Player state
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.7);
+  const [isMuted, setIsMuted] = useState(false);
 
   useEffect(() => {
     checkRole();
@@ -156,6 +163,40 @@ const LivestreamSection = () => {
   const activeLivestream = livestreams.find((ls) => ls.is_active && ls.platform !== "radio");
   const activeRadio = livestreams.find((ls) => ls.is_active && ls.platform === "radio");
 
+  const togglePlayPause = () => {
+    if (!audioRef.current) return;
+    
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0];
+    setVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+      if (newVolume > 0 && isMuted) {
+        setIsMuted(false);
+      }
+    }
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    
+    if (isMuted) {
+      audioRef.current.volume = volume;
+      setIsMuted(false);
+    } else {
+      audioRef.current.volume = 0;
+      setIsMuted(true);
+    }
+  };
+
   const getYouTubeEmbedUrl = (url: string): string | null => {
     try {
       const urlObj = new URL(url);
@@ -200,14 +241,53 @@ const LivestreamSection = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="bg-muted rounded-lg p-6">
+            <div className="bg-muted rounded-lg p-6 space-y-4">
               <audio 
-                controls 
-                className="w-full"
+                ref={audioRef}
                 src={activeRadio.url}
-              >
-                Your browser does not support the audio element.
-              </audio>
+                onEnded={() => setIsPlaying(false)}
+                className="hidden"
+              />
+              
+              <div className="flex items-center gap-4">
+                <Button
+                  size="lg"
+                  variant="default"
+                  onClick={togglePlayPause}
+                  className="h-12 w-12 rounded-full p-0"
+                >
+                  {isPlaying ? (
+                    <Pause className="h-5 w-5" />
+                  ) : (
+                    <Play className="h-5 w-5 ml-0.5" />
+                  )}
+                </Button>
+                
+                <div className="flex-1 flex items-center gap-3">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={toggleMute}
+                    className="h-9 w-9 p-0"
+                  >
+                    {isMuted || volume === 0 ? (
+                      <VolumeX className="h-4 w-4" />
+                    ) : (
+                      <Volume2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                  
+                  <div className="flex-1">
+                    <Slider
+                      value={[isMuted ? 0 : volume]}
+                      onValueChange={handleVolumeChange}
+                      max={1}
+                      step={0.01}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
