@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu } from "lucide-react";
+import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu, Heart } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -14,6 +14,7 @@ import ProfileSettings from "@/components/ProfileSettings";
 import SermonsList from "@/components/SermonsList";
 import DevotionalsList from "@/components/DevotionalsList";
 import LivestreamSection from "@/components/LivestreamSection";
+import PrayerRequestForm from "@/components/PrayerRequestForm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import churchLogo from "@/assets/church-logo.webp";
 import pastorPhoto from "@/assets/pastor-photo.jpg";
@@ -180,6 +181,12 @@ const Home = () => {
                         Campaigns
                       </Button>
                     </Link>
+                    <Link to="/admin/prayer-requests" className="block">
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Heart className="h-5 w-5 mr-3" />
+                        Prayer Requests
+                      </Button>
+                    </Link>
                   </div>
                 </SheetContent>
               </Sheet>
@@ -240,7 +247,7 @@ const Home = () => {
       <main className={`container py-3 md:py-4 px-3 md:px-4 ${isMobile ? 'pb-20' : ''}`}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {!isMobile && (
-            <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
+            <TabsList className="grid w-full grid-cols-4 mb-4 h-auto">
               <TabsTrigger value="news" className="flex flex-col items-center gap-1 py-2">
                 <Newspaper className="h-4 w-4" />
                 <span className="text-xs">News</span>
@@ -252,6 +259,10 @@ const Home = () => {
               <TabsTrigger value="media" className="flex flex-col items-center gap-1 py-2">
                 <Video className="h-4 w-4" />
                 <span className="text-xs">Media</span>
+              </TabsTrigger>
+              <TabsTrigger value="prayer" className="flex flex-col items-center gap-1 py-2">
+                <Heart className="h-4 w-4" />
+                <span className="text-xs">Prayer</span>
               </TabsTrigger>
             </TabsList>
           )}
@@ -285,13 +296,25 @@ const Home = () => {
               </TabsContent>
             </Tabs>
           </TabsContent>
+          
+          <TabsContent value="prayer">
+            <div className="max-w-2xl mx-auto">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold mb-2">Prayer Requests</h2>
+                <p className="text-muted-foreground">
+                  Share your prayer needs with our church leadership. Your request will be kept confidential.
+                </p>
+              </div>
+              <PrayerRequestForm />
+            </div>
+          </TabsContent>
         </Tabs>
       </main>
 
       {/* Bottom Navigation Bar - Mobile Only */}
       {isMobile && (
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
-          <div className="grid grid-cols-4 h-16">
+          <div className="grid grid-cols-5 h-16">
             <button
               onClick={() => setActiveTab("news")}
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
@@ -318,6 +341,15 @@ const Home = () => {
             >
               <Video className="h-5 w-5" />
               <span className="text-xs font-medium">Media</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("prayer")}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                activeTab === "prayer" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Heart className="h-5 w-5" />
+              <span className="text-xs font-medium">Prayer</span>
             </button>
             <Link to="/giving" className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary">
               <HandHeart className="h-5 w-5" />
