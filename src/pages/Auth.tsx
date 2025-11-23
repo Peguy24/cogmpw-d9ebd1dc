@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
+import churchLogo from "@/assets/church-logo-official.webp";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -107,8 +108,15 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">COGMPW Church</CardTitle>
-          <CardDescription>Welcome to our community</CardDescription>
+          <div className="flex justify-center mb-4">
+            <img 
+              src={churchLogo} 
+              alt="COGMPW Church Logo" 
+              className="h-24 w-24 object-contain"
+            />
+          </div>
+          <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
+          <CardDescription>Church of God Ministry of Prayer and the Word</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
