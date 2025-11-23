@@ -142,13 +142,67 @@ const AdminUserManagement = () => {
 
       if (notifError) {
         console.error('Failed to send role change notification:', notifError);
-        // Don't show error to admin, as the role change was successful
       } else {
         console.log('Role change notification sent successfully');
       }
     } catch (error) {
       console.error('Error sending notification:', error);
-      // Don't show error to admin, as the role change was successful
+    }
+
+    await loadUsers();
+  };
+
+  const toggleAdminRole = async (userId: string, currentlyAdmin: boolean) => {
+    const action = currentlyAdmin ? 'revoked' : 'granted';
+    
+    if (currentlyAdmin) {
+      // Remove admin role
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .eq("role", "admin");
+
+      if (error) {
+        toast.error("Failed to remove admin role");
+        return;
+      }
+
+      toast.success("Admin role removed");
+    } else {
+      // Add admin role
+      const { error } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: "admin" });
+
+      if (error) {
+        toast.error("Failed to add admin role");
+        return;
+      }
+
+      toast.success("Admin role assigned");
+    }
+
+    // Send notification to the user
+    try {
+      const { error: notifError } = await supabase.functions.invoke(
+        'notify-role-change',
+        {
+          body: {
+            userId,
+            role: 'admin',
+            action,
+          },
+        }
+      );
+
+      if (notifError) {
+        console.error('Failed to send role change notification:', notifError);
+      } else {
+        console.log('Role change notification sent successfully');
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
     }
 
     await loadUsers();
@@ -186,9 +240,9 @@ const AdminUserManagement = () => {
       <main className="container py-4 md:py-6 px-3 md:px-4">
         <Card className="mb-4 md:mb-6">
           <CardHeader className="pb-3 md:pb-6">
-            <CardTitle className="text-base md:text-lg">Assign Leader Roles</CardTitle>
+            <CardTitle className="text-base md:text-lg">Manage User Roles</CardTitle>
             <CardDescription className="text-xs md:text-sm">
-              Leaders can publish news and events. Admins have full access to all features.
+              Assign admin or leader roles to users. Admins have full access and can manage other users.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -226,33 +280,54 @@ const AdminUserManagement = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="space-y-0.5 flex-1">
-                    <Label htmlFor={`leader-${user.id}`} className="text-sm md:text-base">
-                      Leader Permissions
-                    </Label>
-                    <div className="text-xs md:text-sm text-muted-foreground">
-                      Allow this user to publish news and events
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b">
+                    <div className="space-y-0.5 flex-1">
+                      <Label htmlFor={`admin-${user.id}`} className="text-sm md:text-base">
+                        Admin Permissions
+                      </Label>
+                      <div className="text-xs md:text-sm text-muted-foreground">
+                        Full access to all features including user management
+                      </div>
                     </div>
+                    <Switch
+                      id={`admin-${user.id}`}
+                      checked={user.isAdmin}
+                      disabled={user.id === currentUserId}
+                      onCheckedChange={() => toggleAdminRole(user.id, user.isAdmin)}
+                      className="shrink-0"
+                    />
                   </div>
-                  <Switch
-                    id={`leader-${user.id}`}
-                    checked={user.isLeader}
-                    disabled={user.isAdmin || user.id === currentUserId}
-                    onCheckedChange={() => toggleLeaderRole(user.id, user.isLeader)}
-                    className="shrink-0"
-                  />
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="space-y-0.5 flex-1">
+                      <Label htmlFor={`leader-${user.id}`} className="text-sm md:text-base">
+                        Leader Permissions
+                      </Label>
+                      <div className="text-xs md:text-sm text-muted-foreground">
+                        Allow this user to publish news and events
+                      </div>
+                    </div>
+                    <Switch
+                      id={`leader-${user.id}`}
+                      checked={user.isLeader}
+                      disabled={user.isAdmin || user.id === currentUserId}
+                      onCheckedChange={() => toggleLeaderRole(user.id, user.isLeader)}
+                      className="shrink-0"
+                    />
+                  </div>
+
+                  {user.isAdmin && (
+                    <p className="text-xs text-muted-foreground">
+                      Admins automatically have all permissions
+                    </p>
+                  )}
+                  {user.id === currentUserId && (
+                    <p className="text-xs text-muted-foreground">
+                      You cannot modify your own roles
+                    </p>
+                  )}
                 </div>
-                {user.isAdmin && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Admins automatically have all permissions
-                  </p>
-                )}
-                {user.id === currentUserId && !user.isAdmin && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    You cannot modify your own roles
-                  </p>
-                )}
               </CardContent>
             </Card>
           ))}
