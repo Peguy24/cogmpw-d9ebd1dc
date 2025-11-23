@@ -5,6 +5,7 @@ import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
@@ -194,26 +195,28 @@ const Home = () => {
                   <Settings className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80">
+              <SheetContent side="right" className="w-80 flex flex-col">
                 <SheetHeader>
                   <SheetTitle>Settings</SheetTitle>
                   <SheetDescription>
                     Manage your profile and privacy settings
                   </SheetDescription>
                 </SheetHeader>
-                <div className="mt-6">
-                  {user && <ProfileSettings user={user} />}
-                </div>
-                <div className="mt-6 pt-6 border-t">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-destructive hover:text-destructive"
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    Sign Out
-                  </Button>
-                </div>
+                <ScrollArea className="flex-1 -mx-6 px-6">
+                  <div className="mt-6">
+                    {user && <ProfileSettings user={user} />}
+                  </div>
+                  <div className="mt-6 pt-6 border-t">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start text-destructive hover:text-destructive"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="h-5 w-5 mr-3" />
+                      Sign Out
+                    </Button>
+                  </div>
+                </ScrollArea>
               </SheetContent>
             </Sheet>
           </div>
