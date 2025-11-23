@@ -171,15 +171,15 @@ const NewsFeed = () => {
   const canPostNews = userRole === "admin" || userRole === "leader";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {!checkingRole && canPostNews && (
         <NewsPostForm onSuccess={fetchNews} />
       )}
 
       {news.length === 0 ? (
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
+          <CardContent className="pt-4 md:pt-6 py-6 md:py-8">
+            <p className="text-center text-sm md:text-base text-muted-foreground">
               No announcements yet. Check back soon!
             </p>
           </CardContent>
@@ -187,29 +187,30 @@ const NewsFeed = () => {
       ) : (
         news.map((item) => (
           <Card key={item.id} className={item.is_pinned ? "border-primary" : ""}>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1 flex-1">
-                  <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3 md:pb-4">
+              <div className="flex items-start justify-between gap-3 md:gap-4">
+                <div className="space-y-1 flex-1 min-w-0">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg break-words">
                     {item.is_pinned && (
-                      <Pin className="h-4 w-4 text-primary fill-primary" />
+                      <Pin className="h-4 w-4 shrink-0 text-primary fill-primary" />
                     )}
-                    {item.title}
+                    <span className="break-words">{item.title}</span>
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs md:text-sm break-words">
                     {item.author?.full_name || "Church Admin"} • {" "}
                     {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2 shrink-0">
                   {item.is_pinned && (
-                    <Badge variant="default">Pinned</Badge>
+                    <Badge variant="default" className="text-xs">Pinned</Badge>
                   )}
                   {canPostNews && (
                     <>
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 md:h-9 md:w-9"
                         onClick={() => setEditingNews(item)}
                       >
                         <Pencil className="h-4 w-4" />
@@ -217,6 +218,7 @@ const NewsFeed = () => {
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 md:h-9 md:w-9"
                         onClick={() => setDeletingNewsId(item.id)}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -226,25 +228,25 @@ const NewsFeed = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               {item.media_url && (
-                <div className="mb-4">
+                <div className="mb-3 md:mb-4">
                   {item.media_type === 'video' ? (
                     <video 
                       src={item.media_url} 
                       controls 
-                      className="w-full rounded-lg max-h-96 object-cover"
+                      className="w-full rounded-lg max-h-64 md:max-h-96 object-cover"
                     />
                   ) : (
                     <img 
                       src={item.media_url} 
                       alt={item.title}
-                      className="w-full rounded-lg max-h-96 object-cover"
+                      className="w-full rounded-lg max-h-64 md:max-h-96 object-cover"
                     />
                   )}
                 </div>
               )}
-              <p className="text-foreground whitespace-pre-wrap">{item.content}</p>
+              <p className="text-sm md:text-base text-foreground whitespace-pre-wrap break-words">{item.content}</p>
             </CardContent>
           </Card>
         ))

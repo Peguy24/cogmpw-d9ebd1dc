@@ -193,15 +193,15 @@ const EventsCalendar = () => {
   const canCreateEvent = userRole === "admin" || userRole === "leader";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {!checkingRole && canCreateEvent && (
         <EventPostForm onSuccess={fetchEvents} />
       )}
 
       {events.length === 0 ? (
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
+          <CardContent className="pt-4 md:pt-6 py-6 md:py-8">
+            <p className="text-center text-sm md:text-base text-muted-foreground">
               No upcoming events. Check back soon!
             </p>
           </CardContent>
@@ -209,11 +209,11 @@ const EventsCalendar = () => {
       ) : (
         events.map((event) => (
           <Card key={event.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1 flex-1">
+            <CardHeader className="pb-3 md:pb-4">
+              <div className="flex items-start justify-between gap-3 md:gap-4">
+                <div className="space-y-1 flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <CardTitle>{event.title}</CardTitle>
+                    <CardTitle className="text-base md:text-lg break-words">{event.title}</CardTitle>
                     {canCreateEvent && (
                       <Badge 
                         variant={
@@ -221,7 +221,7 @@ const EventsCalendar = () => {
                           event.visibility === "member" ? "default" :
                           "outline"
                         }
-                        className="gap-1"
+                        className="gap-1 text-xs"
                       >
                         {event.visibility === "guest" ? (
                           <>
@@ -242,22 +242,23 @@ const EventsCalendar = () => {
                       </Badge>
                     )}
                   </div>
-                  <CardDescription className="flex items-center gap-4 flex-wrap">
+                  <CardDescription className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-xs md:text-sm">
                     <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {format(new Date(event.event_date), "PPP 'at' p")}
+                      <Calendar className="h-3 w-3 md:h-4 md:w-4 shrink-0" />
+                      <span className="break-words">{format(new Date(event.event_date), "PPP 'at' p")}</span>
                     </span>
                     <span className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {event.location}
+                      <MapPin className="h-3 w-3 md:h-4 md:w-4 shrink-0" />
+                      <span className="break-words">{event.location}</span>
                     </span>
                   </CardDescription>
                 </div>
                 {canCreateEvent && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 md:gap-2 shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 md:h-9 md:w-9"
                       onClick={() => setEditingEvent(event)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -265,6 +266,7 @@ const EventsCalendar = () => {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 md:h-9 md:w-9"
                       onClick={() => setDeletingEventId(event.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -273,29 +275,29 @@ const EventsCalendar = () => {
                 )}
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 md:space-y-4">
               {event.media_url && (
-                <div className="mb-4">
+                <div>
                   {event.media_type === 'video' ? (
                     <video 
                       src={event.media_url} 
                       controls 
-                      className="w-full rounded-lg max-h-96 object-cover"
+                      className="w-full rounded-lg max-h-64 md:max-h-96 object-cover"
                     />
                   ) : (
                     <img 
                       src={event.media_url} 
                       alt={event.title}
-                      className="w-full rounded-lg max-h-96 object-cover"
+                      className="w-full rounded-lg max-h-64 md:max-h-96 object-cover"
                     />
                   )}
                 </div>
               )}
-              <p className="text-foreground">{event.description}</p>
+              <p className="text-sm md:text-base text-foreground break-words">{event.description}</p>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Users className="h-4 w-4" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                  <Users className="h-4 w-4 shrink-0" />
                   <span>
                     {event.rsvp_count} {event.rsvp_count === 1 ? "person" : "people"} going
                   </span>
@@ -304,7 +306,7 @@ const EventsCalendar = () => {
                 <Button
                   variant={event.user_rsvp ? "secondary" : "default"}
                   onClick={() => handleRSVP(event.id, event.user_rsvp || false)}
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto text-sm md:text-base h-9 md:h-10"
                 >
                   {event.user_rsvp ? (
                     <>
@@ -318,7 +320,7 @@ const EventsCalendar = () => {
               </div>
 
               {event.user_rsvp && (
-                <Badge variant="outline" className="w-fit">
+                <Badge variant="outline" className="w-fit text-xs">
                   You're attending this event
                 </Badge>
               )}
