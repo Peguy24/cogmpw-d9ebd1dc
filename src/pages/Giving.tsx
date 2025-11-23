@@ -4,14 +4,19 @@ import { useQuery } from "@tanstack/react-query";
 import { DonationForm } from "@/components/DonationForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, History, RefreshCw, Target } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ArrowLeft, History, RefreshCw, Target, CheckCircle, Mail, Download } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CampaignCard } from "@/components/CampaignCard";
+import { format } from "date-fns";
 
 const Giving = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
+  const [donationDetails, setDonationDetails] = useState<any>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const { data: activeCampaigns } = useQuery({
     queryKey: ["active-campaigns"],
@@ -36,14 +41,29 @@ const Giving = () => {
     if (donationStatus === "success") {
       const sessionId = sessionStorage.getItem('pendingDonationSession');
       if (sessionId) {
+        // Record donation and fetch details
         supabase.functions.invoke("record-donation", {
           body: { sessionId },
-        }).then(({ error }) => {
+        }).then(async ({ data, error }) => {
           if (error) {
             console.error("Error recording donation:", error);
             toast.error("Payment received but failed to record. Please contact support.");
           } else {
-            toast.success("Thank you for your generous donation!");
+            // Fetch the recorded donation details
+            const { data: donations, error: fetchError } = await supabase
+              .from("donations")
+              .select("*, user_id")
+              .eq("stripe_payment_intent_id", data?.paymentIntentId)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            if (!fetchError && donations) {
+              setDonationDetails(donations);
+              setShowReceiptDialog(true);
+            } else {
+              toast.success("Thank you for your generous donation!");
+            }
             sessionStorage.removeItem('pendingDonationSession');
           }
         });
@@ -62,6 +82,40 @@ const Giving = () => {
       navigate("/giving", { replace: true });
     }
   }, [searchParams, navigate]);
+
+  const handleEmailReceipt = async () => {
+    if (!donationDetails) return;
+    
+    setSendingEmail(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", donationDetails.user_id)
+        .single();
+
+      const { error } = await supabase.functions.invoke("send-donation-receipt", {
+        body: {
+          email: user?.email,
+          donorName: profile?.full_name || "Valued Donor",
+          donation: donationDetails,
+        },
+      });
+
+      if (error) throw error;
+      toast.success("Receipt emailed successfully!");
+    } catch (error) {
+      console.error("Error sending receipt:", error);
+      toast.error("Failed to send receipt. Please try again.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleDownloadReceipt = () => {
+    window.print();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted p-4 md:p-8">
@@ -135,6 +189,111 @@ const Giving = () => {
 
         <DonationForm />
       </div>
+
+      {/* Donation Receipt Dialog */}
+      <Dialog open={showReceiptDialog} onOpenChange={setShowReceiptDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto print:shadow-none">
+          <DialogHeader className="print:hidden">
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Donation Successful
+            </DialogTitle>
+          </DialogHeader>
+          
+          {donationDetails && (
+            <div className="space-y-6 print:text-black">
+              <div className="text-center border-b pb-4 bg-green-50 dark:bg-green-950/20 p-4 rounded-lg print:bg-gray-100">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
+                <h2 className="text-2xl font-bold">Thank You!</h2>
+                <p className="text-muted-foreground mt-1">
+                  Your generous donation has been received
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg">COGMPW</h3>
+                <p className="text-sm text-muted-foreground">Official Donation Receipt</p>
+              </div>
+
+              <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                <h3 className="font-semibold text-lg">Transaction Details</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Amount:</span>
+                    <span className="text-xl font-bold text-green-600">
+                      ${donationDetails.amount.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Category:</span>
+                    <span className="text-sm">{donationDetails.category}</span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Date:</span>
+                    <span className="text-sm">
+                      {format(new Date(donationDetails.created_at), "MMMM d, yyyy 'at' h:mm a")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b pb-2">
+                    <span className="text-sm font-medium text-muted-foreground">Transaction ID:</span>
+                    <span className="text-sm break-all font-mono text-xs">
+                      {donationDetails.stripe_payment_intent_id}
+                    </span>
+                  </div>
+                  {donationDetails.notes && (
+                    <div className="flex justify-between border-b pb-2">
+                      <span className="text-sm font-medium text-muted-foreground">Notes:</span>
+                      <span className="text-sm">{donationDetails.notes}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-950/20 p-6 rounded-lg space-y-2 print:bg-gray-100">
+                <h3 className="font-semibold text-lg">Tax Information</h3>
+                <p className="text-sm">
+                  COGMPW is a 501(c)(3) tax-exempt organization. This receipt serves as documentation 
+                  of your charitable contribution for tax purposes. No goods or services were provided 
+                  in exchange for this donation.
+                </p>
+                <p className="text-sm font-medium">
+                  Please retain this receipt for your tax records.
+                </p>
+              </div>
+
+              <div className="text-center text-sm text-muted-foreground pt-4 border-t">
+                <p>May God bless you for your generosity!</p>
+                <p className="font-medium mt-1">COGMPW Ministry Team</p>
+              </div>
+
+              <div className="flex gap-2 justify-end print:hidden">
+                <Button 
+                  onClick={handleEmailReceipt} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={sendingEmail}
+                >
+                  {sendingEmail ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4 mr-2" />
+                      Email Receipt
+                    </>
+                  )}
+                </Button>
+                <Button onClick={handleDownloadReceipt} variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download/Print
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
