@@ -3,12 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Receipt, Download } from "lucide-react";
+import { ArrowLeft, Receipt, Download, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DonationReceiptDialog } from "@/components/DonationReceiptDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import jsPDF from "jspdf";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function GivingHistory() {
   const navigate = useNavigate();
@@ -45,6 +46,15 @@ export default function GivingHistory() {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: stripeMode } = useQuery({
+    queryKey: ["stripe-mode"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("check-stripe-mode");
       if (error) throw error;
       return data;
     },
@@ -152,6 +162,15 @@ export default function GivingHistory() {
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
+        {stripeMode?.isTestMode && (
+          <Alert className="bg-amber-50 dark:bg-amber-950/50 border-amber-500 dark:border-amber-600">
+            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <AlertDescription className="text-amber-800 dark:text-amber-200">
+              <span className="font-semibold">Test Mode:</span> You're using Stripe test mode. Use test card <code className="bg-amber-100 dark:bg-amber-900 px-2 py-0.5 rounded text-xs">4242 4242 4242 4242</code> for testing. No real charges will be made.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Button
