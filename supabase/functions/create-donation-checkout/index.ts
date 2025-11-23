@@ -26,16 +26,21 @@ serve(async (req) => {
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    let user = null;
+    let userEmail = null;
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    // Try to get authenticated user, but allow guest donations
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data } = await supabaseClient.auth.getUser(token);
+      user = data.user;
+      userEmail = user?.email;
+      logStep("User authenticated", { userId: user?.id, email: userEmail });
+    } else {
+      logStep("Guest donation (no auth)");
+    }
 
-    const { amount, category, notes, interval, campaign_id } = await req.json();
+    const { amount, category, notes, interval, campaign_id, guest_email } = await req.json();
     
     if (!amount || amount <= 0) {
       throw new Error("Invalid donation amount");
@@ -45,14 +50,20 @@ serve(async (req) => {
       throw new Error("Donation category is required");
     }
 
-    logStep("Donation details received", { amount, category });
+    // For guests, require email
+    const effectiveEmail = userEmail || guest_email;
+    if (!effectiveEmail) {
+      throw new Error("Email is required for donations");
+    }
+
+    logStep("Donation details received", { amount, category, isGuest: !user });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
     });
 
     // Check if customer exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: effectiveEmail, limit: 1 });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
@@ -67,7 +78,7 @@ serve(async (req) => {
     // Create checkout session with custom amount
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
+      customer_email: customerId ? undefined : effectiveEmail,
       payment_method_types: ['card', 'apple_pay'],
       line_items: [
         {
@@ -83,13 +94,14 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/home?donation=success`,
-      cancel_url: `${req.headers.get("origin")}/home?donation=canceled`,
+      success_url: `${req.headers.get("origin")}/giving?donation=success`,
+      cancel_url: `${req.headers.get("origin")}/giving?donation=canceled`,
       metadata: {
-        user_id: user.id,
+        user_id: user?.id || 'guest',
         category: category,
         notes: notes || '',
         campaign_id: campaign_id || '',
+        guest_email: !user ? effectiveEmail : '',
       },
     });
 

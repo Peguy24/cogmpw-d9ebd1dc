@@ -59,7 +59,7 @@ export type Database = {
           status: string
           stripe_payment_intent_id: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -72,7 +72,7 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -85,7 +85,7 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -167,6 +167,7 @@ export type Database = {
           media_url: string | null
           title: string
           updated_at: string
+          visibility: string
         }
         Insert: {
           created_at?: string
@@ -179,6 +180,7 @@ export type Database = {
           media_url?: string | null
           title: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
           created_at?: string
@@ -191,6 +193,7 @@ export type Database = {
           media_url?: string | null
           title?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: []
       }

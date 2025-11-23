@@ -24,6 +24,7 @@ const donationSchema = z.object({
   type: z.enum(["one-time", "recurring"]),
   interval: z.enum(["month", "week"]).optional(),
   campaign_id: z.string().optional(),
+  guest_email: z.string().email("Invalid email address").optional(),
 });
 
 type DonationFormValues = z.infer<typeof donationSchema>;
@@ -40,12 +41,18 @@ const DONATION_CATEGORIES = [
 export const DonationForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCampaignFromStorage, setSelectedCampaignFromStorage] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const campaignId = sessionStorage.getItem('selectedCampaignId');
     if (campaignId) {
       setSelectedCampaignFromStorage(campaignId);
     }
+    
+    // Check if user is authenticated
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
   }, []);
 
   const form = useForm<DonationFormValues>({
@@ -67,8 +74,10 @@ export const DonationForm = () => {
       setIsSubmitting(true);
 
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Please sign in to make a donation");
+
+      // For guests, require email
+      if (!session && !values.guest_email) {
+        toast.error("Please provide your email address");
         return;
       }
 
@@ -103,6 +112,7 @@ export const DonationForm = () => {
             category: values.category,
             notes: values.notes || null,
             campaign_id: values.campaign_id || selectedCampaignFromStorage || null,
+            guest_email: values.guest_email || null,
           },
         });
 
@@ -185,6 +195,29 @@ export const DonationForm = () => {
                     </Select>
                     <FormDescription>
                       Your donation will automatically renew each {field.value === "month" ? "month" : "week"}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {!isAuthenticated && (
+              <FormField
+                control={form.control}
+                name="guest_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address (Required for guests)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="your.email@example.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      We'll send your donation receipt to this email
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

@@ -19,6 +19,7 @@ import GivingCampaigns from "./pages/GivingCampaigns";
 import CampaignDetails from "./pages/CampaignDetails";
 import ManageSubscriptions from "./pages/ManageSubscriptions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import GuestLanding from "./pages/GuestLanding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/guest" element={<GuestLanding />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/home" element={<Home />} />
       <Route path="/pending-approval" element={<PendingApproval />} />
