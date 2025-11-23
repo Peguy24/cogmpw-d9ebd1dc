@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, Users, ArrowUp } from "lucide-react";
 import churchBanner from "@/assets/church-banner-new.jpg";
+import churchLogo from "@/assets/church-logo-official.webp";
 import { useEffect, useRef, useState } from "react";
 
 const Index = () => {
@@ -106,7 +107,11 @@ const Index = () => {
       }`}
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold mb-3">Everything You Need</h2>
+        <img 
+          src={churchLogo} 
+          alt="Church of God - Ministry of Prayer and the Word" 
+          className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-4"
+        />
         <p className="text-muted-foreground text-sm md:text-base">Stay connected with your church community</p>
       </div>
       
