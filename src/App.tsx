@@ -24,6 +24,7 @@ import GuestLanding from "./pages/GuestLanding";
 import GuestEvents from "./pages/GuestEvents";
 import GuestSermons from "./pages/GuestSermons";
 import GuestDevotionals from "./pages/GuestDevotionals";
+import MyPrayerRequests from "./pages/MyPrayerRequests";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const AppContent = () => {
       <Route path="/admin/campaigns" element={<AdminCampaigns />} />
       <Route path="/admin/campaigns/analytics" element={<AdminCampaignAnalytics />} />
       <Route path="/admin/prayer-requests" element={<AdminPrayerRequests />} />
+      <Route path="/my-prayer-requests" element={<MyPrayerRequests />} />
       <Route path="/giving" element={<Giving />} />
       <Route path="/giving-history" element={<GivingHistory />} />
       <Route path="/campaigns" element={<GivingCampaigns />} />
