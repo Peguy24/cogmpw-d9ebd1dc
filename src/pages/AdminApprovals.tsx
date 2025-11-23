@@ -148,43 +148,43 @@ const AdminApprovals = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/home")}>
-              <ArrowLeft className="h-5 w-5" />
+        <div className="container flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/home")}>
+              <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
-            <h1 className="text-xl font-bold">Pending Approvals</h1>
+            <h1 className="text-lg md:text-xl font-bold">Pending Approvals</h1>
           </div>
-          <Badge variant="secondary">{pendingUsers.length} Pending</Badge>
+          <Badge variant="secondary" className="text-xs md:text-sm">{pendingUsers.length} Pending</Badge>
         </div>
       </header>
 
-      <main className="container py-6">
+      <main className="container py-4 md:py-6 px-3 md:px-4">
         {pendingUsers.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">No pending user approvals</p>
+              <p className="text-muted-foreground text-sm md:text-base">No pending user approvals</p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {pendingUsers.map((user) => (
               <Card key={user.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle>{user.full_name}</CardTitle>
-                      <CardDescription>
+                <CardHeader className="pb-3 md:pb-6">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base md:text-lg truncate">{user.full_name}</CardTitle>
+                      <CardDescription className="text-xs md:text-sm">
                         Signed up {new Date(user.created_at).toLocaleDateString()}
                       </CardDescription>
                     </div>
-                    <Badge variant="outline">Pending</Badge>
+                    <Badge variant="outline" className="shrink-0 text-xs">Pending</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2 mb-4">
+                  <div className="space-y-2 mb-3 md:mb-4">
                     {user.phone && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         Phone: {user.phone}
                       </p>
                     )}
@@ -192,7 +192,7 @@ const AdminApprovals = () => {
                   <div className="flex gap-2">
                     <Button
                       onClick={() => handleApprove(user.id)}
-                      className="flex-1"
+                      className="flex-1 min-h-[44px]"
                       size="sm"
                     >
                       <Check className="h-4 w-4 mr-2" />
@@ -201,7 +201,7 @@ const AdminApprovals = () => {
                     <Button
                       onClick={() => handleReject(user.id)}
                       variant="destructive"
-                      className="flex-1"
+                      className="flex-1 min-h-[44px]"
                       size="sm"
                     >
                       <X className="h-4 w-4 mr-2" />

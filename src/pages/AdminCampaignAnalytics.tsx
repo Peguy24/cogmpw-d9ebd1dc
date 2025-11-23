@@ -468,58 +468,58 @@ export default function AdminCampaignAnalytics() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-background p-3 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => navigate("/admin/campaigns")}
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold">Campaign Analytics</h1>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl md:text-3xl font-bold">Campaign Analytics</h1>
                 {isLive && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-full text-sm font-medium animate-pulse">
-                    <Radio className="h-4 w-4" />
+                  <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1 bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-full text-xs md:text-sm font-medium animate-pulse">
+                    <Radio className="h-3 w-3 md:h-4 md:w-4" />
                     Live
                   </div>
                 )}
               </div>
-              <p className="text-muted-foreground">Insights and trends for giving campaigns</p>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">Insights and trends for giving campaigns</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToCSV}>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" size="sm" onClick={exportToCSV} className="flex-1 sm:flex-none">
               <FileText className="h-4 w-4 mr-2" />
-              Export CSV
+              <span className="hidden sm:inline">Export </span>CSV
             </Button>
-            <Button variant="outline" onClick={exportToPDF}>
+            <Button variant="outline" size="sm" onClick={exportToPDF} className="flex-1 sm:flex-none">
               <Download className="h-4 w-4 mr-2" />
-              Export PDF
+              <span className="hidden sm:inline">Export </span>PDF
             </Button>
           </div>
         </div>
 
         {/* Live Donation Alert */}
         {recentDonation && (
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-4 animate-fade-in">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center text-white text-xl animate-scale-in">
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950/20 dark:to-blue-950/20 border-2 border-green-200 dark:border-green-800 rounded-lg p-3 md:p-4 animate-fade-in">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-green-500 flex items-center justify-center text-white text-lg md:text-xl animate-scale-in shrink-0">
                   🎉
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg text-foreground">New Donation Received!</h3>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-sm md:text-lg text-foreground truncate">New Donation Received!</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground truncate">
                     ${recentDonation.amount.toFixed(2)} from {recentDonation.donor}
                   </p>
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground shrink-0">
                 Just now
               </div>
             </div>
@@ -527,58 +527,58 @@ export default function AdminCampaignAnalytics() {
         )}
 
         {/* Summary Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Total Raised
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1 md:gap-2">
+                <DollarSign className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="truncate">Total Raised</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-lg md:text-2xl font-bold text-primary">
                 ${totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Average Donation
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1 md:gap-2">
+                <TrendingUp className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="truncate">Avg Donation</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-lg md:text-2xl font-bold">
                 ${averageDonation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Unique Donors
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1 md:gap-2">
+                <Users className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="truncate">Unique Donors</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-lg md:text-2xl font-bold">
                 {uniqueDonors}
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Active Campaigns
+            <CardHeader className="pb-2 md:pb-3">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-1 md:gap-2">
+                <Target className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="truncate">Active</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-lg md:text-2xl font-bold">
                 {activeCampaigns}
               </div>
             </CardContent>
@@ -587,24 +587,32 @@ export default function AdminCampaignAnalytics() {
 
         {/* Donation Trends */}
         <Card>
-          <CardHeader>
-            <CardTitle>Donation Trends</CardTitle>
-            <CardDescription>Monthly donation amounts over the last 6 months</CardDescription>
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-base md:text-lg">Donation Trends</CardTitle>
+            <CardDescription className="text-xs md:text-sm">Monthly donation amounts over the last 6 months</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="px-2 md:px-6">
+            <ResponsiveContainer width="100%" height={250} className="md:h-[300px]">
               <LineChart data={donationTrendData()}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  style={{ fontSize: '0.75rem' }}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  style={{ fontSize: '0.75rem' }}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--background))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
+                    fontSize: '0.75rem',
                   }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '0.75rem' }} />
                 <Line
                   type="monotone"
                   dataKey="amount"
@@ -624,27 +632,38 @@ export default function AdminCampaignAnalytics() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-4 md:gap-6 lg:grid-cols-2">
           {/* Campaign Performance */}
           <Card>
-            <CardHeader>
-              <CardTitle>Campaign Performance</CardTitle>
-              <CardDescription>Top campaigns by amount raised</CardDescription>
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="text-base md:text-lg">Campaign Performance</CardTitle>
+              <CardDescription className="text-xs md:text-sm">Top campaigns by amount raised</CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+            <CardContent className="px-2 md:px-6">
+              <ResponsiveContainer width="100%" height={250} className="md:h-[300px]">
                 <BarChart data={campaignPerformanceData()}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke="hsl(var(--muted-foreground))"
+                    style={{ fontSize: '0.65rem' }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    stroke="hsl(var(--muted-foreground))"
+                    style={{ fontSize: '0.75rem' }}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
+                      fontSize: '0.75rem',
                     }}
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '0.75rem' }} />
                   <Bar dataKey="raised" fill="hsl(var(--primary))" name="Raised ($)" />
                 </BarChart>
               </ResponsiveContainer>

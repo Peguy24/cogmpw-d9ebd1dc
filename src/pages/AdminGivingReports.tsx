@@ -251,28 +251,28 @@ const AdminGivingReports = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="container flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
             <Link to="/home">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold">Giving Reports</h1>
+            <h1 className="text-lg md:text-xl font-bold truncate">Giving Reports</h1>
           </div>
         </div>
       </header>
 
-      <main className="container py-6 space-y-6">
+      <main className="container py-4 md:py-6 px-3 md:px-4 space-y-4 md:space-y-6">
         {/* Time Period Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(todayStats.totalAmount)}</div>
+              <div className="text-xl md:text-2xl font-bold">{formatCurrency(todayStats.totalAmount)}</div>
               <p className="text-xs text-muted-foreground">
                 {todayStats.donationCount} donations • Avg: {formatCurrency(todayStats.averageDonation)}
               </p>
@@ -285,20 +285,20 @@ const AdminGivingReports = () => {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(weekStats.totalAmount)}</div>
+              <div className="text-xl md:text-2xl font-bold">{formatCurrency(weekStats.totalAmount)}</div>
               <p className="text-xs text-muted-foreground">
                 {weekStats.donationCount} donations • Avg: {formatCurrency(weekStats.averageDonation)}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="sm:col-span-2 lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">This Month</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(monthStats.totalAmount)}</div>
+              <div className="text-xl md:text-2xl font-bold">{formatCurrency(monthStats.totalAmount)}</div>
               <p className="text-xs text-muted-foreground">
                 {monthStats.donationCount} donations • Avg: {formatCurrency(monthStats.averageDonation)}
               </p>
@@ -308,34 +308,34 @@ const AdminGivingReports = () => {
 
         {/* Time Range Selector */}
         <Tabs value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="today">Today</TabsTrigger>
-            <TabsTrigger value="week">This Week</TabsTrigger>
-            <TabsTrigger value="month">This Month</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="today" className="text-xs md:text-sm py-2">Today</TabsTrigger>
+            <TabsTrigger value="week" className="text-xs md:text-sm py-2">This Week</TabsTrigger>
+            <TabsTrigger value="month" className="text-xs md:text-sm py-2">This Month</TabsTrigger>
           </TabsList>
 
-          <TabsContent value={timeRange} className="space-y-4 mt-6">
-            <div className="grid gap-4 md:grid-cols-2">
+          <TabsContent value={timeRange} className="space-y-4 mt-4 md:mt-6">
+            <div className="grid gap-4 lg:grid-cols-2">
               {/* Category Breakdown */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Donation Categories</CardTitle>
-                  <CardDescription>Breakdown by category for selected period</CardDescription>
+                <CardHeader className="pb-3 md:pb-6">
+                  <CardTitle className="text-base md:text-lg">Donation Categories</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">Breakdown by category for selected period</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {categoryBreakdown.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
+                    <p className="text-xs md:text-sm text-muted-foreground text-center py-4">
                       No donations for this period
                     </p>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                       {categoryBreakdown.map((item) => (
-                        <div key={item.category} className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium leading-none">{item.category}</p>
-                            <p className="text-sm text-muted-foreground">{item.count} donations</p>
+                        <div key={item.category} className="flex items-center justify-between gap-2">
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <p className="text-xs md:text-sm font-medium leading-none truncate">{item.category}</p>
+                            <p className="text-xs text-muted-foreground">{item.count} donations</p>
                           </div>
-                          <div className="text-sm font-bold">{formatCurrency(item.total)}</div>
+                          <div className="text-xs md:text-sm font-bold shrink-0">{formatCurrency(item.total)}</div>
                         </div>
                       ))}
                     </div>
@@ -345,29 +345,29 @@ const AdminGivingReports = () => {
 
               {/* Top Donors */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Top Donors</CardTitle>
-                  <CardDescription>Most generous givers for selected period</CardDescription>
+                <CardHeader className="pb-3 md:pb-6">
+                  <CardTitle className="text-base md:text-lg">Top Donors</CardTitle>
+                  <CardDescription className="text-xs md:text-sm">Most generous givers for selected period</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {topDonors.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
+                    <p className="text-xs md:text-sm text-muted-foreground text-center py-4">
                       No donations for this period
                     </p>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3 md:space-y-4">
                       {topDonors.map((donor, index) => (
-                        <div key={donor.user_id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                        <div key={donor.user_id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs md:text-sm font-bold shrink-0">
                               {index + 1}
                             </div>
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium leading-none">{donor.full_name}</p>
-                              <p className="text-sm text-muted-foreground">{donor.donation_count} donations</p>
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <p className="text-xs md:text-sm font-medium leading-none truncate">{donor.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{donor.donation_count} donations</p>
                             </div>
                           </div>
-                          <div className="text-sm font-bold">{formatCurrency(donor.total)}</div>
+                          <div className="text-xs md:text-sm font-bold shrink-0">{formatCurrency(donor.total)}</div>
                         </div>
                       ))}
                     </div>

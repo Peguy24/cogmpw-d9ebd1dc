@@ -169,56 +169,56 @@ const AdminUserManagement = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/home")}>
-              <ArrowLeft className="h-5 w-5" />
+        <div className="container flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/home")}>
+              <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
-            <h1 className="text-xl font-bold">User Management</h1>
+            <h1 className="text-lg md:text-xl font-bold truncate">User Management</h1>
           </div>
-          <Badge variant="secondary">
+          <Badge variant="secondary" className="shrink-0 text-xs md:text-sm">
             <Users className="h-3 w-3 mr-1" />
-            {users.length} Users
+            {users.length}
           </Badge>
         </div>
       </header>
 
-      <main className="container py-6">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Assign Leader Roles</CardTitle>
-            <CardDescription>
+      <main className="container py-4 md:py-6 px-3 md:px-4">
+        <Card className="mb-4 md:mb-6">
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-base md:text-lg">Assign Leader Roles</CardTitle>
+            <CardDescription className="text-xs md:text-sm">
               Leaders can publish news and events. Admins have full access to all features.
             </CardDescription>
           </CardHeader>
         </Card>
 
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {users.map((user) => (
             <Card key={user.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
-                      {user.full_name}
+              <CardHeader className="pb-3 md:pb-6">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="flex flex-wrap items-center gap-2 text-base md:text-lg">
+                      <span className="truncate">{user.full_name}</span>
                       {user.isAdmin && (
-                        <Badge variant="default">
+                        <Badge variant="default" className="text-xs">
                           <Shield className="h-3 w-3 mr-1" />
                           Admin
                         </Badge>
                       )}
                       {user.isLeader && !user.isAdmin && (
-                        <Badge variant="secondary">Leader</Badge>
+                        <Badge variant="secondary" className="text-xs">Leader</Badge>
                       )}
                     </CardTitle>
-                    <CardDescription className="space-y-1 mt-2">
+                    <CardDescription className="space-y-1 mt-2 text-xs md:text-sm">
                       {user.ministry && (
-                        <div className="text-sm">Ministry: {user.ministry}</div>
+                        <div>Ministry: {user.ministry}</div>
                       )}
                       {user.phone && (
-                        <div className="text-sm">Phone: {user.phone}</div>
+                        <div>Phone: {user.phone}</div>
                       )}
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-muted-foreground">
                         Member since {new Date(user.created_at).toLocaleDateString()}
                       </div>
                     </CardDescription>
@@ -226,12 +226,12 @@ const AdminUserManagement = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor={`leader-${user.id}`} className="text-base">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="space-y-0.5 flex-1">
+                    <Label htmlFor={`leader-${user.id}`} className="text-sm md:text-base">
                       Leader Permissions
                     </Label>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-xs md:text-sm text-muted-foreground">
                       Allow this user to publish news and events
                     </div>
                   </div>
@@ -240,6 +240,7 @@ const AdminUserManagement = () => {
                     checked={user.isLeader}
                     disabled={user.isAdmin || user.id === currentUserId}
                     onCheckedChange={() => toggleLeaderRole(user.id, user.isLeader)}
+                    className="shrink-0"
                   />
                 </div>
                 {user.isAdmin && (
@@ -260,7 +261,7 @@ const AdminUserManagement = () => {
         {users.length === 0 && (
           <Card>
             <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">No approved users found</p>
+              <p className="text-muted-foreground text-sm md:text-base">No approved users found</p>
             </CardContent>
           </Card>
         )}
