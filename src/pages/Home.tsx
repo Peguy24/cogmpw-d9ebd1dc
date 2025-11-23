@@ -299,18 +299,18 @@ const Home = () => {
           
           <TabsContent value="prayer">
             <div className="max-w-2xl mx-auto">
-              <div className="mb-6">
-                <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="mb-4 md:mb-6">
+                <div className="flex flex-col gap-3">
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Prayer Requests</h2>
-                    <p className="text-muted-foreground">
+                    <h2 className="text-xl md:text-2xl font-bold mb-2">Prayer Requests</h2>
+                    <p className="text-sm md:text-base text-muted-foreground">
                       Share your prayer needs with our church leadership. Your request will be kept confidential.
                     </p>
                   </div>
-                  <Link to="/my-prayer-requests">
-                    <Button variant="outline" size="sm" className="shrink-0">
+                  <Link to="/my-prayer-requests" className="w-full md:w-auto">
+                    <Button variant="outline" size="sm" className="w-full md:w-auto">
                       <Heart className="h-4 w-4 mr-2" />
-                      My Requests
+                      View My Prayer Requests
                     </Button>
                   </Link>
                 </div>

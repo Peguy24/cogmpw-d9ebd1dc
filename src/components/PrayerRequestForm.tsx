@@ -84,17 +84,21 @@ export default function PrayerRequestForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
         <FormField
           control={form.control}
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel className="text-sm md:text-base">Title</FormLabel>
               <FormControl>
-                <Input placeholder="Enter a brief title" {...field} />
+                <Input 
+                  placeholder="Enter a brief title" 
+                  className="text-sm md:text-base"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs md:text-sm" />
             </FormItem>
           )}
         />
@@ -104,18 +108,18 @@ export default function PrayerRequestForm() {
           name="content"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Prayer Request</FormLabel>
+              <FormLabel className="text-sm md:text-base">Prayer Request</FormLabel>
               <FormControl>
                 <Textarea 
                   placeholder="Share your prayer request..." 
-                  className="min-h-[150px]"
+                  className="min-h-[120px] md:min-h-[150px] text-sm md:text-base resize-none"
                   {...field} 
                 />
               </FormControl>
-              <FormDescription>
+              <FormDescription className="text-xs md:text-sm">
                 Your prayer request will be kept confidential and only seen by church leadership.
               </FormDescription>
-              <FormMessage />
+              <FormMessage className="text-xs md:text-sm" />
             </FormItem>
           )}
         />
@@ -124,18 +128,19 @@ export default function PrayerRequestForm() {
           control={form.control}
           name="is_urgent"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3 md:p-4">
               <FormControl>
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  className="mt-0.5"
                 />
               </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel>
+              <div className="space-y-1 leading-none flex-1">
+                <FormLabel className="text-sm md:text-base font-medium">
                   Mark as urgent
                 </FormLabel>
-                <FormDescription>
+                <FormDescription className="text-xs md:text-sm">
                   Check this if you need immediate prayer
                 </FormDescription>
               </div>
@@ -143,7 +148,11 @@ export default function PrayerRequestForm() {
           )}
         />
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button 
+          type="submit" 
+          disabled={isSubmitting} 
+          className="w-full text-sm md:text-base h-10 md:h-11"
+        >
           {isSubmitting ? "Submitting..." : "Submit Prayer Request"}
         </Button>
       </form>
