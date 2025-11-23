@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import NewsPostForm from "./NewsPostForm";
 import NewsEditDialog from "./NewsEditDialog";
 import { toast } from "@/hooks/use-toast";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface NewsItem {
   id: string;
@@ -170,8 +171,13 @@ const NewsFeed = () => {
 
   const canPostNews = userRole === "admin" || userRole === "leader";
 
+  const handleRefresh = async () => {
+    await fetchNews();
+  };
+
   return (
-    <div className="space-y-3 md:space-y-4">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="space-y-3 md:space-y-4">
       {!checkingRole && canPostNews && (
         <NewsPostForm onSuccess={fetchNews} />
       )}
@@ -284,7 +290,8 @@ const NewsFeed = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 

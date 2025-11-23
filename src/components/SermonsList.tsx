@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import SermonPostForm from "./SermonPostForm";
 import SermonEditDialog from "./SermonEditDialog";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface Sermon {
   id: string;
@@ -96,8 +97,13 @@ const SermonsList = () => {
     return <div className="text-center py-8 text-muted-foreground">Loading sermons...</div>;
   }
 
+  const handleRefresh = async () => {
+    await loadSermons();
+  };
+
   return (
-    <div className="space-y-4 md:space-y-6">
+    <PullToRefresh onRefresh={handleRefresh} pullingContent="">
+      <div className="space-y-4 md:space-y-6">
       {isLeaderOrAdmin && (
         <div className="flex justify-end">
           <Button onClick={() => setShowForm(!showForm)} className="gap-2 text-sm md:text-base h-9 md:h-10">
@@ -240,7 +246,8 @@ const SermonsList = () => {
           }}
         />
       )}
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 
