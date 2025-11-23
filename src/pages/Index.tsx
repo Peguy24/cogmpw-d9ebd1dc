@@ -33,21 +33,21 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
       {/* Hero Section */}
-      <section className="container py-10">
+      <section className="container px-4 py-8">
         <div className="mx-auto max-w-5xl space-y-6">
           <img 
             src={churchBanner} 
             alt="Church of God - Ministry of Prayer and the Word" 
             className="w-full rounded-lg shadow-lg animate-fade-in"
           />
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Button size="lg" onClick={() => navigate("/guest")}>
+          <div className="flex flex-col md:flex-row gap-3 md:justify-center">
+            <Button size="lg" onClick={() => navigate("/guest")} className="w-full md:w-auto">
               Continue as Guest
             </Button>
-            <Button size="lg" onClick={() => navigate("/auth")}>
+            <Button size="lg" onClick={() => navigate("/auth")} className="w-full md:w-auto">
               Get Started
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/auth")}>
+            <Button size="lg" variant="outline" onClick={() => navigate("/auth")} className="w-full md:w-auto">
               Sign In
             </Button>
           </div>
@@ -55,23 +55,23 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="container py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Everything You Need</h2>
-          <p className="text-muted-foreground">Stay connected with your church community</p>
+      <section className="container px-4 py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">Everything You Need</h2>
+          <p className="text-muted-foreground text-sm md:text-base">Stay connected with your church community</p>
         </div>
         
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, index) => (
             <Card key={index} className="text-center hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <CardHeader className="pb-3">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
                   {feature.icon}
                 </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
+                <CardTitle className="text-lg md:text-xl">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>{feature.description}</CardDescription>
+                <CardDescription className="text-sm">{feature.description}</CardDescription>
               </CardContent>
             </Card>
           ))}
@@ -79,15 +79,15 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="container py-20">
+      <section className="container px-4 py-12 pb-16">
         <Card className="bg-primary text-primary-foreground">
-          <CardContent className="py-12 text-center">
-            <Users className="h-16 w-16 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold mb-4">Join Our Community</h2>
-            <p className="text-lg mb-6 opacity-90">
+          <CardContent className="py-10 text-center px-4">
+            <Users className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4" />
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">Join Our Community</h2>
+            <p className="text-base md:text-lg mb-6 opacity-90">
               Create your account today and be part of our growing church family
             </p>
-            <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
+            <Button size="lg" variant="secondary" onClick={() => navigate("/auth")} className="w-full md:w-auto">
               Create Account
             </Button>
           </CardContent>
