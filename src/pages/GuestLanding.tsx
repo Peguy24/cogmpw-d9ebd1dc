@@ -13,15 +13,23 @@ const GuestLanding = () => {
       <div className="container py-8 space-y-8">
         {/* Header */}
         <div className="relative">
-          <img 
-            src={pastorPhoto} 
-            alt="Church Pastor - Church of God - Ministry of Prayer and the Word" 
-            className="w-full h-48 md:h-64 object-cover rounded-lg shadow-lg animate-fade-in"
-          />
+          <div className="relative w-full h-48 md:h-64 rounded-lg overflow-hidden shadow-lg">
+            <img 
+              src={pastorPhoto} 
+              alt="Pastor Jean Elie Turlias - Church of God - Ministry of Prayer and the Word" 
+              className="w-full h-full object-cover animate-fade-in"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <h1 className="text-2xl md:text-4xl font-bold mb-2">Welcome to COGMPW</h1>
+              <p className="text-lg md:text-xl mb-1">Pastor Jean Elie Turlias</p>
+              <p className="text-sm md:text-base opacity-90">Church of God - Ministry of Prayer and the Word</p>
+            </div>
+          </div>
           <Button 
             onClick={() => navigate("/auth")} 
             size="lg"
-            className="absolute top-4 right-4 md:static md:mt-4 md:ml-auto md:block"
+            className="mt-4 w-full md:w-auto md:ml-auto md:block"
           >
             <LogIn className="mr-2 h-4 w-4" />
             Sign In / Sign Up
