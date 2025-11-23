@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, BookOpen } from "lucide-react";
+import { Plus, Edit2, Trash2, BookOpen, Eye, Lock, Globe } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import DevotionalPostForm from "./DevotionalPostForm";
@@ -116,9 +116,36 @@ const DevotionalsList = () => {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <BookOpen className="h-5 w-5 text-primary" />
                         <CardTitle>{devotional.title}</CardTitle>
+                        {isLeaderOrAdmin && (
+                          <Badge 
+                            variant={
+                              devotional.visibility === "guest" ? "secondary" :
+                              devotional.visibility === "member" ? "default" :
+                              "outline"
+                            }
+                            className="gap-1"
+                          >
+                            {devotional.visibility === "guest" ? (
+                              <>
+                                <Eye className="h-3 w-3" />
+                                Guests Only
+                              </>
+                            ) : devotional.visibility === "member" ? (
+                              <>
+                                <Lock className="h-3 w-3" />
+                                Members Only
+                              </>
+                            ) : (
+                              <>
+                                <Globe className="h-3 w-3" />
+                                Everyone
+                              </>
+                            )}
+                          </Badge>
+                        )}
                       </div>
                       <CardDescription>
                         {format(new Date(devotional.devotional_date), "MMMM d, yyyy")}
