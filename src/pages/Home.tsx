@@ -15,6 +15,7 @@ import DevotionalsList from "@/components/DevotionalsList";
 import LivestreamSection from "@/components/LivestreamSection";
 import { useIsMobile } from "@/hooks/use-mobile";
 import churchLogo from "@/assets/church-logo.webp";
+import pastorPhoto from "@/assets/pastor-photo.jpg";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -218,6 +219,19 @@ const Home = () => {
           </div>
         </div>
       </header>
+
+      {/* Pastor Banner */}
+      <section className="relative w-full bg-gradient-to-br from-primary/5 via-background to-accent/5">
+        <div className="container px-4 py-6">
+          <div className="mx-auto max-w-4xl">
+            <img 
+              src={pastorPhoto} 
+              alt="Church Pastor" 
+              className="w-full h-48 md:h-64 object-cover rounded-lg shadow-lg animate-fade-in"
+            />
+          </div>
+        </div>
+      </section>
 
       {/* Main Content */}
       <main className={`container py-4 px-4 ${isMobile ? 'pb-20' : ''}`}>
