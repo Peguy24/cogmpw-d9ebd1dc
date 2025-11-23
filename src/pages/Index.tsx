@@ -3,9 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, Users } from "lucide-react";
 import churchBanner from "@/assets/church-banner-new.jpg";
+import { useEffect, useRef, useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleSections((prev) => new Set(prev).add(entry.target.id));
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -100px 0px" }
+    );
+
+    const sections = document.querySelectorAll('section[id]');
+    sections.forEach((section) => observerRef.current?.observe(section));
+
+    return () => observerRef.current?.disconnect();
+  }, []);
 
   const features = [
     {
@@ -36,7 +57,12 @@ const Index = () => {
   };
 
   const heroSection = (
-    <section id="hero" className="container px-4 py-8 scroll-mt-4">
+    <section 
+      id="hero" 
+      className={`container px-4 py-8 scroll-mt-4 transition-all duration-700 ${
+        visibleSections.has('hero') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      }`}
+    >
       <div className="mx-auto max-w-5xl space-y-6">
         <img 
           src={churchBanner} 
@@ -59,7 +85,12 @@ const Index = () => {
   );
 
   const featuresSection = (
-    <section id="features" className="container px-4 py-12 scroll-mt-4">
+    <section 
+      id="features" 
+      className={`container px-4 py-12 scroll-mt-4 transition-all duration-700 ${
+        visibleSections.has('features') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      }`}
+    >
       <div className="text-center mb-8">
         <h2 className="text-2xl md:text-3xl font-bold mb-3">Everything You Need</h2>
         <p className="text-muted-foreground text-sm md:text-base">Stay connected with your church community</p>
@@ -84,7 +115,12 @@ const Index = () => {
   );
 
   const ctaSection = (
-    <section id="join" className="container px-4 py-12 pb-16 scroll-mt-4">
+    <section 
+      id="join" 
+      className={`container px-4 py-12 pb-16 scroll-mt-4 transition-all duration-700 ${
+        visibleSections.has('join') ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      }`}
+    >
       <Card className="bg-primary text-primary-foreground">
         <CardContent className="py-10 text-center px-4">
           <Users className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4" />
