@@ -23,13 +23,13 @@ interface PrayerRequest {
 export default function AdminPrayerRequests() {
   const [prayerRequests, setPrayerRequests] = useState<PrayerRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    checkAdminAndLoadRequests();
+    checkAuthAndLoadRequests();
   }, []);
 
-  const checkAdminAndLoadRequests = async () => {
+  const checkAuthAndLoadRequests = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -42,10 +42,10 @@ export default function AdminPrayerRequests() {
       .select("role")
       .eq("user_id", user.id);
 
-    const hasAdminRole = roles?.some(r => r.role === "admin");
-    setIsAdmin(hasAdminRole || false);
+    const hasAccess = roles?.some(r => r.role === "admin" || (r.role as string) === "super_leader");
+    setIsAuthorized(hasAccess || false);
 
-    if (hasAdminRole) {
+    if (hasAccess) {
       loadPrayerRequests();
     } else {
       setIsLoading(false);
@@ -137,14 +137,14 @@ export default function AdminPrayerRequests() {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAuthorized) {
     return (
       <div className="flex items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
             <CardDescription>
-              You don't have permission to view this page.
+              You don't have permission to view this page. Only admins and super leaders can access prayer requests.
             </CardDescription>
           </CardHeader>
         </Card>
