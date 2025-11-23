@@ -22,6 +22,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import GuestLanding from "./pages/GuestLanding";
 import GuestEvents from "./pages/GuestEvents";
 import GuestSermons from "./pages/GuestSermons";
+import GuestDevotionals from "./pages/GuestDevotionals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const AppContent = () => {
       <Route path="/guest" element={<GuestLanding />} />
       <Route path="/guest/events" element={<GuestEvents />} />
       <Route path="/guest/sermons" element={<GuestSermons />} />
+      <Route path="/guest/devotionals" element={<GuestDevotionals />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/home" element={<Home />} />
       <Route path="/pending-approval" element={<PendingApproval />} />
