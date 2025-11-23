@@ -26,7 +26,7 @@ const GuestLanding = () => {
         <LivestreamSection />
 
         {/* Quick Actions */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/giving")}>
             <CardHeader>
               <div className="flex items-center gap-4">
@@ -50,6 +50,20 @@ const GuestLanding = () => {
                 <div>
                   <CardTitle>View Events</CardTitle>
                   <CardDescription>See our upcoming church events</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate("/guest/sermons")}>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 rounded-full">
+                  <Video className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Watch Sermons</CardTitle>
+                  <CardDescription>Listen to our latest messages</CardDescription>
                 </div>
               </div>
             </CardHeader>
