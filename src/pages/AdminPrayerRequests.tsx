@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 interface PrayerRequest {
   id: string;
@@ -21,6 +22,7 @@ interface PrayerRequest {
 }
 
 export default function AdminPrayerRequests() {
+  const navigate = useNavigate();
   const [prayerRequests, setPrayerRequests] = useState<PrayerRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -139,70 +141,92 @@ export default function AdminPrayerRequests() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="flex items-center justify-center min-h-screen p-3 md:p-4">
         <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-lg md:text-2xl">Access Denied</CardTitle>
+            <CardDescription className="text-xs md:text-sm">
               You don't have permission to view this page. Only admins and super leaders can access prayer requests.
             </CardDescription>
           </CardHeader>
+          <CardContent className="p-4 md:p-6 pt-0">
+            <Button 
+              onClick={() => navigate("/home")} 
+              className="w-full min-h-[44px] text-sm md:text-base"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Prayer Requests</h1>
-        <p className="text-muted-foreground">
-          View and manage prayer requests from church members
-        </p>
+    <div className="container mx-auto py-3 md:py-6 px-3 md:px-4 max-w-4xl">
+      <div className="mb-4 md:mb-6 space-y-3">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/home")}
+            className="min-h-[44px] min-w-[44px]"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl md:text-3xl font-bold">Prayer Requests</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">
+              View and manage prayer requests from church members
+            </p>
+          </div>
+        </div>
       </div>
 
       {prayerRequests.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No prayer requests yet</p>
+          <CardContent className="py-6 md:py-8 text-center">
+            <p className="text-sm md:text-base text-muted-foreground">No prayer requests yet</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {prayerRequests.map((request) => (
             <Card key={request.id} className={request.is_urgent ? "border-destructive" : ""}>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
+              <CardHeader className="p-4 md:p-6">
+                <div className="flex flex-col gap-2">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <CardTitle className="text-xl">{request.title}</CardTitle>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <CardTitle className="text-base md:text-xl break-words">{request.title}</CardTitle>
                       {request.is_urgent && (
-                        <Badge variant="destructive" className="flex items-center gap-1">
+                        <Badge variant="destructive" className="flex items-center gap-1 text-xs">
                           <AlertCircle className="h-3 w-3" />
                           Urgent
                         </Badge>
                       )}
                       {request.is_answered && (
-                        <Badge variant="default" className="flex items-center gap-1 bg-green-500">
+                        <Badge variant="default" className="flex items-center gap-1 bg-green-500 text-xs">
                           <CheckCircle className="h-3 w-3" />
                           Answered
                         </Badge>
                       )}
                     </div>
-                    <CardDescription>
+                    <CardDescription className="text-xs md:text-sm break-words">
                       From: {request.profiles?.full_name || "Unknown"} • {format(new Date(request.created_at), "PPp")}
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="whitespace-pre-wrap">{request.content}</p>
+              <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6 pt-0">
+                <p className="whitespace-pre-wrap text-sm md:text-base break-words">{request.content}</p>
                 
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     variant={request.is_answered ? "outline" : "default"}
                     size="sm"
                     onClick={() => toggleAnswered(request.id, request.is_answered)}
+                    className="min-h-[44px] text-xs md:text-sm w-full sm:w-auto"
                   >
                     {request.is_answered ? "Mark as Unanswered" : "Mark as Answered"}
                   </Button>
@@ -210,6 +234,7 @@ export default function AdminPrayerRequests() {
                     variant="destructive"
                     size="sm"
                     onClick={() => deletePrayerRequest(request.id)}
+                    className="min-h-[44px] text-xs md:text-sm w-full sm:w-auto"
                   >
                     Delete
                   </Button>
