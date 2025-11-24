@@ -81,28 +81,36 @@ export default function AdminCampaigns() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-background p-3 md:p-8">
+      <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
+        <div className="flex flex-col gap-3 md:gap-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => navigate("/home")}
+              className="min-h-[44px] min-w-[44px]"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Manage Campaigns</h1>
-              <p className="text-muted-foreground">Create and manage giving campaigns</p>
+              <h1 className="text-xl md:text-3xl font-bold">Manage Campaigns</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">Create and manage giving campaigns</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/admin/campaigns/analytics")}>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/admin/campaigns/analytics")}
+              className="min-h-[44px] text-sm md:text-base w-full sm:w-auto"
+            >
               <BarChart3 className="h-4 w-4 mr-2" />
               Analytics
             </Button>
-            <Button onClick={() => setShowForm(true)}>
+            <Button 
+              onClick={() => setShowForm(true)}
+              className="min-h-[44px] text-sm md:text-base w-full sm:w-auto"
+            >
               <Plus className="h-4 w-4 mr-2" />
               New Campaign
             </Button>
@@ -139,30 +147,30 @@ export default function AdminCampaigns() {
                   return (
                     <div
                       key={campaign.id}
-                      className="flex items-center justify-between p-6 border rounded-lg hover:bg-muted/50 transition-colors"
+                      className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-4 md:p-6 border rounded-lg hover:bg-muted/50 transition-colors"
                     >
                       <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-lg">{campaign.title}</h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-base md:text-lg break-words">{campaign.title}</h3>
                           {campaign.is_active ? (
-                            <Badge variant="default">Active</Badge>
+                            <Badge variant="default" className="text-xs">Active</Badge>
                           ) : (
-                            <Badge variant="outline">Inactive</Badge>
+                            <Badge variant="outline" className="text-xs">Inactive</Badge>
                           )}
                           {isComplete && (
-                            <Badge variant="default" className="bg-green-500">
+                            <Badge variant="default" className="bg-green-500 text-xs">
                               <Target className="h-3 w-3 mr-1" />
                               Complete
                             </Badge>
                           )}
                           {isExpired && !isComplete && (
-                            <Badge variant="destructive">Expired</Badge>
+                            <Badge variant="destructive" className="text-xs">Expired</Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 break-words">
                           {campaign.description}
                         </p>
-                        <div className="flex gap-6 text-sm">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 text-xs md:text-sm">
                           <div>
                             <span className="text-muted-foreground">Raised: </span>
                             <span className="font-semibold text-primary">
@@ -184,11 +192,12 @@ export default function AdminCampaigns() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 self-end md:self-center">
                         <Button
                           variant="outline"
                           size="icon"
                           onClick={() => handleEdit(campaign)}
+                          className="min-h-[44px] min-w-[44px]"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -196,6 +205,7 @@ export default function AdminCampaigns() {
                           variant="outline"
                           size="icon"
                           onClick={() => setDeletingCampaign(campaign.id)}
+                          className="min-h-[44px] min-w-[44px]"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -205,10 +215,10 @@ export default function AdminCampaigns() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">No campaigns created yet</p>
-                <Button onClick={() => setShowForm(true)}>
+              <div className="text-center py-8 md:py-12">
+                <Target className="h-10 md:h-12 w-10 md:w-12 mx-auto text-muted-foreground mb-3 md:mb-4" />
+                <p className="text-sm md:text-base text-muted-foreground mb-3 md:mb-4">No campaigns created yet</p>
+                <Button onClick={() => setShowForm(true)} className="min-h-[44px]">
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Campaign
                 </Button>

@@ -134,31 +134,32 @@ export const CampaignForm = ({ campaign, onSuccess, onCancel }: CampaignFormProp
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{campaign ? "Edit Campaign" : "Create New Campaign"}</CardTitle>
-        <CardDescription>
+      <CardHeader className="p-4 md:p-6">
+        <CardTitle className="text-lg md:text-2xl">{campaign ? "Edit Campaign" : "Create New Campaign"}</CardTitle>
+        <CardDescription className="text-xs md:text-sm">
           {campaign 
             ? "Update campaign details below"
             : "Fill in the details to create a new giving campaign"}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 md:p-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Campaign Title</FormLabel>
+                  <FormLabel className="text-sm md:text-base">Campaign Title</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Building Fund 2024"
                       maxLength={200}
+                      className="min-h-[44px] text-sm md:text-base"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs md:text-sm" />
                 </FormItem>
               )}
             />
@@ -168,20 +169,20 @@ export const CampaignForm = ({ campaign, onSuccess, onCancel }: CampaignFormProp
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel className="text-sm md:text-base">Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Describe the purpose and goals of this campaign..."
-                      className="resize-none"
+                      className="resize-none text-sm md:text-base"
                       rows={4}
                       maxLength={2000}
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
+                  <FormDescription className="text-xs md:text-sm">
                     {field.value?.length || 0}/2000 characters
                   </FormDescription>
-                  <FormMessage />
+                  <FormMessage className="text-xs md:text-sm" />
                 </FormItem>
               )}
             />
@@ -191,32 +192,33 @@ export const CampaignForm = ({ campaign, onSuccess, onCancel }: CampaignFormProp
               name="target_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Target Amount ($)</FormLabel>
+                  <FormLabel className="text-sm md:text-base">Target Amount ($)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       step="0.01"
                       min="1"
                       placeholder="50000.00"
+                      className="min-h-[44px] text-sm md:text-base"
                       {...field}
                     />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-xs md:text-sm" />
                 </FormItem>
               )}
             />
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="start_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel className="text-sm md:text-base">Start Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" className="min-h-[44px] text-sm md:text-base" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs md:text-sm" />
                   </FormItem>
                 )}
               />
@@ -226,11 +228,11 @@ export const CampaignForm = ({ campaign, onSuccess, onCancel }: CampaignFormProp
                 name="end_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel className="text-sm md:text-base">End Date</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input type="date" className="min-h-[44px] text-sm md:text-base" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs md:text-sm" />
                   </FormItem>
                 )}
               />
@@ -240,10 +242,10 @@ export const CampaignForm = ({ campaign, onSuccess, onCancel }: CampaignFormProp
               control={form.control}
               name="is_active"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 md:p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Active Campaign</FormLabel>
-                    <FormDescription>
+                    <FormLabel className="text-sm md:text-base">Active Campaign</FormLabel>
+                    <FormDescription className="text-xs md:text-sm">
                       Make this campaign visible to members
                     </FormDescription>
                   </div>
@@ -251,18 +253,19 @@ export const CampaignForm = ({ campaign, onSuccess, onCancel }: CampaignFormProp
                     <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      className="min-h-[44px]"
                     />
                   </FormControl>
                 </FormItem>
               )}
             />
 
-            <div className="flex gap-4">
-              <Button type="submit" disabled={isSubmitting} className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+              <Button type="submit" disabled={isSubmitting} className="flex-1 min-h-[44px] text-sm md:text-base">
                 {isSubmitting ? "Saving..." : campaign ? "Update Campaign" : "Create Campaign"}
               </Button>
               {onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel}>
+                <Button type="button" variant="outline" onClick={onCancel} className="min-h-[44px] text-sm md:text-base">
                   Cancel
                 </Button>
               )}
