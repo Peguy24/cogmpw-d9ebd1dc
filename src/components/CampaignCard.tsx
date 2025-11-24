@@ -71,24 +71,24 @@ export const CampaignCard = ({ campaign, onDonate, onViewDetails }: CampaignCard
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 animate-fade-in">
-      <CardHeader className="space-y-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-xl">{campaign.title}</CardTitle>
-          <div className="flex flex-col gap-1">
+      <CardHeader className="space-y-2 p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          <CardTitle className="text-base md:text-xl break-words">{campaign.title}</CardTitle>
+          <div className="flex flex-wrap gap-1">
             {isComplete && (
-              <Badge variant="default" className="bg-green-500">
+              <Badge variant="default" className="bg-green-500 text-xs">
                 <Target className="h-3 w-3 mr-1" />
                 Completed
               </Badge>
             )}
             {!isExpired && campaign.is_active && !isComplete && (
-              <Badge variant="secondary">
+              <Badge variant="secondary" className="text-xs">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 Active
               </Badge>
             )}
             {isExpired && (
-              <Badge variant="outline">Ended</Badge>
+              <Badge variant="outline" className="text-xs">Ended</Badge>
             )}
             {milestone && !isComplete && (
               <Badge variant={milestone.variant} className="text-xs">
@@ -97,11 +97,11 @@ export const CampaignCard = ({ campaign, onDonate, onViewDetails }: CampaignCard
             )}
           </div>
         </div>
-        <CardDescription className="line-clamp-2">{campaign.description}</CardDescription>
+        <CardDescription className="line-clamp-2 text-xs md:text-sm break-words">{campaign.description}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6 pt-0">
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-xs md:text-sm">
             <span className="font-semibold text-primary">
               ${campaign.current_amount.toLocaleString()}
             </span>
@@ -109,13 +109,13 @@ export const CampaignCard = ({ campaign, onDonate, onViewDetails }: CampaignCard
               of ${campaign.target_amount.toLocaleString()} goal
             </span>
           </div>
-          <Progress value={Math.min(progress, 100)} className="h-3" />
-          <div className="text-sm font-medium text-center">
+          <Progress value={Math.min(progress, 100)} className="h-2 md:h-3" />
+          <div className="text-xs md:text-sm font-medium text-center">
             {progress.toFixed(1)}% funded
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs md:text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
             <span>{timeLeft}</span>
@@ -125,7 +125,7 @@ export const CampaignCard = ({ campaign, onDonate, onViewDetails }: CampaignCard
               variant="ghost"
               size="sm"
               onClick={() => onViewDetails(campaign.id)}
-              className="hover-scale"
+              className="hover-scale min-h-[44px] text-xs md:text-sm w-full sm:w-auto"
             >
               <Users className="h-4 w-4 mr-1" />
               View Details
@@ -135,7 +135,7 @@ export const CampaignCard = ({ campaign, onDonate, onViewDetails }: CampaignCard
 
         {onDonate && !isExpired && campaign.is_active && !isComplete && (
           <Button
-            className="w-full"
+            className="w-full min-h-[44px] text-sm md:text-base"
             onClick={() => onDonate(campaign.id)}
           >
             Donate to Campaign
