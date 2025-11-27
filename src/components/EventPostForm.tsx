@@ -139,6 +139,35 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
 
       if (error) throw error;
 
+      const { data: insertedEvent } = await supabase
+        .from("events")
+        .select('id')
+        .eq('title', values.title)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Create in-app notifications
+      if (insertedEvent) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await supabase.functions.invoke('create-notifications', {
+            body: {
+              title: 'New Event',
+              message: `${values.title} - ${format(eventDateTime, 'MMM d, yyyy')}`,
+              type: 'event',
+              relatedId: insertedEvent.id
+            },
+            headers: {
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+          });
+        } catch (notifError) {
+          console.error('Error creating notifications:', notifError);
+        }
+      }
+
       // Send push notification
       try {
         const { data: { session } } = await supabase.auth.getSession();

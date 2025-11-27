@@ -85,6 +85,35 @@ const SermonPostForm = ({ onSuccess, onCancel }: SermonPostFormProps) => {
 
       if (insertError) throw insertError;
 
+      const { data: insertedSermon } = await supabase
+        .from("sermons")
+        .select('id')
+        .eq('title', title.trim())
+        .eq('created_by', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Create in-app notifications
+      if (insertedSermon) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await supabase.functions.invoke('create-notifications', {
+            body: {
+              title: 'New Sermon Available',
+              message: `${title}${speaker ? ` by ${speaker}` : ''}`,
+              type: 'sermon',
+              relatedId: insertedSermon.id
+            },
+            headers: {
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+          });
+        } catch (notifError) {
+          console.error('Error creating notifications:', notifError);
+        }
+      }
+
       // Send push notification
       try {
         const { data: { session } } = await supabase.auth.getSession();
