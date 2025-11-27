@@ -116,6 +116,35 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
 
       if (error) throw error;
 
+      const { data: insertedNews } = await supabase
+        .from("news")
+        .select('id')
+        .eq('title', values.title)
+        .eq('author_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Create in-app notifications
+      if (insertedNews) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await supabase.functions.invoke('create-notifications', {
+            body: {
+              title: 'New Announcement',
+              message: values.title,
+              type: 'news',
+              relatedId: insertedNews.id
+            },
+            headers: {
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+          });
+        } catch (notifError) {
+          console.error('Error creating notifications:', notifError);
+        }
+      }
+
       // Send push notification
       try {
         const { data: { session } } = await supabase.auth.getSession();

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, Bell, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu, Heart } from "lucide-react";
+import { LogOut, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu, Heart } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -15,6 +15,7 @@ import SermonsList from "@/components/SermonsList";
 import DevotionalsList from "@/components/DevotionalsList";
 import LivestreamSection from "@/components/LivestreamSection";
 import PrayerRequestForm from "@/components/PrayerRequestForm";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import churchLogo from "@/assets/church-logo.webp";
 import pastorPhoto from "@/assets/pastor-photo.jpg";
@@ -192,9 +193,7 @@ const Home = () => {
               </Sheet>
             )}
 
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Bell className="h-5 w-5" />
-            </Button>
+            <NotificationBell />
             
             <Sheet>
               <SheetTrigger asChild>

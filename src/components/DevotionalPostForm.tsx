@@ -48,6 +48,35 @@ const DevotionalPostForm = ({ onSuccess, onCancel }: DevotionalPostFormProps) =>
 
       if (error) throw error;
 
+      const { data: insertedDevotional } = await supabase
+        .from("devotionals")
+        .select('id')
+        .eq('title', title.trim())
+        .eq('created_by', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Create in-app notifications
+      if (insertedDevotional) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          await supabase.functions.invoke('create-notifications', {
+            body: {
+              title: 'New Devotional',
+              message: title.trim(),
+              type: 'devotional',
+              relatedId: insertedDevotional.id
+            },
+            headers: {
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+          });
+        } catch (notifError) {
+          console.error('Error creating notifications:', notifError);
+        }
+      }
+
       // Send push notification
       try {
         const { data: { session } } = await supabase.auth.getSession();
