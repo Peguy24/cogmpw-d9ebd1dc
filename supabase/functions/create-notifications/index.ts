@@ -57,39 +57,59 @@ serve(async (req) => {
     }
 
     const { title, message, type, relatedId } = await req.json() as NotificationRequest;
+    console.log('Creating notifications:', { title, type, relatedId });
 
-    // Get all approved users based on their notification preferences
-    const { data: users, error: usersError } = await supabaseClient
+    // Get all approved users
+    const { data: profiles, error: profilesError } = await supabaseClient
       .from('profiles')
-      .select(`
-        id,
-        notification_preferences!inner(
-          news_enabled,
-          events_enabled,
-          sermons_enabled,
-          devotionals_enabled
-        )
-      `)
+      .select('id')
       .eq('is_approved', true);
 
-    if (usersError) {
-      throw usersError;
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+      throw profilesError;
     }
 
+    if (!profiles || profiles.length === 0) {
+      console.log('No approved users found');
+      return new Response(
+        JSON.stringify({ message: 'No approved users', success: true, count: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    console.log(`Found ${profiles.length} approved users`);
+
+    // Get notification preferences for these users
+    const { data: preferences, error: prefsError } = await supabaseClient
+      .from('notification_preferences')
+      .select('user_id, news_enabled, events_enabled, sermons_enabled, devotionals_enabled')
+      .in('user_id', profiles.map(p => p.id));
+
+    if (prefsError) {
+      console.error('Error fetching preferences:', prefsError);
+      // Continue without preferences - notify all users
+    }
+
+    console.log(`Found ${preferences?.length || 0} notification preferences`);
+
     // Filter users based on notification type preference
-    const eligibleUsers = users?.filter(user => {
-      const prefs = user.notification_preferences[0];
-      if (!prefs) return false;
+    const eligibleUsers = profiles.filter(profile => {
+      const prefs = preferences?.find(p => p.user_id === profile.id);
+      
+      // If no preferences found, default to true (notify everyone)
+      if (!prefs) return true;
+      
       if (type === 'news') return prefs.news_enabled;
       if (type === 'event') return prefs.events_enabled;
       if (type === 'sermon') return prefs.sermons_enabled;
       if (type === 'devotional') return prefs.devotionals_enabled;
       return true;
-    }) || [];
+    });
 
     // Create notifications for all eligible users
-    const notifications = eligibleUsers.map(user => ({
-      user_id: user.id,
+    const notifications = eligibleUsers.map(profile => ({
+      user_id: profile.id,
       title,
       message,
       type,
@@ -97,15 +117,18 @@ serve(async (req) => {
       is_read: false
     }));
 
+    console.log(`Inserting ${notifications.length} notifications into database`);
+
     const { error: insertError } = await supabaseClient
       .from('notifications')
       .insert(notifications);
 
     if (insertError) {
+      console.error('Error inserting notifications:', insertError);
       throw insertError;
     }
 
-    console.log(`Created ${notifications.length} notifications for ${type}: ${title}`);
+    console.log(`Successfully created ${notifications.length} notifications for ${type}: ${title}`);
 
     return new Response(
       JSON.stringify({ 
