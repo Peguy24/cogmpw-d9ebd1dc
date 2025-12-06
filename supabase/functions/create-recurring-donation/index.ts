@@ -12,6 +12,12 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-RECURRING-DONATION] ${step}${detailsStr}`);
 };
 
+// 👇👇 IMPORTANT: set this to your real public URL (Lovable app URL or your website)
+const APP_URL =
+  Deno.env.get("APP_PUBLIC_URL") ??
+  Deno.env.get("SITE_URL") ??
+  "https://cogmpw.lovable.app"; // <-- CHANGE THIS to your real app URL
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -84,8 +90,15 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/giving?subscription=success`,
-      cancel_url: `${req.headers.get("origin")}/giving?subscription=canceled`,
+
+      // ❌ OLD (breaks on mobile)
+      // success_url: `${req.headers.get("origin")}/giving?subscription=success`,
+      // cancel_url: `${req.headers.get("origin")}/giving?subscription=canceled`,
+
+      // ✅ NEW: use public app URL (works on Android/iOS + web)
+      success_url: `${APP_URL}/giving?subscription=success`,
+      cancel_url: `${APP_URL}/giving?subscription=canceled`,
+
       metadata: {
         user_id: user.id,
         category: category,
