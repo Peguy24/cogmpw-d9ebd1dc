@@ -12,11 +12,8 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-DONATION-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// 👇👇 IMPORTANT: set this to your real public URL (Lovable app URL or your website)
-const APP_URL =
-  Deno.env.get("APP_PUBLIC_URL") ??
-  Deno.env.get("SITE_URL") ??
-  "https://cogmpw.lovable.app"; // <-- CHANGE THIS to your real app URL
+// 🔴 IMPORTANT: Always redirect back to your real site, not localhost
+const APP_BASE_URL = "https://cogmpw.lovable.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -46,7 +43,7 @@ serve(async (req) => {
       logStep("Guest donation (no auth)");
     }
 
-    const { amount, category, notes, interval, campaign_id, guest_email } = await req.json();
+    const { amount, category, notes, campaign_id, guest_email } = await req.json();
     
     if (!amount || amount <= 0) {
       throw new Error("Invalid donation amount");
@@ -76,7 +73,6 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     } else {
       logStep("Creating new customer");
-      // Note: using customer_email below will let Stripe create the customer
     }
 
     // Convert amount to cents for Stripe
@@ -102,13 +98,9 @@ serve(async (req) => {
       ],
       mode: "payment",
 
-      // ❌ OLD (broken on mobile):
-      // success_url: `${req.headers.get("origin")}/giving?donation=success`,
-      // cancel_url: `${req.headers.get("origin")}/giving?donation=canceled`,
-
-      // ✅ NEW: always use public app URL (works on phone + web)
-      success_url: `${APP_URL}/giving?donation=success`,
-      cancel_url: `${APP_URL}/giving?donation=canceled`,
+      // ⬇️ ALWAYS redirect to your Lovable URL (NO localhost)
+      success_url: `${APP_BASE_URL}/giving?donation=success`,
+      cancel_url: `${APP_BASE_URL}/giving?donation=canceled`,
 
       metadata: {
         user_id: user?.id || 'guest',
