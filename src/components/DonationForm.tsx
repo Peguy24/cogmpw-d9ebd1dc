@@ -32,10 +32,13 @@ const openCheckoutUrl = async (url: string) => {
 };
 
 const donationSchema = z.object({
-  amount: z.string().refine((val) => {
-    const num = parseFloat(val);
-    return !isNaN(num) && num > 0;
-  }, { message: "Please enter a valid amount greater than 0" }),
+  amount: z.string().refine(
+    (val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num > 0;
+    },
+    { message: "Please enter a valid amount greater than 0" },
+  ),
   category: z.string().min(1, "Please select a category"),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
   type: z.enum(["one-time", "recurring"]),
@@ -46,14 +49,7 @@ const donationSchema = z.object({
 
 type DonationFormValues = z.infer<typeof donationSchema>;
 
-const DONATION_CATEGORIES = [
-  "Tithes",
-  "Offerings",
-  "Building Fund",
-  "Missions",
-  "Youth Ministry",
-  "General",
-];
+const DONATION_CATEGORIES = ["Tithes", "Offerings"];
 
 export const DonationForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,7 +86,9 @@ export const DonationForm = () => {
     try {
       setIsSubmitting(true);
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       // For guests, require email
       if (!session && !values.guest_email) {
@@ -174,11 +172,7 @@ export const DonationForm = () => {
                 <FormItem className="space-y-3">
                   <FormLabel>Donation Type</FormLabel>
                   <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex gap-4"
-                    >
+                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="one-time" id="one-time" />
                         <Label htmlFor="one-time" className="cursor-pointer">
@@ -217,8 +211,7 @@ export const DonationForm = () => {
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Your donation will automatically renew each{" "}
-                      {field.value === "month" ? "month" : "week"}
+                      Your donation will automatically renew each {field.value === "month" ? "month" : "week"}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -234,15 +227,9 @@ export const DonationForm = () => {
                   <FormItem>
                     <FormLabel>Email Address (Required for guests)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="your.email@example.com"
-                        {...field}
-                      />
+                      <Input type="email" placeholder="your.email@example.com" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      We'll send your donation receipt to this email
-                    </FormDescription>
+                    <FormDescription>We'll send your donation receipt to this email</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -258,20 +245,11 @@ export const DonationForm = () => {
                   <FormControl>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="1"
-                        placeholder="0.00"
-                        className="pl-9"
-                        {...field}
-                      />
+                      <Input type="number" step="0.01" min="1" placeholder="0.00" className="pl-9" {...field} />
                     </div>
                   </FormControl>
                   {donationType === "recurring" && (
-                    <FormDescription>
-                      This amount will be charged automatically
-                    </FormDescription>
+                    <FormDescription>This amount will be charged automatically</FormDescription>
                   )}
                   <FormMessage />
                 </FormItem>
@@ -323,12 +301,7 @@ export const DonationForm = () => {
             />
 
             <div className="space-y-3">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full"
-                size="lg"
-              >
+              <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
