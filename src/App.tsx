@@ -60,14 +60,19 @@ const AppContent = () => {
     </Routes>
   );
 };
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppContent />
+        {/* Global safe area so every page sits below the status bar / camera */}
+        <div
+          className="app-safe-area"
+          style={{ paddingTop: 'env(safe-area-inset-top, 20px)' }}
+        >
+          <AppContent />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

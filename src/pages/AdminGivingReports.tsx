@@ -250,7 +250,8 @@ const AdminGivingReports = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
+
         <div className="container flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
           <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
             <Link to="/home">

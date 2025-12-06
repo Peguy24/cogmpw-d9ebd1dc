@@ -1,3 +1,5 @@
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +15,21 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 import { toast } from "sonner";
 import { DollarSign, Loader2, CreditCard, Heart } from "lucide-react";
+
+const openCheckoutUrl = async (url: string) => {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      // Native app (Android / iOS) → open in in-app browser
+      await Browser.open({ url });
+    } else {
+      // Web / Lovable preview → open in a new tab
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  } catch (error) {
+    console.error("Failed to open checkout URL:", error);
+    alert("Unable to open the donation page. Please try again.");
+  }
+};
 
 const donationSchema = z.object({
   amount: z.string().refine((val) => {
@@ -44,11 +61,11 @@ export const DonationForm = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const campaignId = sessionStorage.getItem('selectedCampaignId');
+    const campaignId = sessionStorage.getItem("selectedCampaignId");
     if (campaignId) {
       setSelectedCampaignFromStorage(campaignId);
     }
-    
+
     // Check if user is authenticated
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
@@ -101,7 +118,7 @@ export const DonationForm = () => {
         if (error) throw error;
 
         if (data?.url) {
-          window.open(data.url, '_blank');
+          await openCheckoutUrl(data.url);
           toast.success("Opening recurring donation setup...");
           form.reset();
         }
@@ -119,9 +136,11 @@ export const DonationForm = () => {
         if (error) throw error;
 
         if (data?.url) {
-          sessionStorage.setItem('pendingDonationSession', data.sessionId);
-          sessionStorage.removeItem('selectedCampaignId'); // Clear after use
-          window.open(data.url, '_blank');
+          if (data.sessionId) {
+            sessionStorage.setItem("pendingDonationSession", data.sessionId);
+          }
+          sessionStorage.removeItem("selectedCampaignId"); // Clear after use
+          await openCheckoutUrl(data.url);
           toast.success("Opening donation checkout...");
           form.reset();
         }
@@ -162,11 +181,15 @@ export const DonationForm = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="one-time" id="one-time" />
-                        <Label htmlFor="one-time" className="cursor-pointer">One-Time</Label>
+                        <Label htmlFor="one-time" className="cursor-pointer">
+                          One-Time
+                        </Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="recurring" id="recurring" />
-                        <Label htmlFor="recurring" className="cursor-pointer">Recurring</Label>
+                        <Label htmlFor="recurring" className="cursor-pointer">
+                          Recurring
+                        </Label>
                       </div>
                     </RadioGroup>
                   </FormControl>
@@ -194,7 +217,8 @@ export const DonationForm = () => {
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Your donation will automatically renew each {field.value === "month" ? "month" : "week"}
+                      Your donation will automatically renew each{" "}
+                      {field.value === "month" ? "month" : "week"}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

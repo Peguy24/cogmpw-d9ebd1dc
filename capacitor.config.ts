@@ -1,26 +1,16 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.91bc63e62d9d4af9af191c412e22cd15',
+  appId: 'com.peguy24.cogmpw',
   appName: 'COGMPW',
   webDir: 'dist',
-  server: {
-    url: 'https://91bc63e6-2d9d-4af9-af19-1c412e22cd15.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
+  bundledWebRuntime: false,
   plugins: {
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert']
-    }
+    StatusBar: {
+      // This makes Android keep the webview BELOW the status bar / camera cutout
+      overlaysWebView: false,
+    },
   },
-  // iOS Configuration
-  ios: {
-    contentInset: 'always',
-  },
-  // Android Configuration  
-  android: {
-    allowMixedContent: true,
-  }
 };
 
 export default config;

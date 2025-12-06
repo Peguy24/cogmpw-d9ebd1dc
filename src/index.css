@@ -210,4 +210,9 @@ All colors MUST be HSL.
   .dialog-content {
     page-break-inside: avoid;
   }
+/* Push app content below the camera / status bar */
+.app-safe-area {
+ 
+}
+
 }

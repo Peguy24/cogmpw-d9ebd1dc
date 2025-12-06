@@ -62,7 +62,8 @@ export default function MyPrayerRequests() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
+
         <div className="container flex h-14 md:h-16 items-center gap-2 md:gap-4 px-3 md:px-4">
           <Button variant="ghost" size="sm" onClick={() => navigate("/home")} className="min-h-[44px] min-w-[44px]">
             <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />

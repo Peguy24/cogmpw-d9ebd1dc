@@ -122,7 +122,8 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+<header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
+
         <div className="container flex h-14 items-center justify-between px-4">
           <img src={churchLogo} alt="COGMPW Church Logo" className="h-10 w-10 object-contain" />
           
@@ -145,7 +146,8 @@ const Home = () => {
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-64">
+                <SheetContent side="right" className="w-64 pt-14">
+
                   <SheetHeader>
                     <SheetTitle>Admin Menu</SheetTitle>
                     <SheetDescription>

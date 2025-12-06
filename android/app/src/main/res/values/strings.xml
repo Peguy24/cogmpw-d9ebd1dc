@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">COGMPW</string>
+    <string name="title_activity_main">COGMPW</string>
+    <string name="package_name">com.peguy24.cogmpw</string>
+    <string name="custom_url_scheme">com.peguy24.cogmpw</string>
+</resources>
