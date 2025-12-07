@@ -12,9 +12,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-DONATION-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// 🔴 IMPORTANT: Use custom URL scheme for mobile app deep linking
-// This allows the app to intercept the redirect and return to the app instead of browser
-const APP_BASE_URL = "cogmpw://app";
+// 🔴 IMPORTANT: Use HTTPS URL for Stripe redirects - Android App Links will intercept this
+// Stripe doesn't support custom URL schemes, so we use the web URL which Android intercepts
+const APP_BASE_URL = "https://cogmpw.lovable.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
