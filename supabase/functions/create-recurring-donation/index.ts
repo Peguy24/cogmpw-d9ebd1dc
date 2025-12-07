@@ -12,8 +12,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-RECURRING-DONATION] ${step}${detailsStr}`);
 };
 
-// 🔴 IMPORTANT: Always redirect back to your real site, not localhost
-const APP_BASE_URL = "https://cogmpw.lovable.app";
+// 🔴 IMPORTANT: Use custom URL scheme for mobile app deep linking
+// This allows the app to intercept the redirect and return to the app instead of browser
+const APP_BASE_URL = "cogmpw://app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
