@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,10 +19,10 @@ import { DollarSign, Loader2, CreditCard, Heart } from "lucide-react";
 const openCheckoutUrl = async (url: string) => {
   try {
     if (Capacitor.isNativePlatform()) {
-      // Native app - redirect in same context
-      window.location.href = url;
+      // Native app - open in system browser for proper deep link handling
+      await Browser.open({ url, windowName: '_system' });
     } else {
-      // Web - redirect in same tab for reliable checkout flow
+      // Web - redirect in same tab
       window.location.href = url;
     }
   } catch (error) {

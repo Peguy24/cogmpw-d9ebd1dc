@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { App, URLOpenListenerEvent } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 
 export const useDeepLinks = () => {
@@ -8,10 +10,19 @@ export const useDeepLinks = () => {
 
   useEffect(() => {
     // Handle deep links when app is opened via URL
-    const handleAppUrlOpen = (event: URLOpenListenerEvent) => {
+    const handleAppUrlOpen = async (event: URLOpenListenerEvent) => {
       console.log('[DeepLink] App opened with URL:', event.url);
       
       try {
+        // Close the browser if it was opened for checkout
+        if (Capacitor.isNativePlatform()) {
+          try {
+            await Browser.close();
+          } catch (e) {
+            // Browser might not be open, ignore
+          }
+        }
+
         // Parse the URL to extract path and query params
         // URL format: cogmpw://app/giving?donation=success
         const url = new URL(event.url);
