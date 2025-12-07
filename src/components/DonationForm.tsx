@@ -1,5 +1,4 @@
 import { Capacitor } from "@capacitor/core";
-import { Browser } from "@capacitor/browser";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,15 +18,15 @@ import { DollarSign, Loader2, CreditCard, Heart } from "lucide-react";
 const openCheckoutUrl = async (url: string) => {
   try {
     if (Capacitor.isNativePlatform()) {
-      // Native app (Android / iOS) → open in in-app browser
-      await Browser.open({ url });
+      // Native app - redirect in same context
+      window.location.href = url;
     } else {
-      // Web / Lovable preview → open in a new tab
-      window.open(url, "_blank", "noopener,noreferrer");
+      // Web - redirect in same tab for reliable checkout flow
+      window.location.href = url;
     }
   } catch (error) {
     console.error("Failed to open checkout URL:", error);
-    alert("Unable to open the donation page. Please try again.");
+    toast.error("Unable to open the donation page. Please try again.");
   }
 };
 
