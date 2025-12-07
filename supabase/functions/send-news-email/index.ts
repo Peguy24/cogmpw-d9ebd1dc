@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Sanitize user input to prevent XSS in email HTML
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 interface NewsEmailRequest {
   newsTitle: string;
   newsContent: string;
@@ -132,14 +142,14 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "COGMPW Church <onboarding@resend.dev>",
       to: recipientEmails,
-      subject: `${isPinned ? '📌 IMPORTANT: ' : ''}${newsTitle}`,
+      subject: `${isPinned ? '📌 IMPORTANT: ' : ''}${escapeHtml(newsTitle)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">Church News & Announcements 📢</h1>
           ${pinnedBadge}
-          <h2 style="color: #555;">${newsTitle}</h2>
+          <h2 style="color: #555;">${escapeHtml(newsTitle)}</h2>
           <div style="color: #666; line-height: 1.6; white-space: pre-wrap;">
-            ${contentPreview}
+            ${escapeHtml(contentPreview)}
           </div>
           
           ${newsContent.length > 500 ? '<p style="color: #888; font-style: italic;">Open the COGMPW Church app to read the full announcement.</p>' : ''}
