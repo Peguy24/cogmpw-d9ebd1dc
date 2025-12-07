@@ -11,6 +11,11 @@ const config: CapacitorConfig = {
       overlaysWebView: false,
     },
   },
+  // Deep linking configuration for handling Stripe redirects
+  server: {
+    // Handle deep links with custom URL scheme
+    allowNavigation: ['cogmpw.lovable.app', 'checkout.stripe.com'],
+  },
 };
 
 export default config;

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useDeepLinks } from "@/hooks/useDeepLinks";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
@@ -31,6 +32,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   usePushNotifications();
+  useDeepLinks(); // Handle deep links from Stripe payment redirects
   
   return (
     <Routes>
