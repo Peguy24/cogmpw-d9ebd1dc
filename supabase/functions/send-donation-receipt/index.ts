@@ -8,6 +8,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Sanitize user input to prevent XSS in email HTML
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 interface SendReceiptRequest {
   email: string;
   donorName: string;
@@ -121,7 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="margin: 5px 0; color: #666;">Donation Receipt</p>
             </div>
 
-            <p>Dear ${donorName},</p>
+            <p>Dear ${escapeHtml(donorName)},</p>
             
             <p>Thank you for your generous donation to COGMPW. Your support helps us continue our mission and ministry.</p>
 
@@ -132,7 +142,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <div class="details-row">
                 <span class="label">Category:</span>
-                <span>${donation.category}</span>
+                <span>${escapeHtml(donation.category)}</span>
               </div>
               
               <div class="details-row">
@@ -148,7 +158,7 @@ const handler = async (req: Request): Promise<Response> => {
               ${donation.notes ? `
               <div class="details-row">
                 <span class="label">Notes:</span>
-                <span>${donation.notes}</span>
+                <span>${escapeHtml(donation.notes)}</span>
               </div>
               ` : ''}
             </div>

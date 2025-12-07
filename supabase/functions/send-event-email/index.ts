@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Sanitize user input to prevent XSS in email HTML
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 interface EventEmailRequest {
   eventTitle: string;
   eventDescription: string;
@@ -134,15 +144,15 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "COGMPW Church <onboarding@resend.dev>",
       to: recipientEmails,
-      subject: `New Event: ${eventTitle}`,
+      subject: `New Event: ${escapeHtml(eventTitle)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">New Church Event! 📅</h1>
-          <h2 style="color: #555;">${eventTitle}</h2>
-          <p style="color: #666; line-height: 1.6;">${eventDescription}</p>
+          <h2 style="color: #555;">${escapeHtml(eventTitle)}</h2>
+          <p style="color: #666; line-height: 1.6;">${escapeHtml(eventDescription)}</p>
           
           <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>📍 Location:</strong> ${eventLocation}</p>
+            <p style="margin: 5px 0;"><strong>📍 Location:</strong> ${escapeHtml(eventLocation)}</p>
             <p style="margin: 5px 0;"><strong>🕐 Date & Time:</strong> ${formattedDate}</p>
           </div>
           
