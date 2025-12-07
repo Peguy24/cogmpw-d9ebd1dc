@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_logs: {
+        Row: {
+          action: string
+          approved_by_admin_id: string
+          approved_user_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action: string
+          approved_by_admin_id: string
+          approved_user_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          approved_by_admin_id?: string
+          approved_user_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       devotionals: {
         Row: {
           content: string
