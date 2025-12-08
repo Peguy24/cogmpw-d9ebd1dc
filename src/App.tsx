@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
+import { subscribePaymentLoading } from "@/hooks/usePaymentLoading";
+import { PaymentLoadingOverlay } from "@/components/PaymentLoadingOverlay";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Home from "./pages/Home";
@@ -31,35 +34,45 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
+  
   usePushNotifications();
   useDeepLinks(); // Handle deep links from Stripe payment redirects
   
+  useEffect(() => {
+    const unsubscribe = subscribePaymentLoading(setIsPaymentLoading);
+    return unsubscribe;
+  }, []);
+  
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/guest" element={<GuestLanding />} />
-      <Route path="/guest/events" element={<GuestEvents />} />
-      <Route path="/guest/sermons" element={<GuestSermons />} />
-      <Route path="/guest/devotionals" element={<GuestDevotionals />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/pending-approval" element={<PendingApproval />} />
-      <Route path="/admin/approvals" element={<AdminApprovals />} />
-      <Route path="/admin/users" element={<AdminUserManagement />} />
-      <Route path="/admin/giving" element={<AdminGivingReports />} />
-      <Route path="/admin/campaigns" element={<AdminCampaigns />} />
-      <Route path="/admin/campaigns/analytics" element={<AdminCampaignAnalytics />} />
-      <Route path="/admin/prayer-requests" element={<AdminPrayerRequests />} />
-      <Route path="/my-prayer-requests" element={<MyPrayerRequests />} />
-      <Route path="/giving" element={<Giving />} />
-      <Route path="/giving-history" element={<GivingHistory />} />
-      <Route path="/campaigns" element={<GivingCampaigns />} />
-      <Route path="/campaign/:id" element={<CampaignDetails />} />
-      <Route path="/manage-subscriptions" element={<ManageSubscriptions />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <PaymentLoadingOverlay isVisible={isPaymentLoading} />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/guest" element={<GuestLanding />} />
+        <Route path="/guest/events" element={<GuestEvents />} />
+        <Route path="/guest/sermons" element={<GuestSermons />} />
+        <Route path="/guest/devotionals" element={<GuestDevotionals />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/pending-approval" element={<PendingApproval />} />
+        <Route path="/admin/approvals" element={<AdminApprovals />} />
+        <Route path="/admin/users" element={<AdminUserManagement />} />
+        <Route path="/admin/giving" element={<AdminGivingReports />} />
+        <Route path="/admin/campaigns" element={<AdminCampaigns />} />
+        <Route path="/admin/campaigns/analytics" element={<AdminCampaignAnalytics />} />
+        <Route path="/admin/prayer-requests" element={<AdminPrayerRequests />} />
+        <Route path="/my-prayer-requests" element={<MyPrayerRequests />} />
+        <Route path="/giving" element={<Giving />} />
+        <Route path="/giving-history" element={<GivingHistory />} />
+        <Route path="/campaigns" element={<GivingCampaigns />} />
+        <Route path="/campaign/:id" element={<CampaignDetails />} />
+        <Route path="/manage-subscriptions" element={<ManageSubscriptions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 };
 const App = () => (

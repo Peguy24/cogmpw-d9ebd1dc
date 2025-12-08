@@ -4,6 +4,7 @@ import { App, URLOpenListenerEvent } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
+import { setPaymentLoading } from './usePaymentLoading';
 
 export const useDeepLinks = () => {
   const navigate = useNavigate();
@@ -14,6 +15,9 @@ export const useDeepLinks = () => {
       console.log('[DeepLink] App opened with URL:', event.url);
       
       try {
+        // Hide payment loading overlay immediately
+        setPaymentLoading(false);
+        
         // Close the browser if it was opened for checkout
         if (Capacitor.isNativePlatform()) {
           try {

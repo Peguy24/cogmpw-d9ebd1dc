@@ -15,10 +15,13 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Label } from "./ui/label";
 import { toast } from "sonner";
 import { DollarSign, Loader2, CreditCard, Heart } from "lucide-react";
+import { setPaymentLoading } from "@/hooks/usePaymentLoading";
 
 const openCheckoutUrl = async (url: string) => {
   try {
     if (Capacitor.isNativePlatform()) {
+      // Show loading overlay for native platforms
+      setPaymentLoading(true);
       // Native app - open in system browser for proper deep link handling
       await Browser.open({ url, windowName: '_system' });
     } else {
@@ -27,6 +30,7 @@ const openCheckoutUrl = async (url: string) => {
     }
   } catch (error) {
     console.error("Failed to open checkout URL:", error);
+    setPaymentLoading(false);
     toast.error("Unable to open the donation page. Please try again.");
   }
 };
