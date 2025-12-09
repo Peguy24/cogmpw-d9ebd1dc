@@ -1,18 +1,31 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, RefreshCw, Settings, AlertCircle } from "lucide-react";
+import { ArrowLeft, RefreshCw, Settings, AlertCircle, X, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ManageSubscriptions() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
 
   const { data: subscriptions, isLoading, refetch } = useQuery({
     queryKey: ["recurring-donations"],
@@ -32,6 +45,45 @@ export default function ManageSubscriptions() {
       return data;
     },
   });
+
+  const cancelMutation = useMutation({
+    mutationFn: async ({ subscriptionId, cancelImmediately }: { subscriptionId: string; cancelImmediately: boolean }) => {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { subscriptionId, cancelImmediately },
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.subscription.cancel_at_period_end) {
+        toast.success("Subscription will be canceled at the end of the billing period");
+      } else {
+        toast.success("Subscription canceled successfully");
+      }
+      queryClient.invalidateQueries({ queryKey: ["recurring-donations"] });
+      setCancelDialogOpen(false);
+      setSelectedSubscription(null);
+    },
+    onError: (error: any) => {
+      console.error("Error canceling subscription:", error);
+      toast.error(error.message || "Failed to cancel subscription");
+    },
+  });
+
+  const handleCancelClick = (sub: any) => {
+    setSelectedSubscription(sub);
+    setCancelDialogOpen(true);
+  };
+
+  const handleConfirmCancel = (cancelImmediately: boolean) => {
+    if (selectedSubscription) {
+      cancelMutation.mutate({ 
+        subscriptionId: selectedSubscription.id, 
+        cancelImmediately 
+      });
+    }
+  };
 
   const handleManageSubscription = async () => {
     setIsOpeningPortal(true);
@@ -117,8 +169,8 @@ export default function ManageSubscriptions() {
                     key={sub.id}
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-lg">${sub.amount.toFixed(2)}</span>
                         <span className="text-sm text-muted-foreground">•</span>
                         <span className="text-sm font-medium">{formatInterval(sub.interval)}</span>
@@ -141,13 +193,32 @@ export default function ManageSubscriptions() {
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Next payment: {new Date(sub.current_period_end).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
+                        {sub.cancel_at_period_end ? (
+                          <>Ends: {new Date(sub.current_period_end).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}</>
+                        ) : (
+                          <>Next payment: {new Date(sub.current_period_end).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}</>
+                        )}
                       </div>
                     </div>
+                    {!sub.cancel_at_period_end && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleCancelClick(sub)}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Cancel
+                      </Button>
+                    )}
                   </div>
                 ))}
                 
@@ -155,13 +226,14 @@ export default function ManageSubscriptions() {
                   <Button
                     onClick={handleManageSubscription}
                     disabled={isOpeningPortal}
+                    variant="outline"
                     className="w-full"
                   >
                     <Settings className="h-4 w-4 mr-2" />
-                    {isOpeningPortal ? "Opening Portal..." : "Manage All Subscriptions"}
+                    {isOpeningPortal ? "Opening Portal..." : "Update Payment Method"}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-2">
-                    Opens Stripe portal to update payment methods, cancel subscriptions, and more
+                    Opens Stripe portal to update payment methods
                   </p>
                 </div>
               </div>
@@ -180,6 +252,48 @@ export default function ManageSubscriptions() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Recurring Donation</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Are you sure you want to cancel this {selectedSubscription?.amount?.toFixed(2)} {formatInterval(selectedSubscription?.interval || 'month').toLowerCase()} donation?
+              </p>
+              <p className="text-sm">
+                You can cancel at the end of your current billing period, or cancel immediately.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel disabled={cancelMutation.isPending}>
+              Keep Donation
+            </AlertDialogCancel>
+            <Button
+              variant="outline"
+              onClick={() => handleConfirmCancel(false)}
+              disabled={cancelMutation.isPending}
+            >
+              {cancelMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Cancel at Period End
+            </Button>
+            <AlertDialogAction
+              onClick={() => handleConfirmCancel(true)}
+              disabled={cancelMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              Cancel Now
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
