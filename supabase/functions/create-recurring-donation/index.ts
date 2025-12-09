@@ -93,11 +93,14 @@ serve(async (req) => {
       success_url: `${APP_BASE_URL}/giving?subscription=success`,
       cancel_url: `${APP_BASE_URL}/giving?subscription=canceled`,
 
-      metadata: {
-        user_id: user.id,
-        category: category,
-        notes: notes || "",
-        interval: interval,
+      // Store metadata on the subscription itself (not just the session)
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+          category: category,
+          notes: notes || "",
+          interval: interval,
+        },
       },
     });
 

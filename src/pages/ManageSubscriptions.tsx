@@ -129,8 +129,12 @@ export default function ManageSubscriptions() {
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {sub.metadata?.category && (
+                        {sub.metadata?.category ? (
                           <span className="font-medium">{sub.metadata.category}</span>
+                        ) : sub.product_name ? (
+                          <span className="font-medium">{sub.product_name}</span>
+                        ) : (
+                          <span className="font-medium">Recurring Donation</span>
                         )}
                         {sub.metadata?.notes && (
                           <span className="italic"> • {sub.metadata.notes}</span>

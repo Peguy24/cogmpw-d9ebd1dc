@@ -67,6 +67,10 @@ serve(async (req) => {
       const price = priceItem.price;
       const amount = (price.unit_amount || 0) / 100;
       
+      // Get product name for fallback if metadata is missing
+      const product = price.product;
+      const productName = typeof product === 'object' ? product.name : null;
+      
       return {
         id: sub.id,
         amount: amount,
@@ -74,8 +78,9 @@ serve(async (req) => {
         status: sub.status,
         current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
         created: new Date(sub.created * 1000).toISOString(),
-        metadata: sub.metadata,
+        metadata: sub.metadata || {},
         cancel_at_period_end: sub.cancel_at_period_end,
+        product_name: productName,
       };
     });
 
