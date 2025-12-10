@@ -85,7 +85,22 @@ const Giving = () => {
       toast.info("Donation canceled");
       navigate("/giving", { replace: true });
     } else if (subscriptionStatus === "success") {
-      toast.success("Recurring donation set up successfully!");
+      const sessionId = searchParams.get("session_id");
+      if (sessionId) {
+        // Record the subscription in the database
+        supabase.functions.invoke("record-subscription", {
+          body: { sessionId },
+        }).then(({ data, error }) => {
+          if (error) {
+            console.error("Error recording subscription:", error);
+            toast.success("Recurring donation set up successfully!");
+          } else {
+            toast.success(`Recurring donation of $${data?.amount}/${data?.interval} set up successfully!`);
+          }
+        });
+      } else {
+        toast.success("Recurring donation set up successfully!");
+      }
       navigate("/giving", { replace: true });
     } else if (subscriptionStatus === "canceled") {
       toast.info("Subscription setup canceled");

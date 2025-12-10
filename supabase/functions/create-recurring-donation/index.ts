@@ -89,8 +89,8 @@ serve(async (req) => {
       ],
       mode: "subscription",
 
-      // ⬇️ ALWAYS redirect to your Lovable URL (NO localhost)
-      success_url: `${APP_BASE_URL}/giving?subscription=success`,
+      // Pass session ID back for recording
+      success_url: `${APP_BASE_URL}/giving?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_BASE_URL}/giving?subscription=canceled`,
 
       // Store metadata on the subscription itself (not just the session)
