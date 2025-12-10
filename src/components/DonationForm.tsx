@@ -25,10 +25,13 @@ const openCheckoutUrl = async (url: string) => {
       // Native app - open in system browser for proper deep link handling
       await Browser.open({ url, windowName: '_system' });
     } else {
-      // Web - open in new tab to avoid iframe issues
-      const newWindow = window.open(url, '_blank');
-      if (!newWindow) {
-        // Fallback if popup was blocked
+      // Web - check if we're in an iframe (Lovable preview)
+      const isInIframe = window !== window.parent;
+      if (isInIframe) {
+        // In preview iframe - open in new tab as fallback for testing
+        window.open(url, '_blank');
+      } else {
+        // On deployed site - redirect in same tab
         window.location.href = url;
       }
     }
