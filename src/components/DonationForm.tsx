@@ -25,8 +25,12 @@ const openCheckoutUrl = async (url: string) => {
       // Native app - open in system browser for proper deep link handling
       await Browser.open({ url, windowName: '_system' });
     } else {
-      // Web - redirect in same tab
-      window.location.href = url;
+      // Web - open in new tab to avoid iframe issues
+      const newWindow = window.open(url, '_blank');
+      if (!newWindow) {
+        // Fallback if popup was blocked
+        window.location.href = url;
+      }
     }
   } catch (error) {
     console.error("Failed to open checkout URL:", error);
