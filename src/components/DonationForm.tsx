@@ -120,9 +120,10 @@ export const DonationForm = () => {
         if (error) throw error;
 
         if (data?.url) {
-          await openCheckoutUrl(data.url);
           toast.success("Opening recurring donation setup...");
-          form.reset();
+          // Don't reset form before redirect - it causes the page to freeze
+          await openCheckoutUrl(data.url);
+          // Form reset happens after redirect on web, or not at all since page navigates away
         }
       } else {
         const { data, error } = await supabase.functions.invoke("create-donation-checkout", {
