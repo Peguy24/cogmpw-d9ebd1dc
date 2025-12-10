@@ -176,7 +176,17 @@ export const DonationForm = () => {
                 <FormItem className="space-y-3">
                   <FormLabel>Donation Type</FormLabel>
                   <FormControl>
-                    <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex gap-4">
+                    <RadioGroup 
+                      onValueChange={(value) => {
+                        if (value === "recurring" && !isAuthenticated) {
+                          toast.error("Please sign in to set up recurring donations");
+                          return;
+                        }
+                        field.onChange(value);
+                      }} 
+                      defaultValue={field.value} 
+                      className="flex gap-4"
+                    >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="one-time" id="one-time" />
                         <Label htmlFor="one-time" className="cursor-pointer">
@@ -184,9 +194,9 @@ export const DonationForm = () => {
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="recurring" id="recurring" />
-                        <Label htmlFor="recurring" className="cursor-pointer">
-                          Recurring
+                        <RadioGroupItem value="recurring" id="recurring" disabled={!isAuthenticated} />
+                        <Label htmlFor="recurring" className={`cursor-pointer ${!isAuthenticated ? "text-muted-foreground" : ""}`}>
+                          Recurring {!isAuthenticated && "(Sign in required)"}
                         </Label>
                       </div>
                     </RadioGroup>
