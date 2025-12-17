@@ -49,7 +49,7 @@ const Giving = () => {
   const [showCampaignDialog, setShowCampaignDialog] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [campaignAmount, setCampaignAmount] = useState("");
-  const [campaignCategory, setCampaignCategory] = useState("Offerings");
+  
   const [isSubmittingCampaign, setIsSubmittingCampaign] = useState(false);
 
   const { data: activeCampaigns } = useQuery({
@@ -146,7 +146,7 @@ const Giving = () => {
     if (campaign) {
       setSelectedCampaign(campaign);
       setCampaignAmount("");
-      setCampaignCategory("Offerings");
+      
       setShowCampaignDialog(true);
     }
   };
@@ -163,7 +163,7 @@ const Giving = () => {
       const { data, error } = await supabase.functions.invoke("create-donation-checkout", {
         body: {
           amount: parseFloat(campaignAmount),
-          category: campaignCategory,
+          category: "Campaign",
           campaign_id: selectedCampaign?.id || null,
         },
       });
@@ -444,18 +444,6 @@ const Giving = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="campaign-category">Category</Label>
-              <Select value={campaignCategory} onValueChange={setCampaignCategory}>
-                <SelectTrigger id="campaign-category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Tithes">Tithes</SelectItem>
-                  <SelectItem value="Offerings">Offerings</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <Button 
               onClick={handleCampaignCheckout} 
