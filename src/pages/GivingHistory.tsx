@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Receipt, Download, AlertCircle } from "lucide-react";
+import { ArrowLeft, Receipt, Download, AlertCircle, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { DonationReceiptDialog } from "@/components/DonationReceiptDialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -253,10 +254,16 @@ export default function GivingHistory() {
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-lg">${Number(donation.amount).toFixed(2)}</span>
                         <span className="text-sm text-muted-foreground">•</span>
                         <span className="text-sm font-medium">{donation.category}</span>
+                        {donation.payment_method === "stripe_subscription" && (
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                            <RefreshCw className="h-3 w-3" />
+                            Recurring
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {new Date(donation.created_at).toLocaleDateString('en-US', {
