@@ -4,13 +4,39 @@ import { useQuery } from "@tanstack/react-query";
 import { DonationForm } from "@/components/DonationForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, History, RefreshCw, Target, CheckCircle, Mail, Download, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, History, RefreshCw, Target, CheckCircle, Mail, Download, AlertCircle, DollarSign, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CampaignCard } from "@/components/CampaignCard";
 import { format } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
+import { setPaymentLoading } from "@/hooks/usePaymentLoading";
+
+const openCheckoutUrl = async (url: string) => {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      setPaymentLoading(true);
+      await Browser.open({ url, windowName: '_system' });
+    } else {
+      const isInIframe = window !== window.parent;
+      if (isInIframe) {
+        window.open(url, '_blank');
+      } else {
+        window.location.href = url;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to open checkout URL:", error);
+    setPaymentLoading(false);
+    toast.error("Unable to open the donation page. Please try again.");
+  }
+};
 
 const Giving = () => {
   const navigate = useNavigate();
@@ -18,6 +44,13 @@ const Giving = () => {
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const [donationDetails, setDonationDetails] = useState<any>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
+  
+  // Campaign donation dialog state
+  const [showCampaignDialog, setShowCampaignDialog] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
+  const [campaignAmount, setCampaignAmount] = useState("");
+  const [campaignCategory, setCampaignCategory] = useState("Offerings");
+  const [isSubmittingCampaign, setIsSubmittingCampaign] = useState(false);
 
   const { data: activeCampaigns } = useQuery({
     queryKey: ["active-campaigns"],
@@ -107,6 +140,51 @@ const Giving = () => {
       navigate("/giving", { replace: true });
     }
   }, [searchParams, navigate]);
+
+  const handleCampaignDonate = (campaignId: string) => {
+    const campaign = activeCampaigns?.find(c => c.id === campaignId);
+    if (campaign) {
+      setSelectedCampaign(campaign);
+      setCampaignAmount("");
+      setCampaignCategory("Offerings");
+      setShowCampaignDialog(true);
+    }
+  };
+
+  const handleCampaignCheckout = async () => {
+    if (!campaignAmount || parseFloat(campaignAmount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      setIsSubmittingCampaign(true);
+
+      const { data, error } = await supabase.functions.invoke("create-donation-checkout", {
+        body: {
+          amount: parseFloat(campaignAmount),
+          category: campaignCategory,
+          campaign_id: selectedCampaign?.id || null,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        if (data.sessionId) {
+          sessionStorage.setItem("pendingDonationSession", data.sessionId);
+        }
+        setShowCampaignDialog(false);
+        await openCheckoutUrl(data.url);
+        toast.success("Opening donation checkout...");
+      }
+    } catch (error) {
+      console.error("Error creating campaign donation checkout:", error);
+      toast.error("Failed to create donation checkout. Please try again.");
+    } finally {
+      setIsSubmittingCampaign(false);
+    }
+  };
 
   const handleEmailReceipt = async () => {
     if (!donationDetails) return;
@@ -216,10 +294,7 @@ const Giving = () => {
                   <CampaignCard
                     key={campaign.id}
                     campaign={campaign}
-                    onDonate={(id) => {
-                      sessionStorage.setItem('selectedCampaignId', id);
-                      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                    }}
+                    onDonate={handleCampaignDonate}
                     onViewDetails={(id) => navigate(`/campaign/${id}`)}
                   />
                 ))}
@@ -333,6 +408,77 @@ const Giving = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Campaign Donation Dialog */}
+      <Dialog open={showCampaignDialog} onOpenChange={setShowCampaignDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-primary" />
+              Donate to Campaign
+            </DialogTitle>
+            {selectedCampaign && (
+              <DialogDescription>
+                Supporting: {selectedCampaign.title}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="campaign-amount">Donation Amount (USD)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="campaign-amount"
+                  type="number"
+                  step="0.01"
+                  min="1"
+                  placeholder="0.00"
+                  className="pl-9"
+                  value={campaignAmount}
+                  onChange={(e) => setCampaignAmount(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="campaign-category">Category</Label>
+              <Select value={campaignCategory} onValueChange={setCampaignCategory}>
+                <SelectTrigger id="campaign-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tithes">Tithes</SelectItem>
+                  <SelectItem value="Offerings">Offerings</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button 
+              onClick={handleCampaignCheckout} 
+              className="w-full" 
+              size="lg"
+              disabled={isSubmittingCampaign || !campaignAmount}
+            >
+              {isSubmittingCampaign ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Proceed to Checkout
+                </>
+              )}
+            </Button>
+            
+            <p className="text-xs text-center text-muted-foreground">
+              Supports Apple Pay and credit cards • Powered by Stripe
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
