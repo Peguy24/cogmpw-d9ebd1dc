@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DonationForm } from "@/components/DonationForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, History, RefreshCw, Target, CheckCircle, Mail, Download, AlertCircle, DollarSign, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +40,7 @@ const openCheckoutUrl = async (url: string) => {
 const Giving = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const [showReceiptDialog, setShowReceiptDialog] = useState(false);
   const [donationDetails, setDonationDetails] = useState<any>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -82,7 +82,8 @@ const Giving = () => {
     const subscriptionStatus = searchParams.get("subscription");
     
     if (donationStatus === "success") {
-      const sessionId = sessionStorage.getItem('pendingDonationSession');
+      const sessionIdFromUrl = searchParams.get("session_id");
+      const sessionId = sessionIdFromUrl || sessionStorage.getItem("pendingDonationSession");
       if (sessionId) {
         // Record donation and fetch details
         supabase.functions.invoke("record-donation", {
@@ -92,6 +93,9 @@ const Giving = () => {
             console.error("Error recording donation:", error);
             toast.error("Payment received but failed to record. Please contact support.");
           } else {
+            // Refresh campaigns so progress bars update
+            queryClient.invalidateQueries({ queryKey: ["active-campaigns"] });
+
             // Fetch the recorded donation details
             const { data: donations, error: fetchError } = await supabase
               .from("donations")
@@ -107,7 +111,7 @@ const Giving = () => {
             } else {
               toast.success("Thank you for your generous donation!");
             }
-            sessionStorage.removeItem('pendingDonationSession');
+            sessionStorage.removeItem("pendingDonationSession");
           }
         });
       } else {
