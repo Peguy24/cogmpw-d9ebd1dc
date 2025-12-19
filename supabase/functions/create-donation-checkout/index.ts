@@ -29,6 +29,11 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Use the current site's origin when available (preview/prod), but keep a safe HTTPS fallback
+    const requestOrigin = req.headers.get("origin") || "";
+    const redirectBaseUrl = requestOrigin.startsWith("https://") ? requestOrigin : APP_BASE_URL;
+    logStep("Redirect base URL selected", { redirectBaseUrl });
+
     const authHeader = req.headers.get("Authorization");
     let user = null;
     let userEmail = null;
@@ -99,10 +104,10 @@ serve(async (req) => {
       ],
       mode: "payment",
 
-      // ⬇️ ALWAYS redirect to your Lovable URL (NO localhost)
+      // ⬇️ Use the current site URL for redirects (preview/prod). Fallback keeps native app flow working.
       // Include the session id in the URL so the app can reliably record the donation
-      success_url: `${APP_BASE_URL}/giving?donation=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${APP_BASE_URL}/giving?donation=canceled`,
+      success_url: `${redirectBaseUrl}/giving?donation=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${redirectBaseUrl}/giving?donation=canceled`,
 
       metadata: {
         user_id: user?.id || 'guest',
