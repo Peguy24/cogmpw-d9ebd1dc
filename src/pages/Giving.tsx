@@ -103,7 +103,7 @@ const Giving = () => {
               .eq("stripe_payment_intent_id", data?.paymentIntentId)
               .order("created_at", { ascending: false })
               .limit(1)
-              .single();
+              .maybeSingle();
 
             if (!fetchError && donations) {
               setDonationDetails(donations);
@@ -113,11 +113,13 @@ const Giving = () => {
             }
             sessionStorage.removeItem("pendingDonationSession");
           }
+          // Navigate after recording is complete
+          navigate("/giving", { replace: true });
         });
       } else {
         toast.success("Thank you for your generous donation!");
+        navigate("/giving", { replace: true });
       }
-      navigate("/giving", { replace: true });
     } else if (donationStatus === "canceled") {
       toast.info("Donation canceled");
       navigate("/giving", { replace: true });
@@ -134,11 +136,12 @@ const Giving = () => {
           } else {
             toast.success(`Recurring donation of $${data?.amount}/${data?.interval} set up successfully!`);
           }
+          navigate("/giving", { replace: true });
         });
       } else {
         toast.success("Recurring donation set up successfully!");
+        navigate("/giving", { replace: true });
       }
-      navigate("/giving", { replace: true });
     } else if (subscriptionStatus === "canceled") {
       toast.info("Subscription setup canceled");
       navigate("/giving", { replace: true });
