@@ -100,7 +100,8 @@ serve(async (req) => {
       mode: "payment",
 
       // ⬇️ ALWAYS redirect to your Lovable URL (NO localhost)
-      success_url: `${APP_BASE_URL}/giving?donation=success`,
+      // Include the session id in the URL so the app can reliably record the donation
+      success_url: `${APP_BASE_URL}/giving?donation=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_BASE_URL}/giving?donation=canceled`,
 
       metadata: {
