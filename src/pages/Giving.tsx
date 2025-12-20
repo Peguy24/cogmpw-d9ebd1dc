@@ -111,6 +111,9 @@ const Giving = () => {
             // Refresh campaigns so progress bars update
             queryClient.invalidateQueries({ queryKey: ["active-campaigns"] });
 
+            // Refresh history so the newest donation appears immediately after redirect
+            queryClient.invalidateQueries({ queryKey: ["donations-history"] });
+
             // Try to fetch the recorded donation details (only works for authenticated users)
             if (data?.paymentIntentId) {
               const { data: donations, error: fetchError } = await supabase
@@ -168,7 +171,7 @@ const Giving = () => {
       toast.info("Subscription setup canceled");
       navigate("/giving", { replace: true });
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, queryClient]);
 
   const handleCampaignDonate = (campaignId: string) => {
     const campaign = activeCampaigns?.find(c => c.id === campaignId);
