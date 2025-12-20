@@ -16,6 +16,30 @@ const logStep = (step: string, details?: any) => {
 // Stripe doesn't support custom URL schemes, so we use the web URL which Android intercepts
 const APP_BASE_URL = "https://cogmpw.lovable.app";
 
+// Simple in-memory rate limiting (resets when function cold starts)
+// For production, consider using a distributed cache like Redis
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_MAX = 10; // Max 10 requests per window
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
+
+const checkRateLimit = (identifier: string): boolean => {
+  const now = Date.now();
+  const record = rateLimitMap.get(identifier);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX) {
+    logStep("Rate limit exceeded", { identifier, count: record.count });
+    return false;
+  }
+  
+  record.count++;
+  return true;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -28,6 +52,20 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+    // Rate limiting based on IP address (or forwarded IP)
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    if (!checkRateLimit(clientIP)) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+      );
+    }
+    
+    logStep("Rate limit check passed", { clientIP });
 
     // Use the current site's origin when available (preview/prod), but keep a safe HTTPS fallback
     const requestOrigin = req.headers.get("origin") || "";
