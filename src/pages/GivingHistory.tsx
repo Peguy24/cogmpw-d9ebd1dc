@@ -1,19 +1,49 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Receipt, Download, AlertCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DonationReceiptDialog } from "@/components/DonationReceiptDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import jsPDF from "jspdf";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 export default function GivingHistory() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+
+  const sessionId = useMemo(() => searchParams.get("session_id"), [searchParams]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    // If the user lands on /giving-history directly from Stripe (deep link),
+    // make sure we record the donation before showing history.
+    (async () => {
+      try {
+        const { error } = await supabase.functions.invoke("record-donation", {
+          body: { sessionId },
+        });
+        if (error && !error.message?.includes("already")) {
+          console.error("[GivingHistory] record-donation error", error);
+          toast.error("Payment received but failed to record donation.");
+        }
+      } catch (err) {
+        console.error("[GivingHistory] record-donation unexpected error", err);
+      } finally {
+        await queryClient.invalidateQueries({ queryKey: ["donations-history"] });
+        // Clean URL so refresh/back doesn't re-run recording.
+        navigate("/giving-history", { replace: true });
+      }
+    })();
+  }, [navigate, queryClient, sessionId]);
+
   const [selectedDonation, setSelectedDonation] = useState<any>(null);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
