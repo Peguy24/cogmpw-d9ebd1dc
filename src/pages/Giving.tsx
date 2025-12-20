@@ -82,41 +82,63 @@ const Giving = () => {
     const subscriptionStatus = searchParams.get("subscription");
     
     if (donationStatus === "success") {
+      // Always use session_id from URL first - this is the most reliable source
+      // sessionStorage may be lost if user opened in new tab or different browser context
       const sessionIdFromUrl = searchParams.get("session_id");
-      const sessionId = sessionIdFromUrl || sessionStorage.getItem("pendingDonationSession");
+      const sessionIdFromStorage = sessionStorage.getItem("pendingDonationSession");
+      const sessionId = sessionIdFromUrl || sessionIdFromStorage;
+      
+      console.log("[Giving] Recording donation", { 
+        sessionIdFromUrl, 
+        sessionIdFromStorage, 
+        usingSessionId: sessionId 
+      });
+      
       if (sessionId) {
-        // Record donation and fetch details
+        // Record donation - this now works for both authenticated and guest users
         supabase.functions.invoke("record-donation", {
           body: { sessionId },
         }).then(async ({ data, error }) => {
           if (error) {
             console.error("Error recording donation:", error);
-            toast.error("Payment received but failed to record. Please contact support.");
+            // Don't show error for already-recorded donations
+            if (!error.message?.includes("already")) {
+              toast.error("Payment received but failed to record. Please contact support.");
+            }
           } else {
+            console.log("[Giving] Donation recorded successfully", data);
+            
             // Refresh campaigns so progress bars update
             queryClient.invalidateQueries({ queryKey: ["active-campaigns"] });
 
-            // Fetch the recorded donation details
-            const { data: donations, error: fetchError } = await supabase
-              .from("donations")
-              .select("*, user_id")
-              .eq("stripe_payment_intent_id", data?.paymentIntentId)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
+            // Try to fetch the recorded donation details (only works for authenticated users)
+            if (data?.paymentIntentId) {
+              const { data: donations, error: fetchError } = await supabase
+                .from("donations")
+                .select("*, user_id")
+                .eq("stripe_payment_intent_id", data.paymentIntentId)
+                .order("created_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-            if (!fetchError && donations) {
-              setDonationDetails(donations);
-              setShowReceiptDialog(true);
+              if (!fetchError && donations) {
+                setDonationDetails(donations);
+                setShowReceiptDialog(true);
+              } else {
+                // Guest donation or fetch failed - still show success
+                toast.success("Thank you for your generous donation!");
+              }
             } else {
               toast.success("Thank you for your generous donation!");
             }
+            
             sessionStorage.removeItem("pendingDonationSession");
           }
           // Navigate after recording is complete
           navigate("/giving", { replace: true });
         });
       } else {
+        console.warn("[Giving] No session ID found for donation success");
         toast.success("Thank you for your generous donation!");
         navigate("/giving", { replace: true });
       }

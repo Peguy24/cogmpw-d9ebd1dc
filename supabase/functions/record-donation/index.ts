@@ -164,21 +164,26 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Try to get authenticated user, but allow guest donations too
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user) throw new Error("User not authenticated");
+    let user = null;
     
-    logStep("User authenticated", { userId: user.id });
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data } = await supabaseClient.auth.getUser(token);
+      user = data.user;
+      if (user) {
+        logStep("User authenticated", { userId: user.id });
+      }
+    }
 
     const { sessionId } = await req.json();
     
     if (!sessionId) {
       throw new Error("Session ID is required");
     }
+
+    logStep("Processing session", { sessionId, hasUser: !!user });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
@@ -194,14 +199,46 @@ serve(async (req) => {
     logStep("Payment verified", { sessionId, status: session.payment_status });
 
     // Get metadata from session
-    const { user_id, category, notes, campaign_id } = session.metadata || {};
+    const { user_id, category, notes, campaign_id, guest_email } = session.metadata || {};
     const amount = (session.amount_total || 0) / 100; // Convert from cents
 
-    // Insert donation record
+    // Check if donation already recorded (prevent duplicates)
+    const { data: existingDonation } = await supabaseClient
+      .from('donations')
+      .select('id')
+      .eq('stripe_payment_intent_id', session.payment_intent as string)
+      .maybeSingle();
+
+    if (existingDonation) {
+      logStep("Donation already recorded", { donationId: existingDonation.id });
+      return new Response(JSON.stringify({ 
+        success: true,
+        alreadyRecorded: true,
+        paymentIntentId: session.payment_intent as string 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // Determine the user_id to use:
+    // 1. If authenticated user, use their ID
+    // 2. If metadata has user_id (and it's not 'guest'), use that
+    // 3. Otherwise, it's a guest donation (user_id = null)
+    let effectiveUserId: string | null = null;
+    if (user) {
+      effectiveUserId = user.id;
+    } else if (user_id && user_id !== 'guest') {
+      effectiveUserId = user_id;
+    }
+
+    logStep("Determined user ID", { effectiveUserId, isGuest: !effectiveUserId });
+
+    // Insert donation record using service role (bypasses RLS)
     const { error: insertError } = await supabaseClient
       .from('donations')
       .insert({
-        user_id: user_id || user.id,
+        user_id: effectiveUserId,
         amount,
         category: category || 'General',
         payment_method: 'stripe',
@@ -216,15 +253,16 @@ serve(async (req) => {
       throw insertError;
     }
 
-    logStep("Donation recorded successfully", { amount, category });
+    logStep("Donation recorded successfully", { amount, category, userId: effectiveUserId });
 
     // Send email receipt in background (non-blocking)
-    if (user.email) {
+    const recipientEmail = user?.email || guest_email || session.customer_email;
+    if (recipientEmail) {
       sendDonationReceipt({
-        email: user.email,
-        donorName: user.user_metadata?.full_name || 'Donor',
+        email: recipientEmail,
+        donorName: user?.user_metadata?.full_name || 'Generous Donor',
         amount,
-        category,
+        category: category || 'General',
         transactionId: session.payment_intent as string,
         notes: notes || undefined,
       }).catch((err) => {
