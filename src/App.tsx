@@ -29,6 +29,7 @@ import GuestEvents from "./pages/GuestEvents";
 import GuestSermons from "./pages/GuestSermons";
 import GuestDevotionals from "./pages/GuestDevotionals";
 import MyPrayerRequests from "./pages/MyPrayerRequests";
+import DonationSuccess from "./pages/DonationSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const AppContent = () => {
         <Route path="/campaign/:id" element={<CampaignDetails />} />
         <Route path="/manage-subscriptions" element={<ManageSubscriptions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/donation-success" element={<DonationSuccess />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

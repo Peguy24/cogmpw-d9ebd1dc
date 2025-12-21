@@ -143,8 +143,8 @@ serve(async (req) => {
       mode: "payment",
 
       // ⬇️ Use the current site URL for redirects (preview/prod). Fallback keeps native app flow working.
-      // Include the session id in the URL so the app can reliably record the donation
-      success_url: `${redirectBaseUrl}/giving?donation=success&session_id={CHECKOUT_SESSION_ID}`,
+      // Send users to a dedicated success page that records the donation even if the app deep link isn't triggered.
+      success_url: `${redirectBaseUrl}/donation-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${redirectBaseUrl}/giving?donation=canceled`,
 
       metadata: {
