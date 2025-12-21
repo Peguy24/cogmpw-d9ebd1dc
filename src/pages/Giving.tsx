@@ -192,12 +192,21 @@ const Giving = () => {
     try {
       setIsSubmittingCampaign(true);
 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const authHeaders = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined;
+
       const { data, error } = await supabase.functions.invoke("create-donation-checkout", {
         body: {
           amount: parseFloat(campaignAmount),
           category: "Campaign",
           campaign_id: selectedCampaign?.id || null,
         },
+        headers: authHeaders,
       });
 
       if (error) throw error;

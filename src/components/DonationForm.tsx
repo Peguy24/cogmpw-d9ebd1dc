@@ -101,6 +101,10 @@ export const DonationForm = () => {
         data: { session },
       } = await supabase.auth.getSession();
 
+      const authHeaders = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : undefined;
+
       // For guests, require email
       if (!session && !values.guest_email) {
         toast.error("Please provide your email address");
@@ -122,6 +126,7 @@ export const DonationForm = () => {
             notes: values.notes || null,
             interval: values.interval,
           },
+          headers: authHeaders,
         });
 
         if (error) throw error;
@@ -141,6 +146,7 @@ export const DonationForm = () => {
             campaign_id: values.campaign_id || selectedCampaignFromStorage || null,
             guest_email: values.guest_email || null,
           },
+          headers: authHeaders,
         });
 
         if (error) throw error;
