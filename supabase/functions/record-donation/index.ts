@@ -214,7 +214,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         success: true,
         alreadyRecorded: true,
-        paymentIntentId: session.payment_intent as string 
+        paymentIntentId: session.payment_intent as string,
+        amount,
+        category: category || 'General',
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -272,7 +274,9 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true,
-      paymentIntentId: session.payment_intent as string 
+      paymentIntentId: session.payment_intent as string,
+      amount,
+      category: category || 'General',
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
