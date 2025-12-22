@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle, Loader2, History, HandHeart } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, History, HandHeart, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 function setMetaTag(name: string, content: string) {
@@ -169,6 +169,20 @@ export default function DonationSuccess() {
             )}
 
             <div className="flex flex-col gap-2">
+              {/* Fallback button for mobile app users when page opens in browser */}
+              <Button
+                onClick={() => {
+                  const deepLink = sessionId 
+                    ? `cogmpw://donation-success?session_id=${sessionId}`
+                    : `cogmpw://donation-success`;
+                  window.location.href = deepLink;
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Smartphone className="h-4 w-4 mr-2" />
+                Open in App
+              </Button>
+              
               <Button
                 onClick={() => navigate("/giving-history")}
                 disabled={status === "recording"}
@@ -186,8 +200,8 @@ export default function DonationSuccess() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              If you're using the mobile app and this page opened in your browser, you can now return to
-              the app and open <span className="font-medium">Giving History</span>.
+              If you're using the mobile app and this page opened in your browser, 
+              tap <span className="font-medium">"Open in App"</span> to return to the app.
             </p>
           </CardContent>
         </Card>
