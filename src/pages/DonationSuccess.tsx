@@ -179,10 +179,21 @@ export default function DonationSuccess() {
               {/* Fallback button for mobile app users when page opens in browser */}
               <Button
                 onClick={() => {
-                  const deepLink = sessionId
-                    ? `cogmpw://app/donation-success?session_id=${encodeURIComponent(sessionId)}`
-                    : `cogmpw://app/donation-success`;
-                  window.location.href = deepLink;
+                  const path = sessionId
+                    ? `donation-success?session_id=${encodeURIComponent(sessionId)}`
+                    : `donation-success`;
+                  
+                  // Check if Android Chrome - use intent:// for better reliability
+                  const isAndroid = /android/i.test(navigator.userAgent);
+                  
+                  if (isAndroid) {
+                    // Android intent:// format opens the app reliably from Chrome
+                    const intentUrl = `intent://${path}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;end`;
+                    window.location.href = intentUrl;
+                  } else {
+                    // iOS and other platforms use standard custom scheme
+                    window.location.href = `cogmpw://${path}`;
+                  }
                 }}
               >
                 <Smartphone className="h-4 w-4 mr-2" />
