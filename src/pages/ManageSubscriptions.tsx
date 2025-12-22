@@ -159,18 +159,19 @@ export default function ManageSubscriptions() {
           </Alert>
         )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/giving")}
+              className="shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Recurring Donations</h1>
-              <p className="text-muted-foreground">Manage your automatic donations</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold truncate">Recurring Donations</h1>
+              <p className="text-sm text-muted-foreground">Manage your automatic donations</p>
             </div>
           </div>
           <Button
@@ -178,6 +179,7 @@ export default function ManageSubscriptions() {
             size="icon"
             onClick={() => refetch()}
             disabled={isLoading}
+            className="shrink-0"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
@@ -215,14 +217,14 @@ export default function ManageSubscriptions() {
                       onOpenChange={() => toggleExpanded(sub.id)}
                     >
                       <div className="border rounded-lg overflow-hidden">
-                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
-                          <div className="space-y-2 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/50 transition-colors gap-3">
+                          <div className="space-y-2 flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold text-lg">${sub.amount.toFixed(2)}</span>
-                              <span className="text-sm text-muted-foreground">•</span>
+                              <span className="text-sm text-muted-foreground hidden sm:inline">•</span>
                               <span className="text-sm font-medium">{formatInterval(sub.interval)}</span>
                               {sub.cancel_at_period_end && (
-                                <Badge variant="destructive" className="ml-2">
+                                <Badge variant="destructive" className="text-xs">
                                   Canceling
                                 </Badge>
                               )}
@@ -236,31 +238,31 @@ export default function ManageSubscriptions() {
                                 <span className="font-medium">Recurring Donation</span>
                               )}
                               {sub.metadata?.notes && (
-                                <span className="italic"> • {sub.metadata.notes}</span>
+                                <span className="italic block sm:inline"> {sub.metadata.notes}</span>
                               )}
                             </div>
                             <div className="text-xs text-muted-foreground">
                               {sub.cancel_at_period_end ? (
                                 <>Ends: {sub.current_period_end && new Date(sub.current_period_end).toLocaleDateString('en-US', {
                                   year: 'numeric',
-                                  month: 'long',
+                                  month: 'short',
                                   day: 'numeric',
                                 })}</>
                               ) : (
-                                <>Next payment: {sub.current_period_end && new Date(sub.current_period_end).toLocaleDateString('en-US', {
+                                <>Next: {sub.current_period_end && new Date(sub.current_period_end).toLocaleDateString('en-US', {
                                   year: 'numeric',
-                                  month: 'long',
+                                  month: 'short',
                                   day: 'numeric',
                                 })}</>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 shrink-0">
                             {hasPaymentHistory && (
                               <CollapsibleTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Receipt className="h-4 w-4 mr-1" />
-                                  History
+                                <Button variant="ghost" size="sm" className="flex-1 sm:flex-none">
+                                  <Receipt className="h-4 w-4 sm:mr-1" />
+                                  <span className="sm:inline">History</span>
                                   {isExpanded ? (
                                     <ChevronUp className="h-4 w-4 ml-1" />
                                   ) : (
@@ -273,11 +275,11 @@ export default function ManageSubscriptions() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-1 sm:flex-none"
                                 onClick={() => handleCancelClick(sub)}
                               >
-                                <X className="h-4 w-4 mr-1" />
-                                Cancel
+                                <X className="h-4 w-4 sm:mr-1" />
+                                <span className="sm:inline">Cancel</span>
                               </Button>
                             )}
                           </div>
@@ -294,11 +296,11 @@ export default function ManageSubscriptions() {
                                 {sub.payment_history!.map((payment) => (
                                   <div 
                                     key={payment.id}
-                                    className="flex items-center justify-between py-2 px-3 bg-background rounded-md text-sm"
+                                    className="flex flex-col sm:flex-row sm:items-center justify-between py-2 px-3 bg-background rounded-md text-sm gap-2"
                                   >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                                       <span className="font-medium">${payment.amount.toFixed(2)}</span>
-                                      <span className="text-muted-foreground">
+                                      <span className="text-muted-foreground text-xs sm:text-sm">
                                         {payment.date && new Date(payment.date).toLocaleDateString('en-US', {
                                           year: 'numeric',
                                           month: 'short',
@@ -309,19 +311,17 @@ export default function ManageSubscriptions() {
                                         {payment.status}
                                       </Badge>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                      {payment.hosted_invoice_url && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 px-2"
-                                          onClick={() => window.open(payment.hosted_invoice_url!, '_blank')}
-                                        >
-                                          <ExternalLink className="h-3 w-3 mr-1" />
-                                          View
-                                        </Button>
-                                      )}
-                                    </div>
+                                    {payment.hosted_invoice_url && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-7 px-2 w-full sm:w-auto"
+                                        onClick={() => window.open(payment.hosted_invoice_url!, '_blank')}
+                                      >
+                                        <ExternalLink className="h-3 w-3 mr-1" />
+                                        View Invoice
+                                      </Button>
+                                    )}
                                   </div>
                                 ))}
                               </div>
