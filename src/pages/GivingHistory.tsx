@@ -202,25 +202,26 @@ export default function GivingHistory() {
           </Alert>
         )}
 
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/giving")}
+              className="shrink-0"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Giving History</h1>
-              <p className="text-muted-foreground">View your past donations and receipts</p>
+            <div className="min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold truncate">Giving History</h1>
+              <p className="text-sm text-muted-foreground">View your past donations and receipts</p>
             </div>
           </div>
           
           {availableYears.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-32">
+                <SelectTrigger className="w-full sm:w-32">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -231,9 +232,9 @@ export default function GivingHistory() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleDownloadPDF} variant="outline">
+              <Button onClick={handleDownloadPDF} variant="outline" className="w-full sm:w-auto">
                 <Download className="h-4 w-4 mr-2" />
-                Download Tax Summary
+                <span className="sm:inline">Download Tax Summary</span>
               </Button>
             </div>
           )}
@@ -281,15 +282,15 @@ export default function GivingHistory() {
                 {donations.map((donation) => (
                   <div
                     key={donation.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors gap-3"
                   >
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-lg">${Number(donation.amount).toFixed(2)}</span>
-                        <span className="text-sm text-muted-foreground">•</span>
+                        <span className="text-sm text-muted-foreground hidden sm:inline">•</span>
                         <span className="text-sm font-medium">{donation.category}</span>
                         {donation.payment_method === "stripe_subscription" && (
-                          <Badge variant="secondary" className="flex items-center gap-1">
+                          <Badge variant="secondary" className="flex items-center gap-1 text-xs">
                             <RefreshCw className="h-3 w-3" />
                             Recurring
                           </Badge>
@@ -303,7 +304,7 @@ export default function GivingHistory() {
                         })}
                       </div>
                       {donation.notes && (
-                        <div className="text-xs text-muted-foreground italic">
+                        <div className="text-xs text-muted-foreground italic truncate">
                           {donation.notes}
                         </div>
                       )}
@@ -312,6 +313,7 @@ export default function GivingHistory() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleViewReceipt(donation)}
+                      className="w-full sm:w-auto shrink-0"
                     >
                       <Receipt className="h-4 w-4 mr-2" />
                       View Receipt
