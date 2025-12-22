@@ -40,10 +40,10 @@ export default function DonationSuccess() {
 
   useEffect(() => {
     // Basic per-page SEO (no dynamic SEO lib in project)
-    document.title = "Donation Success | COGMPW Online Giving";
+    document.title = "Thank You | COGMPW Donation Success";
     setMetaTag(
       "description",
-      "Donation success confirmation for COGMPW online giving. Your donation is being recorded and will appear in your giving history."
+      "Thank you for your donation to COGMPW. View the confirmed amount and category, then return to the app."
     );
     setCanonical(`${window.location.origin}/donation-success`);
   }, []);
@@ -80,10 +80,17 @@ export default function DonationSuccess() {
         if (cancelled) return;
 
         // Store donation details from the response
-        if (data && typeof data.amount === 'number') {
+        const amount =
+          typeof data?.amount === "number"
+            ? data.amount
+            : typeof data?.amount === "string"
+              ? Number.parseFloat(data.amount)
+              : null;
+
+        if (amount !== null && Number.isFinite(amount)) {
           setDonationDetails({
-            amount: data.amount,
-            category: data.category || 'General',
+            amount,
+            category: data?.category || "General",
           });
         }
 
@@ -111,9 +118,9 @@ export default function DonationSuccess() {
     <main className="min-h-screen bg-background p-4 md:p-10">
       <section className="max-w-xl mx-auto">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold">Donation Success</h1>
+          <h1 className="text-3xl font-bold">Thank You!</h1>
           <p className="text-muted-foreground mt-1">
-            We're confirming your donation and saving it to your giving history.
+            Your donation has been received successfully.
           </p>
         </header>
 
@@ -123,7 +130,7 @@ export default function DonationSuccess() {
               {status === "recording" ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : status === "success" ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-primary" />
               ) : (
                 <HandHeart className="h-5 w-5" />
               )}
