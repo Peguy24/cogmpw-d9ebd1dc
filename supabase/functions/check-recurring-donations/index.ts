@@ -64,35 +64,57 @@ serve(async (req) => {
     // Map subscriptions with additional details fetched separately if needed
     const formattedSubscriptions = await Promise.all(
       subscriptions.data.map(async (sub: Stripe.Subscription) => {
-        const priceItem = sub.items.data[0];
-        const priceId = priceItem.price.id;
-        
-        // Fetch the price with product expansion
-        const price = await stripe.prices.retrieve(priceId, {
-          expand: ["product"],
-        });
-        
-        const amount = (price.unit_amount || 0) / 100;
-        
-        // Get product name for fallback if metadata is missing
-        const product = price.product;
-        const productName = typeof product === "object" && product !== null ? (product as any).name : null;
+        try {
+          const priceItem = sub.items.data[0];
+          const priceId = priceItem.price.id;
+          
+          // Fetch the price with product expansion
+          const price = await stripe.prices.retrieve(priceId, {
+            expand: ["product"],
+          });
+          
+          const amount = (price.unit_amount || 0) / 100;
+          
+          // Get product name for fallback if metadata is missing
+          const product = price.product;
+          const productName = typeof product === "object" && product !== null ? (product as any).name : null;
 
-        return {
-          id: sub.id,
-          amount: amount,
-          interval: price.recurring?.interval || "month",
-          status: sub.status,
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-          created: new Date(sub.created * 1000).toISOString(),
-          metadata: sub.metadata || {},
-          cancel_at_period_end: sub.cancel_at_period_end,
-          product_name: productName,
-        };
+          // Safely convert timestamps - handle both number and undefined cases
+          const currentPeriodEnd = typeof sub.current_period_end === 'number' 
+            ? new Date(sub.current_period_end * 1000).toISOString() 
+            : null;
+          const createdAt = typeof sub.created === 'number' 
+            ? new Date(sub.created * 1000).toISOString() 
+            : null;
+
+          logStep("Processing subscription", { 
+            id: sub.id, 
+            current_period_end: sub.current_period_end,
+            created: sub.created 
+          });
+
+          return {
+            id: sub.id,
+            amount: amount,
+            interval: price.recurring?.interval || "month",
+            status: sub.status,
+            current_period_end: currentPeriodEnd,
+            created: createdAt,
+            metadata: sub.metadata || {},
+            cancel_at_period_end: sub.cancel_at_period_end,
+            product_name: productName,
+          };
+        } catch (subError) {
+          logStep("Error processing subscription", { id: sub.id, error: String(subError) });
+          return null;
+        }
       })
     );
 
-    return new Response(JSON.stringify({ subscriptions: formattedSubscriptions }), {
+    // Filter out any failed subscriptions and return
+    const validSubscriptions = formattedSubscriptions.filter(Boolean);
+
+    return new Response(JSON.stringify({ subscriptions: validSubscriptions }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
