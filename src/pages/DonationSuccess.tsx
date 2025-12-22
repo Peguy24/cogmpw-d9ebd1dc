@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ export default function DonationSuccess() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [donationDetails, setDonationDetails] = useState<DonationDetails | null>(null);
 
+  const isNative = Capacitor.isNativePlatform();
+
   useEffect(() => {
     // Basic per-page SEO (no dynamic SEO lib in project)
     document.title = "Thank You | COGMPW Donation Success";
@@ -63,10 +66,10 @@ export default function DonationSuccess() {
 
       try {
         // Get auth token if available
-        const { data: { session } } = await supabase.auth.getSession();
-        const authHeaders = session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : undefined;
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const authHeaders = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined;
 
         const { data, error } = await supabase.functions.invoke("record-donation", {
           body: { sessionId },
@@ -79,7 +82,6 @@ export default function DonationSuccess() {
 
         if (cancelled) return;
 
-        // Store donation details from the response
         const amount =
           typeof data?.amount === "number"
             ? data.amount
@@ -114,14 +116,37 @@ export default function DonationSuccess() {
     };
   }, [queryClient, sessionId]);
 
+  const handleOpenInApp = () => {
+    // If we are already inside the native app, a custom-scheme navigation can just refresh the WebView.
+    if (isNative) {
+      navigate("/giving-history");
+      return;
+    }
+
+    // Send users back to the app to their Giving History.
+    const targetPath = "app/giving-history?donation=success";
+    const schemeUrl = `cogmpw://${targetPath}`;
+
+    const ua = navigator.userAgent || "";
+    const isAndroid = /android/i.test(ua);
+    const isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
+
+    // Android Chrome is most reliable with intent://
+    if (isAndroid && isChrome) {
+      const intentUrl = `intent://${targetPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end`;
+      window.location.href = intentUrl;
+      return;
+    }
+
+    window.location.href = schemeUrl;
+  };
+
   return (
     <main className="min-h-screen bg-background p-4 md:p-10">
       <section className="max-w-xl mx-auto">
         <header className="mb-6">
           <h1 className="text-3xl font-bold">Thank You!</h1>
-          <p className="text-muted-foreground mt-1">
-            Your donation has been received successfully.
-          </p>
+          <p className="text-muted-foreground mt-1">Your donation has been received successfully.</p>
         </header>
 
         <Card>
@@ -156,9 +181,7 @@ export default function DonationSuccess() {
               <div className="p-4 bg-muted rounded-lg space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Amount:</span>
-                  <span className="text-2xl font-bold text-primary">
-                    ${donationDetails.amount.toFixed(2)}
-                  </span>
+                  <span className="text-2xl font-bold text-primary">${donationDetails.amount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Category:</span>
@@ -176,61 +199,29 @@ export default function DonationSuccess() {
             )}
 
             <div className="flex flex-col gap-2">
-              {/* Fallback button for mobile app users when page opens in browser */}
-              <Button
-                onClick={() => {
-                  const encodedSessionId = sessionId ? encodeURIComponent(sessionId) : null;
-                  const schemePath = encodedSessionId
-                    ? `app/donation-success?session_id=${encodedSessionId}`
-                    : `app/donation-success`;
+              {!isNative && (
+                <Button onClick={handleOpenInApp}>
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  Open in App
+                </Button>
+              )}
 
-                  const schemeUrl = `cogmpw://${schemePath}`;
-
-                  const isAndroid = /android/i.test(navigator.userAgent);
-
-                  // 1) Try custom scheme first (works in many browsers)
-                  window.location.href = schemeUrl;
-
-                  // 2) Android Chrome sometimes needs intent:// (and package can break if build id differs)
-                  if (isAndroid) {
-                    window.setTimeout(() => {
-                      const intentUrl = `intent://${schemePath}#Intent;scheme=cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end`;
-                      window.location.href = intentUrl;
-                    }, 250);
-                  }
-
-                  // If the app doesn't open (not installed / blocked), show a hint.
-                  window.setTimeout(() => {
-                    toast.info("If the app didn't open…", {
-                      description: "On Android: make sure you're using Chrome and the installed app is the latest build, then tap Open in App again.",
-                    });
-                  }, 1400);
-                }}
-              >
-                <Smartphone className="h-4 w-4 mr-2" />
-                Open in App
-              </Button>
-
-              <Button
-                onClick={() => navigate("/giving-history")}
-                disabled={status === "recording"}
-              >
+              <Button onClick={() => navigate("/giving-history")} disabled={status === "recording"}>
                 <History className="h-4 w-4 mr-2" />
                 View Giving History
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/giving")}
-                disabled={status === "recording"}
-              >
+
+              <Button variant="outline" onClick={() => navigate("/giving")} disabled={status === "recording"}>
                 Back to Giving
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              If you're using the mobile app and this page opened in your browser, 
-              tap <span className="font-medium">"Open in App"</span> to return to the app.
-            </p>
+            {!isNative && (
+              <p className="text-xs text-muted-foreground">
+                If this page opened in your browser, tap <span className="font-medium">"Open in App"</span> to return to
+                the app.
+              </p>
+            )}
           </CardContent>
         </Card>
       </section>
