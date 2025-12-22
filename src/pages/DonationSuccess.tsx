@@ -172,12 +172,11 @@ export default function DonationSuccess() {
               {/* Fallback button for mobile app users when page opens in browser */}
               <Button
                 onClick={() => {
-                  const deepLink = sessionId 
-                    ? `cogmpw://donation-success?session_id=${sessionId}`
-                    : `cogmpw://donation-success`;
+                  const deepLink = sessionId
+                    ? `cogmpw://app/donation-success?session_id=${encodeURIComponent(sessionId)}`
+                    : `cogmpw://app/donation-success`;
                   window.location.href = deepLink;
                 }}
-                className="bg-green-600 hover:bg-green-700"
               >
                 <Smartphone className="h-4 w-4 mr-2" />
                 Open in App

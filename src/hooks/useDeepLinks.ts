@@ -38,10 +38,15 @@ export const useDeepLinks = () => {
         
         // For custom scheme URLs, the host might contain the path
         if (url.protocol === 'cogmpw:') {
-          // Handle cogmpw://app/giving format
+          // Supported formats:
+          // - cogmpw://app/giving?donation=success
+          // - cogmpw://app/donation-success?session_id=...
+          // - cogmpw://donation-success?session_id=... (fallback)
           const hostAndPath = url.host + url.pathname;
           if (hostAndPath.startsWith('app')) {
             path = hostAndPath.replace(/^app/, '') || '/';
+          } else if (url.host) {
+            path = `/${url.host}${url.pathname || ''}`;
           }
         }
         // For HTTPS App Links, pathname is already correct (e.g., /giving)
