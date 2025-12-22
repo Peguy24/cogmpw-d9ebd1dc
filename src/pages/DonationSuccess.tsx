@@ -187,21 +187,24 @@ export default function DonationSuccess() {
                   const schemeUrl = `cogmpw://${schemePath}`;
 
                   const isAndroid = /android/i.test(navigator.userAgent);
-                  const isChrome = /chrome/i.test(navigator.userAgent) && !/edg/i.test(navigator.userAgent);
 
-                  if (isAndroid && isChrome) {
-                    const intentUrl = `intent://${schemePath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end`;
-                    window.location.href = intentUrl;
-                  } else {
-                    window.location.href = schemeUrl;
+                  // 1) Try custom scheme first (works in many browsers)
+                  window.location.href = schemeUrl;
+
+                  // 2) Android Chrome sometimes needs intent:// (and package can break if build id differs)
+                  if (isAndroid) {
+                    window.setTimeout(() => {
+                      const intentUrl = `intent://${schemePath}#Intent;scheme=cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end`;
+                      window.location.href = intentUrl;
+                    }, 250);
                   }
 
                   // If the app doesn't open (not installed / blocked), show a hint.
                   window.setTimeout(() => {
-                    toast.info("If nothing opened…", {
-                      description: "Make sure the COGMPW app is installed, then tap Open in App again.",
+                    toast.info("If the app didn't open…", {
+                      description: "On Android: make sure you're using Chrome and the installed app is the latest build, then tap Open in App again.",
                     });
-                  }, 1200);
+                  }, 1400);
                 }}
               >
                 <Smartphone className="h-4 w-4 mr-2" />
