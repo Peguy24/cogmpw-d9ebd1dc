@@ -103,6 +103,27 @@ serve(async (req) => {
           const currentPeriodEnd = safeIsoFromUnixSeconds(sub.current_period_end);
           const createdAt = safeIsoFromUnixSeconds(sub.created);
 
+          // Fetch invoices for this subscription (last 10 paid invoices)
+          const invoices = await stripe.invoices.list({
+            subscription: sub.id,
+            status: "paid",
+            limit: 10,
+          });
+
+          logStep("Fetched invoices for subscription", { 
+            subscriptionId: sub.id, 
+            invoiceCount: invoices.data.length 
+          });
+
+          const paymentHistory = invoices.data.map((invoice: Stripe.Invoice) => ({
+            id: invoice.id,
+            amount: (invoice.amount_paid || 0) / 100,
+            date: safeIsoFromUnixSeconds(invoice.created),
+            status: invoice.status,
+            invoice_pdf: invoice.invoice_pdf,
+            hosted_invoice_url: invoice.hosted_invoice_url,
+          }));
+
           return {
             id: sub.id,
             amount: amount,
@@ -113,6 +134,7 @@ serve(async (req) => {
             metadata: sub.metadata || {},
             cancel_at_period_end: sub.cancel_at_period_end,
             product_name: productName,
+            payment_history: paymentHistory,
           };
         } catch (subError) {
           logStep("Error processing subscription", { id: sub.id, error: String(subError) });

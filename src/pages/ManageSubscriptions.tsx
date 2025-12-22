@@ -3,12 +3,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, RefreshCw, Settings, AlertCircle, X, Loader2 } from "lucide-react";
+import { ArrowLeft, RefreshCw, Settings, AlertCircle, X, Loader2, ChevronDown, ChevronUp, Receipt, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,12 +25,35 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+interface PaymentHistoryItem {
+  id: string;
+  amount: number;
+  date: string | null;
+  status: string;
+  invoice_pdf: string | null;
+  hosted_invoice_url: string | null;
+}
+
+interface Subscription {
+  id: string;
+  amount: number;
+  interval: string;
+  status: string;
+  current_period_end: string | null;
+  created: string | null;
+  metadata: { category?: string; notes?: string };
+  cancel_at_period_end: boolean;
+  product_name: string | null;
+  payment_history?: PaymentHistoryItem[];
+}
+
 export default function ManageSubscriptions() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
+  const [expandedSubscriptions, setExpandedSubscriptions] = useState<Set<string>>(new Set());
 
   const { data: subscriptions, isLoading, refetch } = useQuery({
     queryKey: ["recurring-donations"],
@@ -71,7 +99,7 @@ export default function ManageSubscriptions() {
     },
   });
 
-  const handleCancelClick = (sub: any) => {
+  const handleCancelClick = (sub: Subscription) => {
     setSelectedSubscription(sub);
     setCancelDialogOpen(true);
   };
@@ -105,6 +133,18 @@ export default function ManageSubscriptions() {
 
   const formatInterval = (interval: string) => {
     return interval === "month" ? "Monthly" : "Weekly";
+  };
+
+  const toggleExpanded = (subscriptionId: string) => {
+    setExpandedSubscriptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(subscriptionId)) {
+        newSet.delete(subscriptionId);
+      } else {
+        newSet.add(subscriptionId);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -164,63 +204,134 @@ export default function ManageSubscriptions() {
               </div>
             ) : subscriptions && subscriptions.length > 0 ? (
               <div className="space-y-4">
-                {subscriptions.map((sub: any) => (
-                  <div
-                    key={sub.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-lg">${sub.amount.toFixed(2)}</span>
-                        <span className="text-sm text-muted-foreground">•</span>
-                        <span className="text-sm font-medium">{formatInterval(sub.interval)}</span>
-                        {sub.cancel_at_period_end && (
-                          <Badge variant="destructive" className="ml-2">
-                            Canceling
-                          </Badge>
+                {subscriptions.map((sub: Subscription) => {
+                  const isExpanded = expandedSubscriptions.has(sub.id);
+                  const hasPaymentHistory = sub.payment_history && sub.payment_history.length > 0;
+                  
+                  return (
+                    <Collapsible 
+                      key={sub.id} 
+                      open={isExpanded}
+                      onOpenChange={() => toggleExpanded(sub.id)}
+                    >
+                      <div className="border rounded-lg overflow-hidden">
+                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-lg">${sub.amount.toFixed(2)}</span>
+                              <span className="text-sm text-muted-foreground">•</span>
+                              <span className="text-sm font-medium">{formatInterval(sub.interval)}</span>
+                              {sub.cancel_at_period_end && (
+                                <Badge variant="destructive" className="ml-2">
+                                  Canceling
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {sub.metadata?.category ? (
+                                <span className="font-medium">{sub.metadata.category}</span>
+                              ) : sub.product_name ? (
+                                <span className="font-medium">{sub.product_name}</span>
+                              ) : (
+                                <span className="font-medium">Recurring Donation</span>
+                              )}
+                              {sub.metadata?.notes && (
+                                <span className="italic"> • {sub.metadata.notes}</span>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {sub.cancel_at_period_end ? (
+                                <>Ends: {sub.current_period_end && new Date(sub.current_period_end).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}</>
+                              ) : (
+                                <>Next payment: {sub.current_period_end && new Date(sub.current_period_end).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                })}</>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {hasPaymentHistory && (
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Receipt className="h-4 w-4 mr-1" />
+                                  History
+                                  {isExpanded ? (
+                                    <ChevronUp className="h-4 w-4 ml-1" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 ml-1" />
+                                  )}
+                                </Button>
+                              </CollapsibleTrigger>
+                            )}
+                            {!sub.cancel_at_period_end && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => handleCancelClick(sub)}
+                              >
+                                <X className="h-4 w-4 mr-1" />
+                                Cancel
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {hasPaymentHistory && (
+                          <CollapsibleContent>
+                            <div className="border-t bg-muted/30 p-4">
+                              <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                                <Receipt className="h-4 w-4" />
+                                Payment History
+                              </h4>
+                              <div className="space-y-2">
+                                {sub.payment_history!.map((payment) => (
+                                  <div 
+                                    key={payment.id}
+                                    className="flex items-center justify-between py-2 px-3 bg-background rounded-md text-sm"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <span className="font-medium">${payment.amount.toFixed(2)}</span>
+                                      <span className="text-muted-foreground">
+                                        {payment.date && new Date(payment.date).toLocaleDateString('en-US', {
+                                          year: 'numeric',
+                                          month: 'short',
+                                          day: 'numeric',
+                                        })}
+                                      </span>
+                                      <Badge variant="secondary" className="text-xs">
+                                        {payment.status}
+                                      </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {payment.hosted_invoice_url && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-7 px-2"
+                                          onClick={() => window.open(payment.hosted_invoice_url!, '_blank')}
+                                        >
+                                          <ExternalLink className="h-3 w-3 mr-1" />
+                                          View
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </CollapsibleContent>
                         )}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {sub.metadata?.category ? (
-                          <span className="font-medium">{sub.metadata.category}</span>
-                        ) : sub.product_name ? (
-                          <span className="font-medium">{sub.product_name}</span>
-                        ) : (
-                          <span className="font-medium">Recurring Donation</span>
-                        )}
-                        {sub.metadata?.notes && (
-                          <span className="italic"> • {sub.metadata.notes}</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {sub.cancel_at_period_end ? (
-                          <>Ends: {new Date(sub.current_period_end).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}</>
-                        ) : (
-                          <>Next payment: {new Date(sub.current_period_end).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}</>
-                        )}
-                      </div>
-                    </div>
-                    {!sub.cancel_at_period_end && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => handleCancelClick(sub)}
-                      >
-                        <X className="h-4 w-4 mr-1" />
-                        Cancel
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                    </Collapsible>
+                  );
+                })}
                 
                 <div className="pt-4 border-t">
                   <Button
