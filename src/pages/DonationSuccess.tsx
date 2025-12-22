@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
@@ -35,21 +35,25 @@ export default function DonationSuccess() {
   const [searchParams] = useSearchParams();
 
   const sessionId = useMemo(() => searchParams.get("session_id"), [searchParams]);
+  const isSubscription = useMemo(() => searchParams.get("type") === "subscription", [searchParams]);
   const [status, setStatus] = useState<"idle" | "recording" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [donationDetails, setDonationDetails] = useState<DonationDetails | null>(null);
+  const autoOpenAttempted = useRef(false);
 
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
     // Basic per-page SEO (no dynamic SEO lib in project)
-    document.title = "Thank You | COGMPW Donation Success";
+    document.title = isSubscription ? "Thank You | COGMPW Subscription Success" : "Thank You | COGMPW Donation Success";
     setMetaTag(
       "description",
-      "Thank you for your donation to COGMPW. View the confirmed amount and category, then return to the app."
+      isSubscription
+        ? "Thank you for setting up recurring giving with COGMPW."
+        : "Thank you for your donation to COGMPW. View the confirmed amount and category, then return to the app."
     );
     setCanonical(`${window.location.origin}/donation-success`);
-  }, []);
+  }, [isSubscription]);
 
   useEffect(() => {
     if (!sessionId) {
@@ -71,6 +75,7 @@ export default function DonationSuccess() {
         } = await supabase.auth.getSession();
         const authHeaders = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined;
 
+        // For subscriptions, we may need a different endpoint, but record-donation handles both
         const { data, error } = await supabase.functions.invoke("record-donation", {
           body: { sessionId },
           headers: authHeaders,
@@ -100,9 +105,18 @@ export default function DonationSuccess() {
         await queryClient.invalidateQueries({ queryKey: ["donations-history"] });
 
         setStatus("success");
-        toast.success("Donation recorded", {
+        toast.success(isSubscription ? "Recurring donation set up" : "Donation recorded", {
           description: "You can now view it in your giving history.",
         });
+
+        // Auto-attempt to open the app if we're in a browser (not native)
+        if (!isNative && !autoOpenAttempted.current) {
+          autoOpenAttempted.current = true;
+          // Small delay to let the success toast show first
+          setTimeout(() => {
+            tryOpenApp();
+          }, 500);
+        }
       } catch (e: any) {
         if (cancelled) return;
         console.error("[DonationSuccess] record-donation failed", e);
@@ -114,31 +128,37 @@ export default function DonationSuccess() {
     return () => {
       cancelled = true;
     };
-  }, [queryClient, sessionId]);
+  }, [queryClient, sessionId, isNative, isSubscription]);
 
-  const handleOpenInApp = () => {
-    // If we are already inside the native app, a custom-scheme navigation can just refresh the WebView.
-    if (isNative) {
-      navigate("/giving-history");
-      return;
-    }
-
-    // Send users back to the app to their Giving History.
-    const targetPath = "app/giving-history?donation=success";
+  // Function to attempt opening the app
+  const tryOpenApp = () => {
+    const successType = isSubscription ? "subscription" : "donation";
+    const targetPath = `app/giving-history?${successType}=success`;
     const schemeUrl = `cogmpw://${targetPath}`;
 
     const ua = navigator.userAgent || "";
     const isAndroid = /android/i.test(ua);
     const isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
 
-    // Android Chrome is most reliable with intent://
+    // Android Chrome works best with intent://
     if (isAndroid && isChrome) {
       const intentUrl = `intent://${targetPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end`;
       window.location.href = intentUrl;
       return;
     }
 
+    // For other browsers/platforms, try the custom scheme
     window.location.href = schemeUrl;
+  };
+
+  const handleOpenInApp = () => {
+    // If we are already inside the native app, just navigate
+    if (isNative) {
+      navigate("/giving-history");
+      return;
+    }
+
+    tryOpenApp();
   };
 
   return (
@@ -146,7 +166,11 @@ export default function DonationSuccess() {
       <section className="max-w-xl mx-auto">
         <header className="mb-6">
           <h1 className="text-3xl font-bold">Thank You!</h1>
-          <p className="text-muted-foreground mt-1">Your donation has been received successfully.</p>
+          <p className="text-muted-foreground mt-1">
+            {isSubscription
+              ? "Your recurring donation has been set up successfully."
+              : "Your donation has been received successfully."}
+          </p>
         </header>
 
         <Card>
@@ -159,13 +183,17 @@ export default function DonationSuccess() {
               ) : (
                 <HandHeart className="h-5 w-5" />
               )}
-              Donation Confirmation
+              {isSubscription ? "Subscription Confirmed" : "Donation Confirmation"}
             </CardTitle>
             <CardDescription>
               {status === "recording"
-                ? "Recording your donation…"
+                ? isSubscription
+                  ? "Setting up your recurring donation…"
+                  : "Recording your donation…"
                 : status === "success"
-                  ? "Your donation has been recorded successfully."
+                  ? isSubscription
+                    ? "Your recurring donation has been set up successfully."
+                    : "Your donation has been recorded successfully."
                   : ""}
             </CardDescription>
           </CardHeader>

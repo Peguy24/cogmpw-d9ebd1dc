@@ -89,8 +89,8 @@ serve(async (req) => {
       ],
       mode: "subscription",
 
-      // Pass session ID back for recording
-      success_url: `${APP_BASE_URL}/giving?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
+      // Use donation-success page for subscriptions too - it handles both types
+      success_url: `${APP_BASE_URL}/donation-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
       cancel_url: `${APP_BASE_URL}/giving?subscription=canceled`,
 
       // Store metadata on the subscription itself (not just the session)
