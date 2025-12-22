@@ -12,6 +12,21 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-RECURRING-DONATIONS] ${step}${detailsStr}`);
 };
 
+const safeIsoFromUnixSeconds = (value: unknown): string | null => {
+  const num = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  if (!Number.isFinite(num)) return null;
+
+  const date = new Date(num * 1000);
+  const time = date.getTime();
+  if (!Number.isFinite(time)) return null;
+
+  try {
+    return date.toISOString();
+  } catch {
+    return null;
+  }
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -79,19 +94,14 @@ serve(async (req) => {
           const product = price.product;
           const productName = typeof product === "object" && product !== null ? (product as any).name : null;
 
-          // Safely convert timestamps - handle both number and undefined cases
-          const currentPeriodEnd = typeof sub.current_period_end === 'number' 
-            ? new Date(sub.current_period_end * 1000).toISOString() 
-            : null;
-          const createdAt = typeof sub.created === 'number' 
-            ? new Date(sub.created * 1000).toISOString() 
-            : null;
-
-          logStep("Processing subscription", { 
-            id: sub.id, 
+          logStep("Processing subscription (raw timestamps)", {
+            id: sub.id,
             current_period_end: sub.current_period_end,
-            created: sub.created 
+            created: sub.created,
           });
+
+          const currentPeriodEnd = safeIsoFromUnixSeconds(sub.current_period_end);
+          const createdAt = safeIsoFromUnixSeconds(sub.created);
 
           return {
             id: sub.id,
