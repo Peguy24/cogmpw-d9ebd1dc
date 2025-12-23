@@ -179,16 +179,18 @@ export default function DonationSuccess() {
     window.location.href = schemeUrl;
   }, [isSubscription, setAutoOpenAttempted]);
 
-  // Handle countdown timer
+  // Handle countdown timer (UX only). We avoid auto-opening from a timer because
+  // many mobile browsers block custom scheme/intent navigation unless it happens
+  // directly within a user gesture.
   useEffect(() => {
     if (!countdownActive) return;
 
     countdownIntervalRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          // Countdown finished, open app
           clearInterval(countdownIntervalRef.current!);
-          tryOpenApp();
+          // Hide the countdown UI after it finishes; user can tap again if needed.
+          setTimeout(() => setCountdownActive(false), 0);
           return 0;
         }
         return prev - 1;
@@ -200,7 +202,7 @@ export default function DonationSuccess() {
         clearInterval(countdownIntervalRef.current);
       }
     };
-  }, [countdownActive, tryOpenApp]);
+  }, [countdownActive]);
 
   const handleOpenInApp = () => {
     // If we are already inside the native app, just navigate
@@ -209,8 +211,12 @@ export default function DonationSuccess() {
       return;
     }
 
-    // Start countdown instead of immediate redirect
+    // Attempt to open immediately (must be inside a user gesture)
+    tryOpenApp();
+
+    // Then show a short countdown UI to guide the user (no auto-open)
     if (!countdownActive) {
+      setCountdown(COUNTDOWN_SECONDS);
       setCountdownActive(true);
     }
   };
@@ -304,7 +310,7 @@ export default function DonationSuccess() {
             {!isNative && countdownActive && (
               <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Opening app in {countdown}s...</span>
+                  <span className="text-sm font-medium">Trying to open the app… {countdown}s</span>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={handleCancelCountdown}>
                       Cancel
