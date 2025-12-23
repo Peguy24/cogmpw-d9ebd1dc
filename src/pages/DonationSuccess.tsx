@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
@@ -39,9 +39,31 @@ export default function DonationSuccess() {
   const [status, setStatus] = useState<"idle" | "recording" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [donationDetails, setDonationDetails] = useState<DonationDetails | null>(null);
-  const autoOpenAttempted = useRef(false);
-
   const isNative = Capacitor.isNativePlatform();
+  const noAutoOpen = useMemo(() => searchParams.get("no_auto_open") === "1", [searchParams]);
+
+  const autoOpenStorageKey = useMemo(
+    () => (sessionId ? `cogmpw:donationSuccess:autoOpenAttempted:${sessionId}` : null),
+    [sessionId]
+  );
+
+  const getAutoOpenAttempted = () => {
+    if (!autoOpenStorageKey) return false;
+    try {
+      return sessionStorage.getItem(autoOpenStorageKey) === "1";
+    } catch {
+      return false;
+    }
+  };
+
+  const setAutoOpenAttempted = () => {
+    if (!autoOpenStorageKey) return;
+    try {
+      sessionStorage.setItem(autoOpenStorageKey, "1");
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
     // Basic per-page SEO (no dynamic SEO lib in project)
@@ -109,9 +131,10 @@ export default function DonationSuccess() {
           description: "You can now view it in your giving history.",
         });
 
-        // Auto-attempt to open the app if we're in a browser (not native)
-        if (!isNative && !autoOpenAttempted.current) {
-          autoOpenAttempted.current = true;
+        // Auto-attempt to open the app if we're in a browser (not native).
+        // Guard against refresh loops if the browser falls back to this page.
+        if (!isNative && !noAutoOpen && !getAutoOpenAttempted()) {
+          setAutoOpenAttempted();
           // Small delay to let the success toast show first
           setTimeout(() => {
             tryOpenApp();
@@ -128,7 +151,7 @@ export default function DonationSuccess() {
     return () => {
       cancelled = true;
     };
-  }, [queryClient, sessionId, isNative, isSubscription]);
+  }, [queryClient, sessionId, isNative, isSubscription, noAutoOpen]);
 
   // Function to attempt opening the app
   const tryOpenApp = () => {
@@ -136,13 +159,23 @@ export default function DonationSuccess() {
     const targetPath = `app/giving-history?${successType}=success`;
     const schemeUrl = `cogmpw://${targetPath}`;
 
+    const fallbackUrl = (() => {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("no_auto_open", "1");
+        return url.toString();
+      } catch {
+        return window.location.href;
+      }
+    })();
+
     const ua = navigator.userAgent || "";
     const isAndroid = /android/i.test(ua);
     const isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
 
     // Android Chrome works best with intent://
     if (isAndroid && isChrome) {
-      const intentUrl = `intent://${targetPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(window.location.href)};end`;
+      const intentUrl = `intent://${targetPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
       window.location.href = intentUrl;
       return;
     }
@@ -158,6 +191,8 @@ export default function DonationSuccess() {
       return;
     }
 
+    // Prevent refresh loops if the browser immediately falls back to this page
+    setAutoOpenAttempted();
     tryOpenApp();
   };
 
