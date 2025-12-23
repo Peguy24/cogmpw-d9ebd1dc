@@ -6,7 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, DollarSign, TrendingUp, Users, Calendar } from "lucide-react";
 import { toast } from "sonner";
-import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subWeeks, subMonths } from "date-fns";
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Area, AreaChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
 
 interface DonationStats {
   totalAmount: number;
@@ -18,6 +20,11 @@ interface CategoryBreakdown {
   category: string;
   total: number;
   count: number;
+}
+
+interface TrendData {
+  date: string;
+  amount: number;
 }
 
 interface TopDonor {
@@ -39,6 +46,7 @@ const AdminGivingReports = () => {
   
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
   const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
+  const [trendData, setTrendData] = useState<TrendData[]>([]);
 
   useEffect(() => {
     checkAdminAndLoadData();
@@ -72,7 +80,8 @@ const AdminGivingReports = () => {
         loadWeeklyStats(),
         loadMonthlyStats(),
         loadCategoryBreakdown(),
-        loadTopDonors()
+        loadTopDonors(),
+        loadTrendData()
       ]);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -237,6 +246,42 @@ const AdminGivingReports = () => {
     }
   };
 
+  const loadTrendData = async () => {
+    const now = new Date();
+    const thirtyDaysAgo = subDays(now, 29);
+    
+    const { data } = await supabase
+      .from("donations")
+      .select("amount, created_at")
+      .eq("status", "completed")
+      .gte("created_at", startOfDay(thirtyDaysAgo).toISOString())
+      .order("created_at", { ascending: true });
+
+    if (data) {
+      // Group by date
+      const dailyTotals: Record<string, number> = {};
+      
+      // Initialize all 30 days with 0
+      for (let i = 0; i < 30; i++) {
+        const date = format(subDays(now, 29 - i), "MMM dd");
+        dailyTotals[date] = 0;
+      }
+      
+      // Sum donations by date
+      data.forEach(donation => {
+        const date = format(new Date(donation.created_at), "MMM dd");
+        dailyTotals[date] = (dailyTotals[date] || 0) + Number(donation.amount);
+      });
+
+      const trendArray = Object.entries(dailyTotals).map(([date, amount]) => ({
+        date,
+        amount,
+      }));
+
+      setTrendData(trendArray);
+    }
+  };
+
   useEffect(() => {
     if (isAdmin) {
       loadCategoryBreakdown();
@@ -321,6 +366,70 @@ const AdminGivingReports = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Donation Trends Chart */}
+        <Card>
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-base md:text-lg">Donation Trends</CardTitle>
+            <CardDescription className="text-xs md:text-sm">Daily giving over the last 30 days</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {trendData.length === 0 ? (
+              <p className="text-xs md:text-sm text-muted-foreground text-center py-8">
+                No donation data available
+              </p>
+            ) : (
+              <ChartContainer
+                config={{
+                  amount: {
+                    label: "Amount",
+                    color: "hsl(var(--primary))",
+                  },
+                }}
+                className="h-[200px] md:h-[300px] w-full"
+              >
+                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="fillAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tick={{ fontSize: 10 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tick={{ fontSize: 10 }}
+                    tickFormatter={(value) => `$${value}`}
+                    width={50}
+                  />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        formatter={(value) => formatCurrency(Number(value))}
+                      />
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="hsl(var(--primary))"
+                    fill="url(#fillAmount)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Time Range Selector */}
         <Tabs value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
