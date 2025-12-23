@@ -4,11 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, DollarSign, TrendingUp, Users, Calendar } from "lucide-react";
+import { ArrowLeft, DollarSign, TrendingUp, Users, Calendar, Download, FileText, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { jsPDF } from "jspdf";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DonationStats {
   totalAmount: number;
@@ -296,6 +303,120 @@ const AdminGivingReports = () => {
     }).format(amount);
   };
 
+  const getTimeRangeLabel = () => {
+    switch (timeRange) {
+      case "today": return "Today";
+      case "week": return "This Week";
+      case "month": return "This Month";
+    }
+  };
+
+  const exportToCSV = () => {
+    const reportDate = format(new Date(), "yyyy-MM-dd");
+    let csvContent = "Giving Report - " + getTimeRangeLabel() + "\n";
+    csvContent += "Generated: " + format(new Date(), "PPP p") + "\n\n";
+
+    // Summary stats
+    csvContent += "SUMMARY STATISTICS\n";
+    csvContent += "Period,Total Amount,Donations,Average\n";
+    csvContent += `Today,${todayStats.totalAmount},${todayStats.donationCount},${todayStats.averageDonation}\n`;
+    csvContent += `This Week,${weekStats.totalAmount},${weekStats.donationCount},${weekStats.averageDonation}\n`;
+    csvContent += `This Month,${monthStats.totalAmount},${monthStats.donationCount},${monthStats.averageDonation}\n\n`;
+
+    // Category breakdown
+    csvContent += "CATEGORY BREAKDOWN (" + getTimeRangeLabel() + ")\n";
+    csvContent += "Category,Total Amount,Donation Count\n";
+    categoryBreakdown.forEach(cat => {
+      csvContent += `${cat.category},${cat.total},${cat.count}\n`;
+    });
+    csvContent += "\n";
+
+    // Top donors
+    csvContent += "TOP DONORS (" + getTimeRangeLabel() + ")\n";
+    csvContent += "Rank,Name,Total Amount,Donation Count\n";
+    topDonors.forEach((donor, index) => {
+      csvContent += `${index + 1},${donor.full_name},${donor.total},${donor.donation_count}\n`;
+    });
+    csvContent += "\n";
+
+    // Trend data
+    csvContent += "DAILY TRENDS (Last 30 Days)\n";
+    csvContent += "Date,Amount\n";
+    trendData.forEach(day => {
+      csvContent += `${day.date},${day.amount}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `giving-report-${reportDate}.csv`;
+    link.click();
+    toast.success("CSV report downloaded");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const reportDate = format(new Date(), "yyyy-MM-dd");
+    let y = 20;
+
+    // Title
+    doc.setFontSize(20);
+    doc.text("Giving Report", 105, y, { align: "center" });
+    y += 10;
+    doc.setFontSize(12);
+    doc.text(`Generated: ${format(new Date(), "PPP p")}`, 105, y, { align: "center" });
+    y += 15;
+
+    // Summary stats
+    doc.setFontSize(14);
+    doc.text("Summary Statistics", 20, y);
+    y += 10;
+    doc.setFontSize(10);
+    doc.text(`Today: ${formatCurrency(todayStats.totalAmount)} (${todayStats.donationCount} donations)`, 25, y);
+    y += 7;
+    doc.text(`This Week: ${formatCurrency(weekStats.totalAmount)} (${weekStats.donationCount} donations)`, 25, y);
+    y += 7;
+    doc.text(`This Month: ${formatCurrency(monthStats.totalAmount)} (${monthStats.donationCount} donations)`, 25, y);
+    y += 15;
+
+    // Category breakdown
+    doc.setFontSize(14);
+    doc.text(`Category Breakdown (${getTimeRangeLabel()})`, 20, y);
+    y += 10;
+    doc.setFontSize(10);
+    if (categoryBreakdown.length === 0) {
+      doc.text("No donations for this period", 25, y);
+      y += 7;
+    } else {
+      categoryBreakdown.forEach(cat => {
+        doc.text(`${cat.category}: ${formatCurrency(cat.total)} (${cat.count} donations)`, 25, y);
+        y += 7;
+      });
+    }
+    y += 8;
+
+    // Top donors
+    doc.setFontSize(14);
+    doc.text(`Top Donors (${getTimeRangeLabel()})`, 20, y);
+    y += 10;
+    doc.setFontSize(10);
+    if (topDonors.length === 0) {
+      doc.text("No donations for this period", 25, y);
+    } else {
+      topDonors.slice(0, 10).forEach((donor, index) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`${index + 1}. ${donor.full_name}: ${formatCurrency(donor.total)} (${donor.donation_count} donations)`, 25, y);
+        y += 7;
+      });
+    }
+
+    doc.save(`giving-report-${reportDate}.pdf`);
+    toast.success("PDF report downloaded");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -321,6 +442,24 @@ const AdminGivingReports = () => {
             </Link>
             <h1 className="text-lg md:text-xl font-bold truncate">Giving Reports</h1>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportToPDF} className="gap-2">
+                <FileText className="h-4 w-4" />
+                Export as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToCSV} className="gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
+                Export as CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
