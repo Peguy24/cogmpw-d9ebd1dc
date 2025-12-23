@@ -192,8 +192,9 @@ const AdminGivingReports = () => {
       .gte("created_at", startDate.toISOString());
 
     if (donations) {
+      // Separate donations by user_id (null = anonymous)
       const donorMap = donations.reduce((acc: Record<string, { total: number; count: number }>, donation) => {
-        const userId = donation.user_id;
+        const userId = donation.user_id || "anonymous";
         if (!acc[userId]) {
           acc[userId] = { total: 0, count: 0 };
         }
@@ -202,17 +203,31 @@ const AdminGivingReports = () => {
         return acc;
       }, {});
 
-      const userIds = Object.keys(donorMap);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", userIds);
+      // Get only real user IDs (not "anonymous")
+      const userIds = Object.keys(donorMap).filter(id => id !== "anonymous");
+      
+      let profiles: { id: string; full_name: string }[] = [];
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", userIds);
+        profiles = profilesData || [];
+      }
 
-      const topDonorsArray = userIds.map(userId => {
-        const profile = profiles?.find(p => p.id === userId);
+      const topDonorsArray = Object.keys(donorMap).map(userId => {
+        if (userId === "anonymous") {
+          return {
+            user_id: "anonymous",
+            full_name: "Anonymous Donors",
+            total: donorMap[userId].total,
+            donation_count: donorMap[userId].count,
+          };
+        }
+        const profile = profiles.find(p => p.id === userId);
         return {
           user_id: userId,
-          full_name: profile?.full_name || "Anonymous",
+          full_name: profile?.full_name || "Unknown User",
           total: donorMap[userId].total,
           donation_count: donorMap[userId].count,
         };
