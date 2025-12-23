@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Trash2, MessageCircle } from "lucide-react";
+import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X } from "lucide-react";
 import { format } from "date-fns";
 import {
   AlertDialog,
@@ -25,6 +25,7 @@ interface ChatMessage {
   content: string;
   is_deleted: boolean;
   created_at: string;
+  reply_to_id?: string | null;
   profiles?: {
     full_name: string;
   };
@@ -40,6 +41,7 @@ const CommunityChat = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -136,7 +138,7 @@ const CommunityChat = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("chat_messages")
-      .select("id, user_id, content, is_deleted, created_at")
+      .select("id, user_id, content, is_deleted, created_at, reply_to_id")
       .order("created_at", { ascending: true })
       .limit(100);
 
@@ -169,6 +171,7 @@ const CommunityChat = () => {
     const { error } = await supabase.from("chat_messages").insert({
       user_id: currentUserId,
       content: newMessage.trim(),
+      reply_to_id: replyingTo?.id || null,
     });
 
     if (error) {
@@ -176,6 +179,7 @@ const CommunityChat = () => {
       console.error(error);
     } else {
       setNewMessage("");
+      setReplyingTo(null);
       inputRef.current?.focus();
     }
     setSending(false);
@@ -203,6 +207,24 @@ const CommunityChat = () => {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getReplyMessage = (replyToId: string) => {
+    return messages.find(m => m.id === replyToId);
+  };
+
+  const handleReply = (message: ChatMessage) => {
+    setReplyingTo(message);
+    inputRef.current?.focus();
+  };
+
+  const scrollToMessage = (messageId: string) => {
+    const element = document.getElementById(`message-${messageId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("bg-primary/10");
+      setTimeout(() => element.classList.remove("bg-primary/10"), 1500);
+    }
   };
 
   if (!isApproved) {
@@ -250,11 +272,13 @@ const CommunityChat = () => {
             {messages.map((message) => {
               const isOwn = message.user_id === currentUserId;
               const canDelete = isOwn || isAdmin;
+              const replyMessage = message.reply_to_id ? getReplyMessage(message.reply_to_id) : null;
 
               if (message.is_deleted) {
                 return (
                   <div
                     key={message.id}
+                    id={`message-${message.id}`}
                     className={`flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
                   >
                     <p className="text-sm text-muted-foreground italic">
@@ -267,7 +291,8 @@ const CommunityChat = () => {
               return (
                 <div
                   key={message.id}
-                  className={`flex items-start gap-2 ${isOwn ? "flex-row-reverse" : "flex-row"}`}
+                  id={`message-${message.id}`}
+                  className={`flex items-start gap-2 transition-colors duration-300 rounded-lg ${isOwn ? "flex-row-reverse" : "flex-row"}`}
                 >
                   <Avatar className="h-8 w-8 shrink-0">
                     <AvatarFallback className="text-xs bg-primary/10 text-primary">
@@ -285,7 +310,28 @@ const CommunityChat = () => {
                         {format(new Date(message.created_at), "h:mm a")}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    
+                    {/* Reply Preview */}
+                    {replyMessage && (
+                      <button
+                        onClick={() => scrollToMessage(replyMessage.id)}
+                        className={`flex items-start gap-1.5 mb-1 px-2 py-1 rounded-lg text-left transition-colors hover:bg-muted/50 ${
+                          isOwn ? "bg-primary/20" : "bg-muted/80"
+                        }`}
+                      >
+                        <Reply className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {replyMessage.profiles?.full_name || "Unknown"}
+                          </p>
+                          <p className="text-xs text-muted-foreground/80 truncate max-w-[200px]">
+                            {replyMessage.is_deleted ? "Message deleted" : replyMessage.content}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+                    
+                    <div className={`flex items-center gap-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
                       <div
                         className={`rounded-2xl px-4 py-2 ${
                           isOwn
@@ -297,16 +343,26 @@ const CommunityChat = () => {
                           {message.content}
                         </p>
                       </div>
-                      {canDelete && (
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => setDeleteMessageId(message.id)}
+                          className="h-6 w-6"
+                          onClick={() => handleReply(message)}
                         >
-                          <Trash2 className="h-3 w-3 text-destructive" />
+                          <Reply className="h-3 w-3 text-muted-foreground" />
                         </Button>
-                      )}
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => setDeleteMessageId(message.id)}
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -316,6 +372,33 @@ const CommunityChat = () => {
         )}
       </ScrollArea>
 
+      {/* Reply Preview */}
+      {replyingTo && (
+        <div className="border-t bg-muted/50 px-4 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Reply className="h-4 w-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-primary">
+                  Replying to {replyingTo.profiles?.full_name || "Unknown"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {replyingTo.content}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              onClick={() => setReplyingTo(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="sticky bottom-0 border-t bg-background p-4 safe-area-bottom">
         <form onSubmit={sendMessage} className="flex gap-2">
@@ -323,7 +406,7 @@ const CommunityChat = () => {
             ref={inputRef}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
+            placeholder={replyingTo ? "Type your reply..." : "Type a message..."}
             className="flex-1"
             disabled={sending}
           />
