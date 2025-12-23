@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu, Heart } from "lucide-react";
+import { LogOut, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu, Heart, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -128,6 +128,11 @@ const Home = () => {
           <img src={churchLogo} alt="COGMPW Church Logo" className="h-10 w-10 object-contain" />
           
           <div className="flex items-center gap-1">
+            <Link to="/community-chat">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <MessageCircle className="h-5 w-5" />
+              </Button>
+            </Link>
             <Link to="/giving">
               <Button variant="ghost" size="icon" className="h-9 w-9">
                 <HandHeart className="h-5 w-5" />

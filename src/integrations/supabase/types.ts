@@ -38,6 +38,33 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          deleted_by: string | null
+          id: string
+          is_deleted: boolean
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          deleted_by?: string | null
+          id?: string
+          is_deleted?: boolean
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          deleted_by?: string | null
+          id?: string
+          is_deleted?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       devotionals: {
         Row: {
           content: string
