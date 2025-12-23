@@ -37,7 +37,7 @@ const GuestLanding = () => {
         </div>
 
         {/* Livestream Section */}
-        <LivestreamSection />
+        <LivestreamSection isGuestView />
 
         {/* Quick Actions */}
         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-4">
