@@ -209,13 +209,20 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
 
       // Handle different YouTube URL formats
       if (urlObj.hostname.includes("youtube.com")) {
-        videoId = urlObj.searchParams.get("v") || "";
+        // Handle /live/VIDEO_ID format (YouTube Live URLs)
+        const liveMatch = urlObj.pathname.match(/^\/live\/([^/?]+)/);
+        if (liveMatch) {
+          videoId = liveMatch[1];
+        } else {
+          // Handle standard ?v=VIDEO_ID format
+          videoId = urlObj.searchParams.get("v") || "";
+        }
       } else if (urlObj.hostname.includes("youtu.be")) {
-        videoId = urlObj.pathname.slice(1);
+        videoId = urlObj.pathname.slice(1).split('?')[0];
       }
 
       if (videoId) {
-        return `https://www.youtube-nocookie.com/embed/${videoId}`;
+        return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0`;
       }
     } catch (error) {
       console.error("Invalid URL:", error);
