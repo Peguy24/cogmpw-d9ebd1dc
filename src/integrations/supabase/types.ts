@@ -45,8 +45,11 @@ export type Database = {
           deleted_by: string | null
           id: string
           is_deleted: boolean
+          is_pinned: boolean
           media_type: string | null
           media_url: string | null
+          pinned_at: string | null
+          pinned_by: string | null
           reply_to_id: string | null
           user_id: string
         }
@@ -56,8 +59,11 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           is_deleted?: boolean
+          is_pinned?: boolean
           media_type?: string | null
           media_url?: string | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to_id?: string | null
           user_id: string
         }
@@ -67,8 +73,11 @@ export type Database = {
           deleted_by?: string | null
           id?: string
           is_deleted?: boolean
+          is_pinned?: boolean
           media_type?: string | null
           media_url?: string | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to_id?: string | null
           user_id?: string
         }

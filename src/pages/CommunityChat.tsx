@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2, Pin, PinOff } from "lucide-react";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { MessageReactions } from "@/components/MessageReactions";
@@ -30,6 +30,9 @@ interface ChatMessage {
   reply_to_id?: string | null;
   media_url?: string | null;
   media_type?: string | null;
+  is_pinned?: boolean;
+  pinned_at?: string | null;
+  pinned_by?: string | null;
   profiles?: {
     full_name: string;
   };
@@ -236,7 +239,7 @@ const CommunityChat = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("chat_messages")
-      .select("id, user_id, content, is_deleted, created_at, reply_to_id, media_url, media_type")
+      .select("id, user_id, content, is_deleted, created_at, reply_to_id, media_url, media_type, is_pinned, pinned_at, pinned_by")
       .order("created_at", { ascending: true })
       .limit(100);
 
@@ -358,6 +361,25 @@ const CommunityChat = () => {
     setDeleteMessageId(null);
   };
 
+  const togglePinMessage = async (messageId: string, currentlyPinned: boolean) => {
+    const { error } = await supabase
+      .from("chat_messages")
+      .update({
+        is_pinned: !currentlyPinned,
+        pinned_at: !currentlyPinned ? new Date().toISOString() : null,
+        pinned_by: !currentlyPinned ? currentUserId : null,
+      })
+      .eq("id", messageId);
+
+    if (error) {
+      toast.error("Failed to update pin status");
+      console.error(error);
+    } else {
+      toast.success(currentlyPinned ? "Message unpinned" : "Message pinned");
+      fetchMessages();
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -427,6 +449,27 @@ const CommunityChat = () => {
           </div>
         ) : (
           <div className="space-y-4 pb-4">
+            {/* Pinned Messages Section */}
+            {messages.filter(m => m.is_pinned && !m.is_deleted).length > 0 && (
+              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Pin className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Pinned Messages</span>
+                </div>
+                <div className="space-y-2">
+                  {messages.filter(m => m.is_pinned && !m.is_deleted).map((pinnedMsg) => (
+                    <button
+                      key={`pinned-${pinnedMsg.id}`}
+                      onClick={() => scrollToMessage(pinnedMsg.id)}
+                      className="w-full text-left p-2 bg-background/50 rounded-lg hover:bg-background/80 transition-colors"
+                    >
+                      <p className="text-xs font-medium text-muted-foreground">{pinnedMsg.profiles?.full_name}</p>
+                      <p className="text-sm truncate">{pinnedMsg.content}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {messages.map((message) => {
               const isOwn = message.user_id === currentUserId;
               const canDelete = isOwn || isAdmin;
@@ -538,6 +581,20 @@ const CommunityChat = () => {
                         >
                           <Reply className="h-3 w-3 text-muted-foreground" />
                         </Button>
+                        {isAdmin && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => togglePinMessage(message.id, !!message.is_pinned)}
+                          >
+                            {message.is_pinned ? (
+                              <PinOff className="h-3 w-3 text-amber-500" />
+                            ) : (
+                              <Pin className="h-3 w-3 text-muted-foreground" />
+                            )}
+                          </Button>
+                        )}
                         {canDelete && (
                           <Button
                             variant="ghost"
