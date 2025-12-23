@@ -1,4 +1,4 @@
-import { Bell } from "lucide-react";
+import { Bell, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
 
 export const NotificationBell = () => {
   const queryClient = useQueryClient();
@@ -78,6 +79,45 @@ export const NotificationBell = () => {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
   };
 
+  const deleteNotification = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+    
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  };
+
+  const clearAllRead = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('is_read', true);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear notifications",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Cleared",
+        description: "Read notifications have been cleared",
+      });
+    }
+    
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  };
+
+  const readCount = notifications.filter(n => n.is_read).length;
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -96,16 +136,29 @@ export const NotificationBell = () => {
       <PopoverContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold">Notifications</h3>
-          {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={markAllAsRead}
-              className="text-xs"
-            >
-              Mark all read
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={markAllAsRead}
+                className="text-xs h-7 px-2"
+              >
+                Mark all read
+              </Button>
+            )}
+            {readCount > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearAllRead}
+                className="text-xs h-7 px-2 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Clear read
+              </Button>
+            )}
+          </div>
         </div>
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
@@ -134,9 +187,14 @@ export const NotificationBell = () => {
                         {format(new Date(notification.created_at), 'MMM d, h:mm a')}
                       </p>
                     </div>
-                    {!notification.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 flex-shrink-0 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => deleteNotification(notification.id, e)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
