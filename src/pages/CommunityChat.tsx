@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X } from "lucide-react";
+import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import {
@@ -27,6 +27,8 @@ interface ChatMessage {
   is_deleted: boolean;
   created_at: string;
   reply_to_id?: string | null;
+  media_url?: string | null;
+  media_type?: string | null;
   profiles?: {
     full_name: string;
   };
@@ -51,10 +53,13 @@ const CommunityChat = () => {
   const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mark messages as read when component mounts
   useEffect(() => {
@@ -230,7 +235,7 @@ const CommunityChat = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("chat_messages")
-      .select("id, user_id, content, is_deleted, created_at, reply_to_id")
+      .select("id, user_id, content, is_deleted, created_at, reply_to_id, media_url, media_type")
       .order("created_at", { ascending: true })
       .limit(100);
 
@@ -255,15 +260,73 @@ const CommunityChat = () => {
     setLoading(false);
   };
 
+  const uploadFile = async (file: File): Promise<{ url: string; type: string } | null> => {
+    if (!currentUserId) return null;
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUserId}/${Date.now()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('chat-media')
+      .upload(fileName, file);
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError);
+      toast.error('Failed to upload file');
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('chat-media')
+      .getPublicUrl(fileName);
+
+    const isImage = file.type.startsWith('image/');
+    return { url: publicUrl, type: isImage ? 'image' : 'file' };
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size must be less than 10MB');
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const clearSelectedFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUserId || sending) return;
+    if ((!newMessage.trim() && !selectedFile) || !currentUserId || sending) return;
 
     setSending(true);
+    setUploadingFile(!!selectedFile);
+
+    let mediaData: { url: string; type: string } | null = null;
+    
+    if (selectedFile) {
+      mediaData = await uploadFile(selectedFile);
+      if (!mediaData && !newMessage.trim()) {
+        setSending(false);
+        setUploadingFile(false);
+        return;
+      }
+    }
+
     const { error } = await supabase.from("chat_messages").insert({
       user_id: currentUserId,
-      content: newMessage.trim(),
+      content: newMessage.trim() || (selectedFile ? selectedFile.name : ''),
       reply_to_id: replyingTo?.id || null,
+      media_url: mediaData?.url || null,
+      media_type: mediaData?.type || null,
     });
 
     if (error) {
@@ -272,9 +335,11 @@ const CommunityChat = () => {
     } else {
       setNewMessage("");
       setReplyingTo(null);
+      clearSelectedFile();
       inputRef.current?.focus();
     }
     setSending(false);
+    setUploadingFile(false);
   };
 
   const deleteMessage = async (messageId: string) => {
@@ -425,15 +490,43 @@ const CommunityChat = () => {
                     
                     <div className={`flex items-center gap-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
                       <div
-                        className={`rounded-2xl px-4 py-2 ${
+                        className={`rounded-2xl px-4 py-2 max-w-full ${
                           isOwn
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm whitespace-pre-wrap break-words">
-                          {message.content}
-                        </p>
+                        {/* Media content */}
+                        {message.media_url && message.media_type === 'image' && (
+                          <a href={message.media_url} target="_blank" rel="noopener noreferrer">
+                            <img 
+                              src={message.media_url} 
+                              alt="Shared image" 
+                              className="max-w-[250px] max-h-[200px] rounded-lg mb-2 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                            />
+                          </a>
+                        )}
+                        {message.media_url && message.media_type === 'file' && (
+                          <a 
+                            href={message.media_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 p-2 rounded-lg mb-2 ${
+                              isOwn ? "bg-primary-foreground/10" : "bg-background/50"
+                            }`}
+                          >
+                            <FileText className="h-5 w-5 shrink-0" />
+                            <span className="text-sm truncate max-w-[180px]">
+                              {message.content || "File"}
+                            </span>
+                          </a>
+                        )}
+                        {/* Text content (only show if no file or has additional text) */}
+                        {(!message.media_url || (message.media_url && message.content && message.content !== message.media_url.split('/').pop())) && (
+                          <p className="text-sm whitespace-pre-wrap break-words">
+                            {message.content}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
@@ -511,9 +604,60 @@ const CommunityChat = () => {
         </div>
       )}
 
+      {/* Selected File Preview */}
+      {selectedFile && (
+        <div className="border-t bg-muted/50 px-4 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {selectedFile.type.startsWith('image/') ? (
+                <img 
+                  src={URL.createObjectURL(selectedFile)} 
+                  alt="Preview" 
+                  className="h-12 w-12 object-cover rounded"
+                />
+              ) : (
+                <div className="h-12 w-12 bg-muted rounded flex items-center justify-center">
+                  <FileText className="h-6 w-6 text-muted-foreground" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {(selectedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              onClick={clearSelectedFile}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="sticky bottom-0 border-t bg-background p-4 safe-area-bottom">
         <form onSubmit={(e) => { sendMessage(e); stopTyping(); }} className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*,.pdf,.doc,.docx,.txt"
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending || uploadingFile}
+          >
+            <ImagePlus className="h-5 w-5" />
+          </Button>
           <Input
             ref={inputRef}
             value={newMessage}
@@ -529,8 +673,16 @@ const CommunityChat = () => {
             className="flex-1"
             disabled={sending}
           />
-          <Button type="submit" size="icon" disabled={!newMessage.trim() || sending}>
-            <Send className="h-4 w-4" />
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={(!newMessage.trim() && !selectedFile) || sending}
+          >
+            {uploadingFile ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </form>
       </div>
