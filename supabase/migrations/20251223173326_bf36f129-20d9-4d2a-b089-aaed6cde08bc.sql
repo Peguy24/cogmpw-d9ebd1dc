@@ -1,0 +1,3 @@
+-- Add reply_to_id column for message replies
+ALTER TABLE public.chat_messages 
+ADD COLUMN reply_to_id uuid REFERENCES public.chat_messages(id) ON DELETE SET NULL;
