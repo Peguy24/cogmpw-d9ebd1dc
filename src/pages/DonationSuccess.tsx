@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Capacitor } from "@capacitor/core";
@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle, Loader2, History, HandHeart, Smartphone } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle, AlertCircle, Loader2, History, HandHeart, Smartphone, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 function setMetaTag(name: string, content: string) {
@@ -29,6 +30,8 @@ interface DonationDetails {
   category: string;
 }
 
+const COUNTDOWN_SECONDS = 5;
+
 export default function DonationSuccess() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -39,31 +42,28 @@ export default function DonationSuccess() {
   const [status, setStatus] = useState<"idle" | "recording" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [donationDetails, setDonationDetails] = useState<DonationDetails | null>(null);
+  
   const isNative = Capacitor.isNativePlatform();
   const noAutoOpen = useMemo(() => searchParams.get("no_auto_open") === "1", [searchParams]);
+
+  // Countdown state - only starts after user taps "Open in App"
+  const [countdownActive, setCountdownActive] = useState(false);
+  const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const autoOpenStorageKey = useMemo(
     () => (sessionId ? `cogmpw:donationSuccess:autoOpenAttempted:${sessionId}` : null),
     [sessionId]
   );
 
-  const getAutoOpenAttempted = () => {
-    if (!autoOpenStorageKey) return false;
-    try {
-      return sessionStorage.getItem(autoOpenStorageKey) === "1";
-    } catch {
-      return false;
-    }
-  };
-
-  const setAutoOpenAttempted = () => {
+  const setAutoOpenAttempted = useCallback(() => {
     if (!autoOpenStorageKey) return;
     try {
       sessionStorage.setItem(autoOpenStorageKey, "1");
     } catch {
       // ignore
     }
-  };
+  }, [autoOpenStorageKey]);
 
   useEffect(() => {
     // Basic per-page SEO (no dynamic SEO lib in project)
@@ -130,16 +130,8 @@ export default function DonationSuccess() {
         toast.success(isSubscription ? "Recurring donation set up" : "Donation recorded", {
           description: "You can now view it in your giving history.",
         });
-
-        // Auto-attempt to open the app if we're in a browser (not native).
-        // Guard against refresh loops if the browser falls back to this page.
-        if (!isNative && !noAutoOpen && !getAutoOpenAttempted()) {
-          setAutoOpenAttempted();
-          // Small delay to let the success toast show first
-          setTimeout(() => {
-            tryOpenApp();
-          }, 500);
-        }
+        
+        // No auto-open; user must tap "Open in App" to start countdown
       } catch (e: any) {
         if (cancelled) return;
         console.error("[DonationSuccess] record-donation failed", e);
@@ -154,7 +146,7 @@ export default function DonationSuccess() {
   }, [queryClient, sessionId, isNative, isSubscription, noAutoOpen]);
 
   // Function to attempt opening the app
-  const tryOpenApp = () => {
+  const tryOpenApp = useCallback(() => {
     const successType = isSubscription ? "subscription" : "donation";
     const targetPath = `app/giving-history?${successType}=success`;
     const schemeUrl = `cogmpw://${targetPath}`;
@@ -173,6 +165,9 @@ export default function DonationSuccess() {
     const isAndroid = /android/i.test(ua);
     const isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
 
+    // Prevent refresh loops
+    setAutoOpenAttempted();
+
     // Android Chrome works best with intent://
     if (isAndroid && isChrome) {
       const intentUrl = `intent://${targetPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
@@ -182,7 +177,30 @@ export default function DonationSuccess() {
 
     // For other browsers/platforms, try the custom scheme
     window.location.href = schemeUrl;
-  };
+  }, [isSubscription, setAutoOpenAttempted]);
+
+  // Handle countdown timer
+  useEffect(() => {
+    if (!countdownActive) return;
+
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          // Countdown finished, open app
+          clearInterval(countdownIntervalRef.current!);
+          tryOpenApp();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [countdownActive, tryOpenApp]);
 
   const handleOpenInApp = () => {
     // If we are already inside the native app, just navigate
@@ -191,15 +209,43 @@ export default function DonationSuccess() {
       return;
     }
 
-    // Prevent refresh loops if the browser immediately falls back to this page
-    setAutoOpenAttempted();
+    // Start countdown instead of immediate redirect
+    if (!countdownActive) {
+      setCountdownActive(true);
+    }
+  };
+
+  const handleCancelCountdown = () => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    setCountdownActive(false);
+    setCountdown(COUNTDOWN_SECONDS);
+  };
+
+  const handleOpenNow = () => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+    }
+    setCountdownActive(false);
     tryOpenApp();
   };
 
+  const progressValue = countdownActive ? ((COUNTDOWN_SECONDS - countdown) / COUNTDOWN_SECONDS) * 100 : 0;
+
   return (
     <main className="min-h-screen bg-background p-4 md:p-10">
-      <section className="max-w-xl mx-auto">
-        <header className="mb-6">
+      <section className="max-w-xl mx-auto animate-fade-in">
+        <header className="mb-6 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            {status === "success" ? (
+              <CheckCircle className="h-8 w-8 text-primary" />
+            ) : status === "recording" ? (
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            ) : (
+              <HandHeart className="h-8 w-8 text-primary" />
+            )}
+          </div>
           <h1 className="text-3xl font-bold">Thank You!</h1>
           <p className="text-muted-foreground mt-1">
             {isSubscription
@@ -208,16 +254,9 @@ export default function DonationSuccess() {
           </p>
         </header>
 
-        <Card>
+        <Card className="animate-scale-in">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              {status === "recording" ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : status === "success" ? (
-                <CheckCircle className="h-5 w-5 text-primary" />
-              ) : (
-                <HandHeart className="h-5 w-5" />
-              )}
               {isSubscription ? "Subscription Confirmed" : "Donation Confirmation"}
             </CardTitle>
             <CardDescription>
@@ -261,28 +300,52 @@ export default function DonationSuccess() {
               </div>
             )}
 
+            {/* Countdown UI */}
+            {!isNative && countdownActive && (
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Opening app in {countdown}s...</span>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={handleCancelCountdown}>
+                      Cancel
+                    </Button>
+                    <Button variant="default" size="sm" onClick={handleOpenNow}>
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      Open Now
+                    </Button>
+                  </div>
+                </div>
+                <Progress value={progressValue} className="h-2" />
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
-              {!isNative && (
-                <Button onClick={handleOpenInApp}>
+              {!isNative && !countdownActive && (
+                <Button onClick={handleOpenInApp} className="w-full" size="lg">
                   <Smartphone className="h-4 w-4 mr-2" />
                   Open in App
                 </Button>
               )}
 
-              <Button onClick={() => navigate("/giving-history")} disabled={status === "recording"}>
+              <Button 
+                variant={countdownActive ? "default" : "secondary"}
+                onClick={() => navigate("/giving-history")} 
+                disabled={status === "recording"}
+                className="w-full"
+              >
                 <History className="h-4 w-4 mr-2" />
                 View Giving History
               </Button>
 
-              <Button variant="outline" onClick={() => navigate("/giving")} disabled={status === "recording"}>
+              <Button variant="outline" onClick={() => navigate("/giving")} disabled={status === "recording"} className="w-full">
                 Back to Giving
               </Button>
             </div>
 
-            {!isNative && (
-              <p className="text-xs text-muted-foreground">
-                If this page opened in your browser, tap <span className="font-medium">"Open in App"</span> to return to
-                the app.
+            {!isNative && !countdownActive && (
+              <p className="text-xs text-muted-foreground text-center">
+                Tap <span className="font-medium">"Open in App"</span> to return to the app.
+                A countdown will start before redirecting.
               </p>
             )}
           </CardContent>
