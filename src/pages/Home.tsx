@@ -17,6 +17,7 @@ import LivestreamSection from "@/components/LivestreamSection";
 import PrayerRequestForm from "@/components/PrayerRequestForm";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import churchLogo from "@/assets/church-logo.webp";
 import pastorPhoto from "@/assets/pastor-photo.jpg";
 
@@ -28,6 +29,7 @@ const Home = () => {
   const [pendingCount, setPendingCount] = useState(0);
   const [activeTab, setActiveTab] = useState("news");
   const isMobile = useIsMobile();
+  const { unreadCount } = useUnreadMessages();
 
   useEffect(() => {
     const checkAuthAndApproval = async () => {
@@ -129,8 +131,13 @@ const Home = () => {
           
           <div className="flex items-center gap-1">
             <Link to="/community-chat">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Button variant="ghost" size="icon" className="h-9 w-9 relative">
                 <MessageCircle className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Button>
             </Link>
             <Link to="/giving">
