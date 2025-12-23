@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { MessageReactions } from "@/components/MessageReactions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -549,6 +550,14 @@ const CommunityChat = () => {
                         )}
                       </div>
                     </div>
+                    {/* Message Reactions */}
+                    {currentUserId && (
+                      <MessageReactions
+                        messageId={message.id}
+                        currentUserId={currentUserId}
+                        isOwnMessage={isOwn}
+                      />
+                    )}
                   </div>
                 </div>
               );
