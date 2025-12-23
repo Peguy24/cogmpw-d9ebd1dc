@@ -19,7 +19,11 @@ interface LivestreamLink {
   is_active: boolean;
 }
 
-const LivestreamSection = () => {
+interface LivestreamSectionProps {
+  isGuestView?: boolean;
+}
+
+const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
   const [livestreams, setLivestreams] = useState<LivestreamLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLeaderOrAdmin, setIsLeaderOrAdmin] = useState(false);
@@ -360,7 +364,7 @@ const LivestreamSection = () => {
         </Card>
       )}
 
-      {isLeaderOrAdmin && (
+      {isLeaderOrAdmin && !isGuestView && (
         <>
           {/* Livestream Management Form */}
           <Card>
