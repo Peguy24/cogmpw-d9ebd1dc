@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X } from "lucide-react";
 import { format } from "date-fns";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,7 @@ interface TypingUser {
 
 const CommunityChat = () => {
   const navigate = useNavigate();
+  const { markAsRead } = useUnreadMessages();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -53,6 +55,11 @@ const CommunityChat = () => {
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Mark messages as read when component mounts
+  useEffect(() => {
+    markAsRead();
+  }, [markAsRead]);
 
   useEffect(() => {
     const checkUserAndFetch = async () => {
