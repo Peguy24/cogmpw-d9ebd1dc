@@ -8,7 +8,7 @@ import { ArrowLeft, DollarSign, TrendingUp, Users, Calendar, Download, FileText,
 import { toast } from "sonner";
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Area, AreaChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, XAxis, YAxis, Pie, PieChart, Cell } from "recharts";
 import { jsPDF } from "jspdf";
 import {
   DropdownMenu,
@@ -40,6 +40,17 @@ interface TopDonor {
   total: number;
   donation_count: number;
 }
+
+const CHART_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(220 70% 50%)",
+  "hsl(160 60% 45%)",
+  "hsl(30 80% 55%)",
+];
 
 const AdminGivingReports = () => {
   const navigate = useNavigate();
@@ -580,7 +591,7 @@ const AdminGivingReports = () => {
 
           <TabsContent value={timeRange} className="space-y-4 mt-4 md:mt-6">
             <div className="grid gap-4 lg:grid-cols-2">
-              {/* Category Breakdown */}
+              {/* Category Breakdown with Pie Chart */}
               <Card>
                 <CardHeader className="pb-3 md:pb-6">
                   <CardTitle className="text-base md:text-lg">Donation Categories</CardTitle>
@@ -592,16 +603,61 @@ const AdminGivingReports = () => {
                       No donations for this period
                     </p>
                   ) : (
-                    <div className="space-y-3 md:space-y-4">
-                      {categoryBreakdown.map((item) => (
-                        <div key={item.category} className="flex items-center justify-between gap-2">
-                          <div className="space-y-1 min-w-0 flex-1">
-                            <p className="text-xs md:text-sm font-medium leading-none truncate">{item.category}</p>
-                            <p className="text-xs text-muted-foreground">{item.count} donations</p>
+                    <div className="space-y-4">
+                      {/* Pie Chart */}
+                      <ChartContainer
+                        config={categoryBreakdown.reduce((acc, cat, index) => {
+                          acc[cat.category] = {
+                            label: cat.category,
+                            color: CHART_COLORS[index % CHART_COLORS.length],
+                          };
+                          return acc;
+                        }, {} as Record<string, { label: string; color: string }>)}
+                        className="h-[180px] md:h-[220px] w-full"
+                      >
+                        <PieChart>
+                          <ChartTooltip
+                            content={
+                              <ChartTooltipContent
+                                formatter={(value) => formatCurrency(Number(value))}
+                              />
+                            }
+                          />
+                          <Pie
+                            data={categoryBreakdown}
+                            dataKey="total"
+                            nameKey="category"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={40}
+                            outerRadius={70}
+                            paddingAngle={2}
+                          >
+                            {categoryBreakdown.map((entry, index) => (
+                              <Cell 
+                                key={`cell-${index}`} 
+                                fill={CHART_COLORS[index % CHART_COLORS.length]}
+                              />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ChartContainer>
+                      
+                      {/* Legend */}
+                      <div className="space-y-2">
+                        {categoryBreakdown.map((item, index) => (
+                          <div key={item.category} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <div 
+                                className="h-3 w-3 rounded-full shrink-0" 
+                                style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                              />
+                              <p className="text-xs md:text-sm font-medium leading-none truncate">{item.category}</p>
+                            </div>
+                            <div className="text-xs md:text-sm font-bold shrink-0">{formatCurrency(item.total)}</div>
                           </div>
-                          <div className="text-xs md:text-sm font-bold shrink-0">{formatCurrency(item.total)}</div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
                 </CardContent>
