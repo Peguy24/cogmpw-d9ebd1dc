@@ -230,6 +230,81 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
     return null;
   };
 
+  const getFacebookEmbedUrl = (url: string): string | null => {
+    try {
+      // Facebook video embed uses the original URL encoded
+      // Supports formats like:
+      // - https://www.facebook.com/username/videos/123456789
+      // - https://www.facebook.com/watch/live/?v=123456789
+      // - https://fb.watch/xxxxx
+      const urlObj = new URL(url);
+      
+      if (urlObj.hostname.includes("facebook.com") || urlObj.hostname.includes("fb.watch")) {
+        // Encode the full URL for Facebook's video embed
+        const encodedUrl = encodeURIComponent(url);
+        return `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=false&width=560`;
+      }
+    } catch (error) {
+      console.error("Invalid Facebook URL:", error);
+    }
+    return null;
+  };
+
+  const renderLivestreamEmbed = () => {
+    if (!activeLivestream) return null;
+
+    // YouTube embed
+    if (activeLivestream.platform === "youtube") {
+      const embedUrl = getYouTubeEmbedUrl(activeLivestream.url);
+      if (embedUrl) {
+        return (
+          <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+            <iframe
+              src={embedUrl}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title="YouTube Livestream"
+            />
+          </div>
+        );
+      }
+    }
+
+    // Facebook embed
+    if (activeLivestream.platform === "facebook") {
+      const embedUrl = getFacebookEmbedUrl(activeLivestream.url);
+      if (embedUrl) {
+        return (
+          <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+            <iframe
+              src={embedUrl}
+              className="w-full h-full border-0"
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              allowFullScreen
+              title="Facebook Livestream"
+              scrolling="no"
+            />
+          </div>
+        );
+      }
+    }
+
+    // Fallback for custom or unsupported platforms
+    return (
+      <div className="aspect-video bg-muted rounded-lg flex items-center justify-center p-4">
+        <Button
+          size="lg"
+          onClick={() => window.open(activeLivestream.url, "_blank")}
+          className="gap-2 text-sm md:text-base h-10 md:h-11"
+        >
+          <Video className="h-5 w-5" />
+          Join Livestream
+        </Button>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-muted-foreground">Loading livestream...</div>;
   }
@@ -338,28 +413,7 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
             </div>
           </CardHeader>
           <CardContent>
-            {activeLivestream.platform === "youtube" && getYouTubeEmbedUrl(activeLivestream.url) ? (
-              <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                <iframe
-                  src={getYouTubeEmbedUrl(activeLivestream.url)!}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title="YouTube Livestream"
-                />
-              </div>
-            ) : (
-              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center p-4">
-                <Button
-                  size="lg"
-                  onClick={() => window.open(activeLivestream.url, "_blank")}
-                  className="gap-2 text-sm md:text-base h-10 md:h-11"
-                >
-                  <Video className="h-5 w-5" />
-                  Join Livestream
-                </Button>
-              </div>
-            )}
+            {renderLivestreamEmbed()}
           </CardContent>
         </Card>
       ) : (
