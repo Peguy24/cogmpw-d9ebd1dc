@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,11 @@ interface ChatMessage {
   };
 }
 
+interface TypingUser {
+  user_id: string;
+  full_name: string;
+}
+
 const CommunityChat = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -38,11 +43,15 @@ const CommunityChat = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,10 +63,10 @@ const CommunityChat = () => {
       }
       setCurrentUserId(user.id);
 
-      // Check if user is approved
+      // Check if user is approved and get name
       const { data: profile } = await supabase
         .from("profiles")
-        .select("is_approved")
+        .select("is_approved, full_name")
         .eq("id", user.id)
         .single();
 
@@ -67,6 +76,7 @@ const CommunityChat = () => {
         return;
       }
       setIsApproved(true);
+      setCurrentUserName(profile.full_name || "Unknown");
 
       // Check if user is admin
       const { data: roles } = await supabase
@@ -82,10 +92,46 @@ const CommunityChat = () => {
     checkUserAndFetch();
   }, [navigate]);
 
+  // Set up typing presence channel
+  useEffect(() => {
+    if (!isApproved || !currentUserId || !currentUserName) return;
+
+    const typingChannel = supabase.channel("chat-typing", {
+      config: { presence: { key: currentUserId } },
+    });
+
+    typingChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = typingChannel.presenceState();
+        const typing: TypingUser[] = [];
+        
+        Object.entries(state).forEach(([userId, presences]) => {
+          if (userId !== currentUserId && Array.isArray(presences) && presences.length > 0) {
+            const presence = presences[0] as unknown as { user_id: string; full_name: string; is_typing: boolean };
+            if (presence.is_typing) {
+              typing.push({ user_id: presence.user_id, full_name: presence.full_name });
+            }
+          }
+        });
+        
+        setTypingUsers(typing);
+      })
+      .subscribe();
+
+    typingChannelRef.current = typingChannel;
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      supabase.removeChannel(typingChannel);
+    };
+  }, [isApproved, currentUserId, currentUserName]);
+
+  // Subscribe to realtime message updates
   useEffect(() => {
     if (!isApproved) return;
 
-    // Subscribe to realtime updates
     const channel = supabase
       .channel("chat-messages")
       .on(
@@ -133,6 +179,45 @@ const CommunityChat = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const handleTyping = useCallback(() => {
+    if (!typingChannelRef.current || !currentUserId || !currentUserName) return;
+
+    // Track typing state
+    typingChannelRef.current.track({
+      user_id: currentUserId,
+      full_name: currentUserName,
+      is_typing: true,
+    });
+
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      typingChannelRef.current?.track({
+        user_id: currentUserId,
+        full_name: currentUserName,
+        is_typing: false,
+      });
+    }, 2000);
+  }, [currentUserId, currentUserName]);
+
+  const stopTyping = useCallback(() => {
+    if (!typingChannelRef.current || !currentUserId || !currentUserName) return;
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingChannelRef.current.track({
+      user_id: currentUserId,
+      full_name: currentUserName,
+      is_typing: false,
+    });
+  }, [currentUserId, currentUserName]);
 
   const fetchMessages = async () => {
     setLoading(true);
@@ -399,13 +484,40 @@ const CommunityChat = () => {
         </div>
       )}
 
+      {/* Typing Indicator */}
+      {typingUsers.length > 0 && (
+        <div className="px-4 py-2 border-t bg-muted/30">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {typingUsers.length === 1
+                ? `${typingUsers[0].full_name} is typing...`
+                : typingUsers.length === 2
+                ? `${typingUsers[0].full_name} and ${typingUsers[1].full_name} are typing...`
+                : `${typingUsers[0].full_name} and ${typingUsers.length - 1} others are typing...`}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Input Area */}
       <div className="sticky bottom-0 border-t bg-background p-4 safe-area-bottom">
-        <form onSubmit={sendMessage} className="flex gap-2">
+        <form onSubmit={(e) => { sendMessage(e); stopTyping(); }} className="flex gap-2">
           <Input
             ref={inputRef}
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              if (e.target.value) {
+                handleTyping();
+              } else {
+                stopTyping();
+              }
+            }}
             placeholder={replyingTo ? "Type your reply..." : "Type a message..."}
             className="flex-1"
             disabled={sending}
