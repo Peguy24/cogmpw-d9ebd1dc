@@ -148,8 +148,11 @@ export default function DonationSuccess() {
   // Function to attempt opening the app
   const tryOpenApp = useCallback(() => {
     const successType = isSubscription ? "subscription" : "donation";
-    const targetPath = `app/giving-history?${successType}=success`;
-    const schemeUrl = `cogmpw://${targetPath}`;
+    // Use simple path without "app/" prefix - the scheme alone identifies the app
+    const deepLinkPath = `giving-history?${successType}=success`;
+    
+    // Simple scheme URL for most cases
+    const schemeUrl = `cogmpw://${deepLinkPath}`;
 
     const fallbackUrl = (() => {
       try {
@@ -163,19 +166,26 @@ export default function DonationSuccess() {
 
     const ua = navigator.userAgent || "";
     const isAndroid = /android/i.test(ua);
-    const isChrome = /chrome/i.test(ua) && !/edg/i.test(ua);
 
     // Prevent refresh loops
     setAutoOpenAttempted();
 
-    // Android Chrome works best with intent://
-    if (isAndroid && isChrome) {
-      const intentUrl = `intent://${targetPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
-      window.location.href = intentUrl;
+    if (isAndroid) {
+      // For Android, use intent:// with simplified path
+      // The path after intent:// becomes the "data" the app receives
+      const intentUrl = `intent://${deepLinkPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
+      
+      // Create a hidden link and click it (more reliable on some browsers)
+      const link = document.createElement('a');
+      link.href = intentUrl;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       return;
     }
 
-    // For other browsers/platforms, try the custom scheme
+    // For iOS and other platforms, use the custom scheme directly
     window.location.href = schemeUrl;
   }, [isSubscription, setAutoOpenAttempted]);
 
