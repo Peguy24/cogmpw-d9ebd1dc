@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, AlertCircle, Loader2, History, HandHeart, Smartphone, ExternalLink, X } from "lucide-react";
 import { toast } from "sonner";
+import { openCogmpwApp } from "@/lib/openCogmpwApp";
 
 function setMetaTag(name: string, content: string) {
   const tag = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
@@ -156,42 +157,16 @@ export default function DonationSuccess() {
         ? `app/${normalizedTarget}?${queryParams}`
         : `app/${normalizedTarget}?${successType}=success`;
 
-      const schemeUrl = `cogmpw://${deepLinkPath}`;
-
-      const fallbackUrl = (() => {
-        try {
-          const url = new URL(window.location.href);
-          url.searchParams.set("no_auto_open", "1");
-          return url.toString();
-        } catch {
-          return window.location.href;
-        }
-      })();
-
-      const ua = navigator.userAgent || "";
-      const isAndroid = /android/i.test(ua);
-
       // Prevent refresh loops
       setAutoOpenAttempted();
 
-      if (isAndroid) {
-        // intent:// + S.browser_fallback_url is generally the most reliable on Android.
-        // This resolves to: cogmpw://app/<path>?...
-        const intentUrl = `intent://${deepLinkPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;S.browser_fallback_url=${encodeURIComponent(
-          fallbackUrl
-        )};end`;
+      // If the app doesn't open, send users to a dedicated instruction screen
+      // (instead of reloading this thank-you page).
+      const fallbackUrl = `${window.location.origin}/return-to-app?target=${encodeURIComponent(
+        normalizedTarget
+      )}&type=${encodeURIComponent(successType)}`;
 
-        const link = document.createElement("a");
-        link.href = intentUrl;
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        return;
-      }
-
-      // For iOS and other platforms, use the custom scheme directly
-      window.location.href = schemeUrl;
+      openCogmpwApp(deepLinkPath, fallbackUrl);
     },
     [isSubscription, setAutoOpenAttempted]
   );
@@ -277,15 +252,20 @@ export default function DonationSuccess() {
   const progressValue = countdownActive ? ((COUNTDOWN_SECONDS - countdown) / COUNTDOWN_SECONDS) * 100 : 0;
 
   const handleClosePage = useCallback(() => {
-    // Some mobile browsers will ignore window.close() unless the page was opened via script.
-    // If it fails, we show a hint for the user.
-    window.close();
+    // From a normal browser tab, we cannot force-switch back to the native app.
+    // Best effort: attempt the deep link, then show clear instructions.
+    tryOpenApp("giving-history");
+
+    const successType = isSubscription ? "subscription" : "donation";
+    const instructionsUrl = `${window.location.origin}/return-to-app?target=${encodeURIComponent(
+      "giving-history"
+    )}&type=${encodeURIComponent(successType)}`;
+
+    // If the deep link is blocked, take the user to an instruction screen.
     window.setTimeout(() => {
-      toast.message("Close this page to return to the app", {
-        description: "If it didn’t close automatically, use your Android back button or close the browser tab, then open COGMPW from your home screen.",
-      });
-    }, 250);
-  }, []);
+      window.location.replace(instructionsUrl);
+    }, 700);
+  }, [isSubscription, tryOpenApp]);
 
   return (
     <main className="min-h-screen bg-background p-4 md:p-10">
