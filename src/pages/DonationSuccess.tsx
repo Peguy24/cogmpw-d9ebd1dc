@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, AlertCircle, Loader2, History, HandHeart, Smartphone, ExternalLink } from "lucide-react";
+import { CheckCircle, AlertCircle, Loader2, History, HandHeart, Smartphone, ExternalLink, X } from "lucide-react";
 import { toast } from "sonner";
 
 function setMetaTag(name: string, content: string) {
@@ -276,10 +276,33 @@ export default function DonationSuccess() {
 
   const progressValue = countdownActive ? ((COUNTDOWN_SECONDS - countdown) / COUNTDOWN_SECONDS) * 100 : 0;
 
+  const handleClosePage = useCallback(() => {
+    // Some mobile browsers will ignore window.close() unless the page was opened via script.
+    // If it fails, we show a hint for the user.
+    window.close();
+    window.setTimeout(() => {
+      toast.message("Close this page to return to the app", {
+        description: "If it didn’t close automatically, use your Android back button or close the browser tab, then open COGMPW from your home screen.",
+      });
+    }, 250);
+  }, []);
+
   return (
     <main className="min-h-screen bg-background p-4 md:p-10">
       <section className="max-w-xl mx-auto animate-fade-in">
-        <header className="mb-6 text-center">
+        <header className="mb-6 text-center relative">
+          {!isNative && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClosePage}
+              className="absolute right-0 top-0"
+              aria-label="Close page"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
             {status === "success" ? (
               <CheckCircle className="h-8 w-8 text-primary" />
