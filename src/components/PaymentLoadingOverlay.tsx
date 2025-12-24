@@ -27,6 +27,10 @@ export const PaymentLoadingOverlay = ({ isVisible }: PaymentLoadingOverlayProps)
     return () => clearTimeout(timer);
   }, [isVisible]);
 
+  const handleDismiss = () => {
+    setPaymentLoading(false);
+  };
+
   const handleReturnToApp = () => {
     setPaymentLoading(false);
     navigate("/home");
@@ -77,6 +81,10 @@ export const PaymentLoadingOverlay = ({ isVisible }: PaymentLoadingOverlayProps)
               <Loader2 className="h-5 w-5 animate-spin" />
               <span className="text-sm font-medium">Waiting for confirmation...</span>
             </div>
+
+            <Button variant="outline" onClick={handleDismiss}>
+              Continue in App
+            </Button>
           </>
         )}
       </div>

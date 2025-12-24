@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
+import { useClearPaymentLoadingOnResume } from "@/hooks/useClearPaymentLoadingOnResume";
 import { subscribePaymentLoading } from "@/hooks/usePaymentLoading";
 import { PaymentLoadingOverlay } from "@/components/PaymentLoadingOverlay";
 import Index from "./pages/Index";
@@ -41,7 +42,8 @@ const AppContent = () => {
   
   usePushNotifications();
   useDeepLinks(); // Handle deep links from Stripe payment redirects
-  
+  useClearPaymentLoadingOnResume(); // Clear overlay when the user returns to the app
+
   useEffect(() => {
     const unsubscribe = subscribePaymentLoading(setIsPaymentLoading);
     return unsubscribe;
