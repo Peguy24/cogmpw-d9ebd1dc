@@ -5,6 +5,7 @@ const LAST_READ_KEY = "chat_last_read_at";
 
 export const useUnreadMessages = () => {
   const [unreadCount, setUnreadCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const getLastReadTimestamp = () => {
     return localStorage.getItem(LAST_READ_KEY) || new Date(0).toISOString();
@@ -15,14 +16,24 @@ export const useUnreadMessages = () => {
     setUnreadCount(0);
   };
 
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = async (userId: string | null) => {
+    if (!userId) {
+      setUnreadCount(0);
+      return;
+    }
+
     const lastRead = getLastReadTimestamp();
     
+    // Count messages that are:
+    // 1. Not deleted
+    // 2. Created after the last read timestamp
+    // 3. NOT sent by the current user (so your own messages don't count as unread)
     const { count, error } = await supabase
       .from("chat_messages")
       .select("*", { count: "exact", head: true })
       .eq("is_deleted", false)
-      .gt("created_at", lastRead);
+      .gt("created_at", lastRead)
+      .neq("user_id", userId);
 
     if (!error && count !== null) {
       setUnreadCount(count);
@@ -30,7 +41,15 @@ export const useUnreadMessages = () => {
   };
 
   useEffect(() => {
-    fetchUnreadCount();
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || null;
+      setCurrentUserId(userId);
+      fetchUnreadCount(userId);
+    };
+
+    getCurrentUser();
 
     // Subscribe to new messages
     const channel = supabase
@@ -42,8 +61,11 @@ export const useUnreadMessages = () => {
           schema: "public",
           table: "chat_messages",
         },
-        () => {
-          fetchUnreadCount();
+        (payload) => {
+          // Only increment if the message is from someone else
+          if (currentUserId && payload.new.user_id !== currentUserId) {
+            setUnreadCount((prev) => prev + 1);
+          }
         }
       )
       .subscribe();
@@ -51,7 +73,7 @@ export const useUnreadMessages = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentUserId]);
 
-  return { unreadCount, markAsRead, fetchUnreadCount };
+  return { unreadCount, markAsRead, fetchUnreadCount: () => fetchUnreadCount(currentUserId) };
 };
