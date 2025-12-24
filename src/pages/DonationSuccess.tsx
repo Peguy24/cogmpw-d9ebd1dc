@@ -147,49 +147,54 @@ export default function DonationSuccess() {
   }, [queryClient, sessionId, isNative, isSubscription, noAutoOpen]);
 
   // Function to attempt opening the app with a specific path
-  const tryOpenApp = useCallback((targetPath: string = "giving-history", queryParams: string = "") => {
-    const successType = isSubscription ? "subscription" : "donation";
-    // Build the deep link path
-    const deepLinkPath = queryParams 
-      ? `${targetPath}?${queryParams}` 
-      : `${targetPath}?${successType}=success`;
-    
-    // Simple scheme URL for most cases
-    const schemeUrl = `cogmpw://${deepLinkPath}`;
+  const tryOpenApp = useCallback(
+    (targetPath: string = "giving-history", queryParams: string = "") => {
+      const successType = isSubscription ? "subscription" : "donation";
+      const normalizedTarget = targetPath.replace(/^\//, "");
 
-    const fallbackUrl = (() => {
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.set("no_auto_open", "1");
-        return url.toString();
-      } catch {
-        return window.location.href;
+      const deepLinkPath = queryParams
+        ? `app/${normalizedTarget}?${queryParams}`
+        : `app/${normalizedTarget}?${successType}=success`;
+
+      const schemeUrl = `cogmpw://${deepLinkPath}`;
+
+      const fallbackUrl = (() => {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set("no_auto_open", "1");
+          return url.toString();
+        } catch {
+          return window.location.href;
+        }
+      })();
+
+      const ua = navigator.userAgent || "";
+      const isAndroid = /android/i.test(ua);
+
+      // Prevent refresh loops
+      setAutoOpenAttempted();
+
+      if (isAndroid) {
+        // intent:// + S.browser_fallback_url is generally the most reliable on Android.
+        // This resolves to: cogmpw://app/<path>?...
+        const intentUrl = `intent://${deepLinkPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;S.browser_fallback_url=${encodeURIComponent(
+          fallbackUrl
+        )};end`;
+
+        const link = document.createElement("a");
+        link.href = intentUrl;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
       }
-    })();
 
-    const ua = navigator.userAgent || "";
-    const isAndroid = /android/i.test(ua);
-
-    // Prevent refresh loops
-    setAutoOpenAttempted();
-
-    if (isAndroid) {
-      // For Android, use intent:// with simplified path
-      const intentUrl = `intent://${deepLinkPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
-      
-      // Create a hidden link and click it (more reliable on some browsers)
-      const link = document.createElement('a');
-      link.href = intentUrl;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      return;
-    }
-
-    // For iOS and other platforms, use the custom scheme directly
-    window.location.href = schemeUrl;
-  }, [isSubscription, setAutoOpenAttempted]);
+      // For iOS and other platforms, use the custom scheme directly
+      window.location.href = schemeUrl;
+    },
+    [isSubscription, setAutoOpenAttempted]
+  );
 
   // Handle countdown timer (UX only). We avoid auto-opening from a timer because
   // many mobile browsers block custom scheme/intent navigation unless it happens
@@ -359,26 +364,25 @@ export default function DonationSuccess() {
 
             {/* Fallback message when app didn't open */}
             {!isNative && showFallback && !countdownActive && (
-              <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg space-y-3">
+              <div className="p-4 bg-muted/60 border border-border rounded-lg space-y-3">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                      App did not open automatically
-                    </p>
-                    <p className="text-sm text-amber-700 dark:text-amber-300">
-                      To return to the COGMPW app:
-                    </p>
-                    <ol className="text-sm text-amber-700 dark:text-amber-300 list-decimal list-inside space-y-1">
+                    <p className="text-sm font-medium text-foreground">App did not open automatically</p>
+                    <p className="text-sm text-muted-foreground">To return to the COGMPW app:</p>
+                    <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
                       <li>Close this browser tab</li>
-                      <li>Find and tap the <span className="font-medium">COGMPW</span> app icon on your home screen</li>
+                      <li>
+                        Find and tap the <span className="font-medium text-foreground">COGMPW</span> app icon on your home
+                        screen
+                      </li>
                       <li>Your donation has been recorded and will appear in your giving history</li>
                     </ol>
                   </div>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     setShowFallback(false);
                     handleOpenInApp();
