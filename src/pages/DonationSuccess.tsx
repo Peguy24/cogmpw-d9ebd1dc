@@ -145,11 +145,13 @@ export default function DonationSuccess() {
     };
   }, [queryClient, sessionId, isNative, isSubscription, noAutoOpen]);
 
-  // Function to attempt opening the app
-  const tryOpenApp = useCallback(() => {
+  // Function to attempt opening the app with a specific path
+  const tryOpenApp = useCallback((targetPath: string = "giving-history", queryParams: string = "") => {
     const successType = isSubscription ? "subscription" : "donation";
-    // Use simple path without "app/" prefix - the scheme alone identifies the app
-    const deepLinkPath = `giving-history?${successType}=success`;
+    // Build the deep link path
+    const deepLinkPath = queryParams 
+      ? `${targetPath}?${queryParams}` 
+      : `${targetPath}?${successType}=success`;
     
     // Simple scheme URL for most cases
     const schemeUrl = `cogmpw://${deepLinkPath}`;
@@ -172,7 +174,6 @@ export default function DonationSuccess() {
 
     if (isAndroid) {
       // For Android, use intent:// with simplified path
-      // The path after intent:// becomes the "data" the app receives
       const intentUrl = `intent://${deepLinkPath}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end`;
       
       // Create a hidden link and click it (more reliable on some browsers)
@@ -222,12 +223,28 @@ export default function DonationSuccess() {
     }
 
     // Attempt to open immediately (must be inside a user gesture)
-    tryOpenApp();
+    tryOpenApp("giving-history");
 
     // Then show a short countdown UI to guide the user (no auto-open)
     if (!countdownActive) {
       setCountdown(COUNTDOWN_SECONDS);
       setCountdownActive(true);
+    }
+  };
+
+  const handleViewHistory = () => {
+    if (isNative) {
+      navigate("/giving-history");
+    } else {
+      tryOpenApp("giving-history");
+    }
+  };
+
+  const handleBackToGiving = () => {
+    if (isNative) {
+      navigate("/giving");
+    } else {
+      tryOpenApp("giving");
     }
   };
 
@@ -244,7 +261,7 @@ export default function DonationSuccess() {
       clearInterval(countdownIntervalRef.current);
     }
     setCountdownActive(false);
-    tryOpenApp();
+    tryOpenApp("giving-history");
   };
 
   const progressValue = countdownActive ? ((COUNTDOWN_SECONDS - countdown) / COUNTDOWN_SECONDS) * 100 : 0;
@@ -345,7 +362,7 @@ export default function DonationSuccess() {
 
               <Button 
                 variant={countdownActive ? "default" : "secondary"}
-                onClick={() => navigate("/giving-history")} 
+                onClick={handleViewHistory} 
                 disabled={status === "recording"}
                 className="w-full"
               >
@@ -353,7 +370,7 @@ export default function DonationSuccess() {
                 View Giving History
               </Button>
 
-              <Button variant="outline" onClick={() => navigate("/giving")} disabled={status === "recording"} className="w-full">
+              <Button variant="outline" onClick={handleBackToGiving} disabled={status === "recording"} className="w-full">
                 Back to Giving
               </Button>
             </div>
