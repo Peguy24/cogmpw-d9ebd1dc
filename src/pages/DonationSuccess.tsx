@@ -49,6 +49,7 @@ export default function DonationSuccess() {
   // Countdown state - only starts after user taps "Open in App"
   const [countdownActive, setCountdownActive] = useState(false);
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
+  const [showFallback, setShowFallback] = useState(false);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const autoOpenStorageKey = useMemo(
@@ -200,8 +201,11 @@ export default function DonationSuccess() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(countdownIntervalRef.current!);
-          // Hide the countdown UI after it finishes; user can tap again if needed.
-          setTimeout(() => setCountdownActive(false), 0);
+          // Show fallback message after countdown finishes
+          setTimeout(() => {
+            setCountdownActive(false);
+            setShowFallback(true);
+          }, 0);
           return 0;
         }
         return prev - 1;
@@ -253,6 +257,7 @@ export default function DonationSuccess() {
       clearInterval(countdownIntervalRef.current);
     }
     setCountdownActive(false);
+    setShowFallback(false);
     setCountdown(COUNTDOWN_SECONDS);
   };
 
@@ -352,8 +357,42 @@ export default function DonationSuccess() {
               </div>
             )}
 
+            {/* Fallback message when app didn't open */}
+            {!isNative && showFallback && !countdownActive && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      App did not open automatically
+                    </p>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      To return to the COGMPW app:
+                    </p>
+                    <ol className="text-sm text-amber-700 dark:text-amber-300 list-decimal list-inside space-y-1">
+                      <li>Close this browser tab</li>
+                      <li>Find and tap the <span className="font-medium">COGMPW</span> app icon on your home screen</li>
+                      <li>Your donation has been recorded and will appear in your giving history</li>
+                    </ol>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setShowFallback(false);
+                    handleOpenInApp();
+                  }}
+                  className="w-full"
+                >
+                  <ExternalLink className="h-3 w-3 mr-2" />
+                  Try Again
+                </Button>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
-              {!isNative && !countdownActive && (
+              {!isNative && !countdownActive && !showFallback && (
                 <Button onClick={handleOpenInApp} className="w-full" size="lg">
                   <Smartphone className="h-4 w-4 mr-2" />
                   Open in App
@@ -375,7 +414,7 @@ export default function DonationSuccess() {
               </Button>
             </div>
 
-            {!isNative && !countdownActive && (
+            {!isNative && !countdownActive && !showFallback && (
               <p className="text-xs text-muted-foreground text-center">
                 Tap <span className="font-medium">"Open in App"</span> to return to the app.
                 A countdown will start before redirecting.
