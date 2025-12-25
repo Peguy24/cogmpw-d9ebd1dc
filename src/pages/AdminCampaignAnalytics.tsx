@@ -38,10 +38,7 @@ export default function AdminCampaignAnalytics() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("donations")
-        .select(`
-          *,
-          profiles:user_id (full_name)
-        `)
+        .select("*")
         .eq("status", "completed")
         .order("created_at", { ascending: true });
 
