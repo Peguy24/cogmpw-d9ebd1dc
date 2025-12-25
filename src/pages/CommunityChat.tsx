@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2, Pin, PinOff } from "lucide-react";
 import { format } from "date-fns";
@@ -35,6 +35,7 @@ interface ChatMessage {
   pinned_by?: string | null;
   profiles?: {
     full_name: string;
+    avatar_url?: string | null;
   };
 }
 
@@ -162,7 +163,7 @@ const CommunityChat = () => {
             // Fetch the profile for the new message
             const { data: profile } = await supabase
               .from("profiles")
-              .select("full_name")
+              .select("full_name, avatar_url")
               .eq("id", (payload.new as ChatMessage).user_id)
               .single();
 
@@ -251,7 +252,7 @@ const CommunityChat = () => {
       const userIds = [...new Set(data.map(m => m.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, avatar_url")
         .in("id", userIds);
 
       const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
@@ -496,6 +497,7 @@ const CommunityChat = () => {
                   className={`flex items-start gap-2 transition-colors duration-300 rounded-lg ${isOwn ? "flex-row-reverse" : "flex-row"}`}
                 >
                   <Avatar className="h-8 w-8 shrink-0">
+                    <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
                     <AvatarFallback className="text-xs bg-primary/10 text-primary">
                       {getInitials(message.profiles?.full_name || "?")}
                     </AvatarFallback>
