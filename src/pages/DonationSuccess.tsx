@@ -53,6 +53,11 @@ export default function DonationSuccess() {
   const [showFallback, setShowFallback] = useState(false);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Auto-open banner state
+  const [autoOpenBannerVisible, setAutoOpenBannerVisible] = useState(false);
+  const [autoOpenFailed, setAutoOpenFailed] = useState(false);
+  const autoOpenAttemptedRef = useRef(false);
+
   const autoOpenStorageKey = useMemo(
     () => (sessionId ? `cogmpw:donationSuccess:autoOpenAttempted:${sessionId}` : null),
     [sessionId]
@@ -133,7 +138,24 @@ export default function DonationSuccess() {
           description: "You can now view it in your giving history.",
         });
         
-        // No auto-open; user must tap "Open in App" to start countdown
+        // Auto-attempt to open the app (non-native browsers only)
+        if (!isNative && !noAutoOpen && !autoOpenAttemptedRef.current) {
+          autoOpenAttemptedRef.current = true;
+          setAutoOpenBannerVisible(true);
+          
+          // Wait a moment then attempt to open
+          setTimeout(() => {
+            const successType = isSubscription ? "subscription" : "donation";
+            const deepLinkPath = `app/giving-history?${successType}=success`;
+            const fallbackUrl = `${window.location.origin}/return-to-app?target=giving-history&type=${successType}`;
+            openCogmpwApp(deepLinkPath, fallbackUrl);
+            
+            // If still on this page after 2s, assume it failed
+            setTimeout(() => {
+              setAutoOpenFailed(true);
+            }, 2000);
+          }, 500);
+        }
       } catch (e: any) {
         if (cancelled) return;
         console.error("[DonationSuccess] record-donation failed", e);
@@ -343,6 +365,41 @@ export default function DonationSuccess() {
                 <p className="text-muted-foreground text-center">
                   Your donation has been recorded. View your giving history for details.
                 </p>
+              </div>
+            )}
+
+            {/* Auto-open banner */}
+            {!isNative && autoOpenBannerVisible && (
+              <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
+                {!autoOpenFailed ? (
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary flex-shrink-0" />
+                    <span className="text-sm font-medium">Opening COGMPW app…</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Smartphone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <p className="text-sm">
+                        <span className="font-medium">Tap the COGMPW app</span> on your home screen to continue.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setAutoOpenFailed(false);
+                        const successType = isSubscription ? "subscription" : "donation";
+                        openCogmpwApp(`app/giving-history?${successType}=success`);
+                        setTimeout(() => setAutoOpenFailed(true), 2000);
+                      }}
+                    >
+                      <ExternalLink className="h-3 w-3 mr-2" />
+                      Try opening again
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
