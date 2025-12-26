@@ -4,8 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Check, X } from "lucide-react";
+import { ArrowLeft, Check, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PendingUser {
   id: string;
@@ -20,6 +30,8 @@ const AdminApprovals = () => {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userToReject, setUserToReject] = useState<PendingUser | null>(null);
+  const [rejecting, setRejecting] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoadUsers();
@@ -131,13 +143,16 @@ const AdminApprovals = () => {
     await loadPendingUsers();
   };
 
-  const handleReject = async (userId: string) => {
+  const handleReject = async () => {
+    if (!userToReject) return;
+    
+    setRejecting(true);
     const { data: { session } } = await supabase.auth.getSession();
 
     // Send rejection email BEFORE deleting the user (need their email)
     try {
       await supabase.functions.invoke("send-rejection-email", {
-        body: { userId },
+        body: { userId: userToReject.id },
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },
@@ -151,14 +166,18 @@ const AdminApprovals = () => {
     const { error } = await supabase
       .from("profiles")
       .delete()
-      .eq("id", userId);
+      .eq("id", userToReject.id);
 
     if (error) {
       toast.error("Failed to reject user");
+      setRejecting(false);
+      setUserToReject(null);
       return;
     }
 
     toast.success("User rejected and notified");
+    setRejecting(false);
+    setUserToReject(null);
     await loadPendingUsers();
   };
 
@@ -176,8 +195,7 @@ const AdminApprovals = () => {
 
   return (
     <div className="min-h-screen bg-background">
-     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
-
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
         <div className="container flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
           <div className="flex items-center gap-2 md:gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate("/home")}>
@@ -229,7 +247,7 @@ const AdminApprovals = () => {
                       Approve
                     </Button>
                     <Button
-                      onClick={() => handleReject(user.id)}
+                      onClick={() => setUserToReject(user)}
                       variant="destructive"
                       className="flex-1 min-h-[44px]"
                       size="sm"
@@ -244,6 +262,35 @@ const AdminApprovals = () => {
           </div>
         )}
       </main>
+
+      <AlertDialog open={!!userToReject} onOpenChange={(open) => !open && setUserToReject(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject <strong>{userToReject?.full_name}</strong>? 
+              This will delete their account and send them a rejection email. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={rejecting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReject}
+              disabled={rejecting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {rejecting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                "Reject User"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
