@@ -6,7 +6,13 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2, Pin, PinOff } from "lucide-react";
+import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2, Pin, PinOff, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { MessageReactions } from "@/components/MessageReactions";
@@ -68,6 +74,8 @@ const CommunityChat = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [actionSheetMessage, setActionSheetMessage] = useState<ChatMessage | null>(null);
+  const [showClearChatDialog, setShowClearChatDialog] = useState(false);
+  const [clearingChat, setClearingChat] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -438,6 +446,26 @@ const CommunityChat = () => {
     }
   };
 
+  const clearAllChat = async () => {
+    if (!isAdmin) return;
+    
+    setClearingChat(true);
+    const { error } = await supabase
+      .from("chat_messages")
+      .update({ is_deleted: true, deleted_by: currentUserId })
+      .eq("is_deleted", false);
+
+    if (error) {
+      toast.error("Failed to clear chat");
+      console.error(error);
+    } else {
+      toast.success("Chat cleared successfully");
+      setMessages([]);
+    }
+    setClearingChat(false);
+    setShowClearChatDialog(false);
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -516,9 +544,27 @@ const CommunityChat = () => {
             </div>
           </div>
           {isAdmin && (
-            <span className="ml-auto text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shrink-0">
-              Moderator
-            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shrink-0">
+                Moderator
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setShowClearChatDialog(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear All Chat
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           )}
         </div>
       </header>
@@ -887,6 +933,35 @@ const CommunityChat = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear Chat Confirmation Dialog */}
+      <AlertDialog open={showClearChatDialog} onOpenChange={setShowClearChatDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Chat</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete all messages in the chat? This will remove all messages for everyone and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={clearingChat}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={clearAllChat}
+              disabled={clearingChat}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {clearingChat ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Clearing...
+                </>
+              ) : (
+                "Clear All"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
