@@ -87,6 +87,22 @@ const AdminApprovals = () => {
       return;
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+
+    // Send approval email
+    try {
+      await supabase.functions.invoke("send-approval-email", {
+        body: { userId },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+      console.log("Approval email sent successfully");
+    } catch (emailError) {
+      console.error("Failed to send approval email:", emailError);
+      // Don't block approval if email fails
+    }
+
     // Get user's push tokens for notification
     const { data: tokens } = await supabase
       .from("push_tokens")
@@ -96,8 +112,6 @@ const AdminApprovals = () => {
     // Send welcome notification if user has push tokens
     if (tokens && tokens.length > 0) {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
         await supabase.functions.invoke("send-push-notification", {
           body: {
             title: "Welcome to COGMPW! 🎉",
@@ -110,7 +124,6 @@ const AdminApprovals = () => {
         });
       } catch (notifError) {
         console.error("Failed to send welcome notification:", notifError);
-        // Don't show error to admin - approval was successful
       }
     }
 
