@@ -19,6 +19,7 @@ import AdminGivingReports from "./pages/AdminGivingReports";
 import AdminCampaigns from "./pages/AdminCampaigns";
 import AdminCampaignAnalytics from "./pages/AdminCampaignAnalytics";
 import AdminPrayerRequests from "./pages/AdminPrayerRequests";
+import AdminChurchInfo from "./pages/AdminChurchInfo";
 import Giving from "./pages/Giving";
 import GivingHistory from "./pages/GivingHistory";
 import GivingCampaigns from "./pages/GivingCampaigns";
@@ -67,6 +68,7 @@ const AppContent = () => {
         <Route path="/admin/campaigns" element={<AdminCampaigns />} />
         <Route path="/admin/campaigns/analytics" element={<AdminCampaignAnalytics />} />
         <Route path="/admin/prayer-requests" element={<AdminPrayerRequests />} />
+        <Route path="/admin/church-info" element={<AdminChurchInfo />} />
         <Route path="/my-prayer-requests" element={<MyPrayerRequests />} />
         <Route path="/giving" element={<Giving />} />
         <Route path="/giving-history" element={<GivingHistory />} />

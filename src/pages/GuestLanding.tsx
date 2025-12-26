@@ -1,12 +1,48 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, LogIn, BookOpen, Clock, MapPin, Phone, Mail } from "lucide-react";
 import LivestreamSection from "@/components/LivestreamSection";
 import pastorPhoto from "@/assets/pastor-photo.jpg";
 
+interface ChurchInfo {
+  key: string;
+  value: string;
+  label: string | null;
+  category: string;
+}
+
 const GuestLanding = () => {
   const navigate = useNavigate();
+  const [serviceTimes, setServiceTimes] = useState<ChurchInfo[]>([]);
+  const [contactInfo, setContactInfo] = useState<ChurchInfo[]>([]);
+
+  useEffect(() => {
+    const fetchChurchInfo = async () => {
+      const { data } = await supabase
+        .from("church_info")
+        .select("key, value, label, category")
+        .order("sort_order", { ascending: true });
+
+      if (data) {
+        setServiceTimes(data.filter(item => item.category === "service_times"));
+        setContactInfo(data.filter(item => item.category === "contact"));
+      }
+    };
+
+    fetchChurchInfo();
+  }, []);
+
+  const getContactIcon = (key: string) => {
+    switch (key) {
+      case "location": return <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />;
+      case "phone": return <Phone className="h-5 w-5 text-primary shrink-0" />;
+      case "email": return <Mail className="h-5 w-5 text-primary shrink-0" />;
+      default: return <Church className="h-5 w-5 text-primary shrink-0" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
@@ -46,18 +82,32 @@ const GuestLanding = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-border/50">
-                <span className="font-medium text-sm md:text-base">Sunday Worship</span>
-                <span className="text-muted-foreground text-sm md:text-base">10:00 AM</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-border/50">
-                <span className="font-medium text-sm md:text-base">Wednesday Bible Study</span>
-                <span className="text-muted-foreground text-sm md:text-base">7:00 PM</span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="font-medium text-sm md:text-base">Friday Prayer Meeting</span>
-                <span className="text-muted-foreground text-sm md:text-base">7:00 PM</span>
-              </div>
+              {serviceTimes.length > 0 ? (
+                serviceTimes.map((service, index) => (
+                  <div 
+                    key={service.key} 
+                    className={`flex justify-between items-center py-2 ${index < serviceTimes.length - 1 ? 'border-b border-border/50' : ''}`}
+                  >
+                    <span className="font-medium text-sm md:text-base">{service.label}</span>
+                    <span className="text-muted-foreground text-sm md:text-base">{service.value}</span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
+                    <span className="font-medium text-sm md:text-base">Sunday Worship</span>
+                    <span className="text-muted-foreground text-sm md:text-base">10:00 AM</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-border/50">
+                    <span className="font-medium text-sm md:text-base">Wednesday Bible Study</span>
+                    <span className="text-muted-foreground text-sm md:text-base">7:00 PM</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="font-medium text-sm md:text-base">Friday Prayer Meeting</span>
+                    <span className="text-muted-foreground text-sm md:text-base">7:00 PM</span>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -69,27 +119,41 @@ const GuestLanding = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-start gap-3 py-2">
-                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-sm md:text-base">Location</p>
-                  <p className="text-muted-foreground text-xs md:text-sm">Paris West, France</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 py-2">
-                <Phone className="h-5 w-5 text-primary shrink-0" />
-                <div>
-                  <p className="font-medium text-sm md:text-base">Phone</p>
-                  <p className="text-muted-foreground text-xs md:text-sm">Contact church office</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 py-2">
-                <Mail className="h-5 w-5 text-primary shrink-0" />
-                <div>
-                  <p className="font-medium text-sm md:text-base">Email</p>
-                  <p className="text-muted-foreground text-xs md:text-sm">info@cogmpw.org</p>
-                </div>
-              </div>
+              {contactInfo.length > 0 ? (
+                contactInfo.map((contact) => (
+                  <div key={contact.key} className="flex items-center gap-3 py-2">
+                    {getContactIcon(contact.key)}
+                    <div>
+                      <p className="font-medium text-sm md:text-base">{contact.label}</p>
+                      <p className="text-muted-foreground text-xs md:text-sm">{contact.value}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="flex items-start gap-3 py-2">
+                    <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm md:text-base">Location</p>
+                      <p className="text-muted-foreground text-xs md:text-sm">Paris West, France</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 py-2">
+                    <Phone className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="font-medium text-sm md:text-base">Phone</p>
+                      <p className="text-muted-foreground text-xs md:text-sm">Contact church office</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 py-2">
+                    <Mail className="h-5 w-5 text-primary shrink-0" />
+                    <div>
+                      <p className="font-medium text-sm md:text-base">Email</p>
+                      <p className="text-muted-foreground text-xs md:text-sm">info@cogmpw.org</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
