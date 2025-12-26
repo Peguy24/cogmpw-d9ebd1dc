@@ -45,6 +45,10 @@ interface TypingUser {
   full_name: string;
 }
 
+interface OnlineUser {
+  user_id: string;
+}
+
 const CommunityChat = () => {
   const navigate = useNavigate();
   const { markAsRead } = useUnreadMessages();
@@ -59,12 +63,14 @@ const CommunityChat = () => {
   const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [actionSheetMessage, setActionSheetMessage] = useState<ChatMessage | null>(null);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -111,6 +117,38 @@ const CommunityChat = () => {
 
     checkUserAndFetch();
   }, [navigate]);
+
+  // Set up online presence channel
+  useEffect(() => {
+    if (!isApproved || !currentUserId) return;
+
+    const presenceChannel = supabase.channel("chat-presence", {
+      config: { presence: { key: currentUserId } },
+    });
+
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = presenceChannel.presenceState();
+        const online = new Set<string>();
+        
+        Object.keys(state).forEach((userId) => {
+          online.add(userId);
+        });
+        
+        setOnlineUsers(online);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await presenceChannel.track({ user_id: currentUserId, online_at: new Date().toISOString() });
+        }
+      });
+
+    presenceChannelRef.current = presenceChannel;
+
+    return () => {
+      supabase.removeChannel(presenceChannel);
+    };
+  }, [isApproved, currentUserId]);
 
   // Set up typing presence channel
   useEffect(() => {
@@ -528,12 +566,17 @@ const CommunityChat = () => {
                     setActionSheetMessage(message);
                   }}
                 >
-                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
-                    <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
-                    <AvatarFallback className="text-[10px] sm:text-xs bg-primary/10 text-primary">
-                      {getInitials(message.profiles?.full_name || "?")}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
+                      <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
+                      <AvatarFallback className="text-[10px] sm:text-xs bg-primary/10 text-primary">
+                        {getInitials(message.profiles?.full_name || "?")}
+                      </AvatarFallback>
+                    </Avatar>
+                    {onlineUsers.has(message.user_id) && (
+                      <span className="absolute bottom-0 right-0 h-2 w-2 sm:h-2.5 sm:w-2.5 bg-green-500 rounded-full border-2 border-background" />
+                    )}
+                  </div>
                   <div
                     className={`group max-w-[80%] sm:max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}
                   >
