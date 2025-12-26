@@ -210,9 +210,13 @@ All colors MUST be HSL.
   .dialog-content {
     page-break-inside: avoid;
   }
-/* Push app content below the camera / status bar */
-.app-safe-area {
- 
+  /* Push app content below the camera / status bar */
+  .app-safe-area {
+  
+  }
 }
 
+/* Safe area for bottom sheet on mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }

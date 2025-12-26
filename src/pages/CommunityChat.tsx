@@ -10,6 +10,7 @@ import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, 
 import { format } from "date-fns";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { MessageReactions } from "@/components/MessageReactions";
+import { MessageActionSheet } from "@/components/MessageActionSheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,8 @@ const CommunityChat = () => {
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [actionSheetMessage, setActionSheetMessage] = useState<ChatMessage | null>(null);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -408,6 +411,27 @@ const CommunityChat = () => {
     }
   };
 
+  // Long press handlers for mobile
+  const handleTouchStart = (message: ChatMessage) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setActionSheetMessage(message);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleTouchMove = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
   if (!isApproved) {
     return null;
   }
@@ -496,6 +520,13 @@ const CommunityChat = () => {
                   key={message.id}
                   id={`message-${message.id}`}
                   className={`flex items-start gap-1.5 sm:gap-2 transition-colors duration-300 rounded-lg ${isOwn ? "flex-row-reverse" : "flex-row"}`}
+                  onTouchStart={() => handleTouchStart(message)}
+                  onTouchEnd={handleTouchEnd}
+                  onTouchMove={handleTouchMove}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setActionSheetMessage(message);
+                  }}
                 >
                   <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
                     <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
@@ -778,6 +809,18 @@ const CommunityChat = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Mobile Message Action Sheet */}
+      <MessageActionSheet
+        isOpen={!!actionSheetMessage}
+        onClose={() => setActionSheetMessage(null)}
+        onReply={() => actionSheetMessage && handleReply(actionSheetMessage)}
+        onPin={isAdmin && actionSheetMessage ? () => togglePinMessage(actionSheetMessage.id, !!actionSheetMessage.is_pinned) : undefined}
+        onDelete={actionSheetMessage && (actionSheetMessage.user_id === currentUserId || isAdmin) ? () => setDeleteMessageId(actionSheetMessage.id) : undefined}
+        isPinned={!!actionSheetMessage?.is_pinned}
+        canPin={isAdmin}
+        canDelete={!!actionSheetMessage && (actionSheetMessage.user_id === currentUserId || isAdmin)}
+      />
     </div>
   );
 };
