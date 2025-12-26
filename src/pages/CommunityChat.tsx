@@ -255,13 +255,13 @@ const CommunityChat = () => {
       const userIds = [...new Set(data.map(m => m.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url")
+        .select("id, full_name, avatar_url, phone_visible")
         .in("id", userIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profileMap = new Map(profiles?.map(p => [p.id, { id: p.id, full_name: p.full_name, avatar_url: p.avatar_url }]) || []);
       const messagesWithProfiles = data.map(m => ({
         ...m,
-        profiles: profileMap.get(m.user_id) || { full_name: "Unknown" },
+        profiles: profileMap.get(m.user_id) || { full_name: "Member" },
       }));
       setMessages(messagesWithProfiles);
     }
