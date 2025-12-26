@@ -503,9 +503,17 @@ const CommunityChat = () => {
           >
             <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
-          <div className="flex items-center gap-2 min-w-0">
-            <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-            <h1 className="font-semibold text-sm sm:text-base truncate">Community Chat</h1>
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+              <h1 className="font-semibold text-sm sm:text-base truncate">Community Chat</h1>
+            </div>
+            <div className="flex items-center gap-1 ml-6">
+              <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-[10px] sm:text-xs text-muted-foreground">
+                {onlineUsers.size} online
+              </span>
+            </div>
           </div>
           {isAdmin && (
             <span className="ml-auto text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full shrink-0">
