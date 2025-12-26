@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Church, Calendar, DollarSign, Video, LogIn, BookOpen } from "lucide-react";
+import { Church, Calendar, DollarSign, Video, LogIn, BookOpen, Clock, MapPin, Phone, Mail } from "lucide-react";
 import LivestreamSection from "@/components/LivestreamSection";
 import pastorPhoto from "@/assets/pastor-photo.jpg";
 
@@ -34,6 +34,64 @@ const GuestLanding = () => {
             <LogIn className="mr-2 h-4 w-4" />
             Sign In / Sign Up
           </Button>
+        </div>
+
+        {/* Service Times & Contact Info */}
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+          <Card className="border-primary/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                Service Times
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-border/50">
+                <span className="font-medium text-sm md:text-base">Sunday Worship</span>
+                <span className="text-muted-foreground text-sm md:text-base">10:00 AM</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border/50">
+                <span className="font-medium text-sm md:text-base">Wednesday Bible Study</span>
+                <span className="text-muted-foreground text-sm md:text-base">7:00 PM</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="font-medium text-sm md:text-base">Friday Prayer Meeting</span>
+                <span className="text-muted-foreground text-sm md:text-base">7:00 PM</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/20">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+                <Church className="h-5 w-5 text-primary" />
+                Contact Us
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-start gap-3 py-2">
+                <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm md:text-base">Location</p>
+                  <p className="text-muted-foreground text-xs md:text-sm">Paris West, France</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 py-2">
+                <Phone className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <p className="font-medium text-sm md:text-base">Phone</p>
+                  <p className="text-muted-foreground text-xs md:text-sm">Contact church office</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 py-2">
+                <Mail className="h-5 w-5 text-primary shrink-0" />
+                <div>
+                  <p className="font-medium text-sm md:text-base">Email</p>
+                  <p className="text-muted-foreground text-xs md:text-sm">info@cogmpw.org</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Livestream Section */}
