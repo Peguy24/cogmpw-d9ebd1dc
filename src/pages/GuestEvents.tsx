@@ -66,10 +66,6 @@ const GuestEvents = () => {
               Join us for worship, fellowship, and community
             </p>
           </div>
-          <Button onClick={() => navigate("/auth")} size="lg">
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign In to RSVP
-          </Button>
         </div>
 
         {/* Events List */}
@@ -92,12 +88,9 @@ const GuestEvents = () => {
             <CardContent className="py-12 text-center">
               <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-xl font-semibold mb-2">No Upcoming Events</h3>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground">
                 Check back soon for our next events and gatherings
               </p>
-              <Button onClick={() => navigate("/auth")}>
-                Sign In to View All Events
-              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -146,35 +139,21 @@ const GuestEvents = () => {
                   <p className="text-muted-foreground whitespace-pre-wrap">
                     {event.description}
                   </p>
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                        Want to RSVP and get event reminders?
-                      </p>
-                      <Button onClick={() => navigate("/auth")}>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Sign In to RSVP
-                      </Button>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
 
-        {/* CTA Section */}
-        <Card className="bg-primary text-primary-foreground">
-          <CardContent className="py-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Join Our Community</h2>
-            <p className="text-lg mb-6 opacity-90">
-              Sign in to RSVP for events, receive reminders, and access exclusive member content
-            </p>
-            <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
-              Create Account or Sign In
+        {/* Subtle member link at bottom */}
+        <div className="text-center pt-4">
+          <p className="text-sm text-muted-foreground">
+            Already a church member?{" "}
+            <Button variant="link" className="p-0 h-auto text-sm" onClick={() => navigate("/auth")}>
+              Sign in here
             </Button>
-          </CardContent>
-        </Card>
+          </p>
+        </div>
       </div>
     </div>
   );
