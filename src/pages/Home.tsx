@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu, Heart, MessageCircle } from "lucide-react";
+import { LogOut, Calendar, Newspaper, Settings, UserCheck, Shield, Video, DollarSign, HandHeart, Target, Menu, Heart, MessageCircle, Church } from "lucide-react";
 import { toast } from "sonner";
 import NewsFeed from "@/components/NewsFeed";
 import EventsCalendar from "@/components/EventsCalendar";
@@ -200,6 +200,12 @@ const Home = () => {
                       <Button variant="ghost" className="w-full justify-start">
                         <Heart className="h-5 w-5 mr-3" />
                         Prayer Requests
+                      </Button>
+                    </Link>
+                    <Link to="/admin/church-info" className="block">
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Church className="h-5 w-5 mr-3" />
+                        Church Info
                       </Button>
                     </Link>
                   </div>
