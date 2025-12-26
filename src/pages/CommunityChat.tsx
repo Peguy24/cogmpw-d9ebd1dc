@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2, Pin, PinOff, MoreVertical } from "lucide-react";
+import { ArrowLeft, Send, Trash2, MessageCircle, Reply, X, ImagePlus, FileText, Loader2, Pin, PinOff, MoreVertical, History } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
@@ -76,6 +77,7 @@ const CommunityChat = () => {
   const [actionSheetMessage, setActionSheetMessage] = useState<ChatMessage | null>(null);
   const [showClearChatDialog, setShowClearChatDialog] = useState(false);
   const [clearingChat, setClearingChat] = useState(false);
+  const [showDeletedMessages, setShowDeletedMessages] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -556,6 +558,13 @@ const CommunityChat = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
+                    onClick={() => setShowDeletedMessages(!showDeletedMessages)}
+                  >
+                    <History className="h-4 w-4 mr-2" />
+                    {showDeletedMessages ? "Hide Deleted Messages" : "View Deleted Messages"}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
                     onClick={() => setShowClearChatDialog(true)}
                     className="text-destructive focus:text-destructive"
                   >
@@ -610,15 +619,59 @@ const CommunityChat = () => {
               const replyMessage = message.reply_to_id ? getReplyMessage(message.reply_to_id) : null;
 
               if (message.is_deleted) {
+                // Only show placeholder for non-admins or when admin hasn't enabled archive view
+                if (!isAdmin || !showDeletedMessages) {
+                  return (
+                    <div
+                      key={message.id}
+                      id={`message-${message.id}`}
+                      className={`flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
+                    >
+                      <p className="text-sm text-muted-foreground italic">
+                        Message deleted
+                      </p>
+                    </div>
+                  );
+                }
+                
+                // Admin viewing deleted message - show with special styling
                 return (
                   <div
                     key={message.id}
                     id={`message-${message.id}`}
-                    className={`flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
+                    className={`flex items-start gap-1.5 sm:gap-2 transition-colors duration-300 rounded-lg opacity-60 ${isOwn ? "flex-row-reverse" : "flex-row"}`}
                   >
-                    <p className="text-sm text-muted-foreground italic">
-                      Message deleted
-                    </p>
+                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
+                      <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
+                      <AvatarFallback className="text-[10px] sm:text-xs bg-destructive/10 text-destructive">
+                        {getInitials(message.profiles?.full_name || "?")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className={`max-w-[80%] sm:max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}>
+                      <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
+                        <span className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate max-w-[100px] sm:max-w-none">
+                          {message.profiles?.full_name || "Unknown"}
+                        </span>
+                        <span className="text-[8px] sm:text-[10px] bg-destructive/10 text-destructive px-1 sm:px-1.5 py-0.5 rounded-full">
+                          Deleted
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground">
+                          {format(new Date(message.created_at), "h:mm a")}
+                        </span>
+                      </div>
+                      <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl border-2 border-dashed border-destructive/30 bg-destructive/5">
+                        <p className="text-xs sm:text-sm break-words line-through text-muted-foreground">
+                          {message.content}
+                        </p>
+                        {message.media_url && message.media_type === 'image' && (
+                          <img 
+                            src={message.media_url} 
+                            alt="Deleted attachment" 
+                            className="mt-2 max-w-full rounded-lg max-h-40 sm:max-h-48 object-cover grayscale opacity-50"
+                          />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
               }
