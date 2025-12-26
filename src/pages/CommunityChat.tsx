@@ -64,6 +64,7 @@ const CommunityChat = () => {
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+  const [userRoles, setUserRoles] = useState<Map<string, string[]>>(new Map());
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [actionSheetMessage, setActionSheetMessage] = useState<ChatMessage | null>(null);
@@ -295,6 +296,21 @@ const CommunityChat = () => {
         .from("profiles")
         .select("id, full_name, avatar_url, phone_visible")
         .in("id", userIds);
+
+      // Fetch roles for all unique user IDs
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role")
+        .in("user_id", userIds);
+
+      // Build roles map
+      const rolesMap = new Map<string, string[]>();
+      roles?.forEach(r => {
+        const existing = rolesMap.get(r.user_id) || [];
+        existing.push(r.role);
+        rolesMap.set(r.user_id, existing);
+      });
+      setUserRoles(rolesMap);
 
       const profileMap = new Map(profiles?.map(p => [p.id, { id: p.id, full_name: p.full_name, avatar_url: p.avatar_url }]) || []);
       const messagesWithProfiles = data.map(m => ({
@@ -580,10 +596,25 @@ const CommunityChat = () => {
                   <div
                     className={`group max-w-[80%] sm:max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}
                   >
-                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
                       <span className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate max-w-[100px] sm:max-w-none">
                         {message.profiles?.full_name || "Unknown"}
                       </span>
+                      {userRoles.get(message.user_id)?.includes("admin") && (
+                        <span className="text-[8px] sm:text-[10px] bg-primary/10 text-primary px-1 sm:px-1.5 py-0.5 rounded-full">
+                          Moderator
+                        </span>
+                      )}
+                      {userRoles.get(message.user_id)?.includes("super_leader") && !userRoles.get(message.user_id)?.includes("admin") && (
+                        <span className="text-[8px] sm:text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1 sm:px-1.5 py-0.5 rounded-full">
+                          Super Leader
+                        </span>
+                      )}
+                      {userRoles.get(message.user_id)?.includes("leader") && !userRoles.get(message.user_id)?.includes("admin") && !userRoles.get(message.user_id)?.includes("super_leader") && (
+                        <span className="text-[8px] sm:text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1 sm:px-1.5 py-0.5 rounded-full">
+                          Leader
+                        </span>
+                      )}
                       <span className="text-[10px] sm:text-xs text-muted-foreground/60">
                         {format(new Date(message.created_at), "h:mm a")}
                       </span>
