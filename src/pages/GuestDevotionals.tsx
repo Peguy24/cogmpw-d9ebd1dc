@@ -54,25 +54,18 @@ const GuestDevotionals = () => {
               Spiritual insights and biblical wisdom for daily reflection
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/")}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <Button onClick={() => navigate("/auth")}>
-              <LogIn className="h-4 w-4 mr-2" />
-              Sign In
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/")}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
         </div>
 
         {/* Devotionals List */}
         <div className="space-y-6">
           {isLoading ? (
-            // Loading skeletons
             Array.from({ length: 3 }).map((_, i) => (
               <Card key={i}>
                 <CardHeader>
@@ -90,12 +83,9 @@ const GuestDevotionals = () => {
             <Card>
               <CardContent className="py-12 text-center">
                 <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground">
                   No devotionals available at the moment
                 </p>
-                <Button onClick={() => navigate("/auth")}>
-                  Sign in to access more content
-                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -129,21 +119,15 @@ const GuestDevotionals = () => {
           )}
         </div>
 
-        {/* Sign-in prompt */}
-        {devotionals.length > 0 && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="py-8 text-center space-y-4">
-              <h3 className="text-xl font-semibold">Want access to more devotionals?</h3>
-              <p className="text-muted-foreground">
-                Sign in to access our complete library of daily devotionals, sermons, and more spiritual content.
-              </p>
-              <Button onClick={() => navigate("/auth")} size="lg">
-                <LogIn className="h-4 w-4 mr-2" />
-                Sign In to Continue
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Subtle member link at bottom */}
+        <div className="text-center pt-4">
+          <p className="text-sm text-muted-foreground">
+            Already a church member?{" "}
+            <Button variant="link" className="p-0 h-auto text-sm" onClick={() => navigate("/auth")}>
+              Sign in here
+            </Button>
+          </p>
+        </div>
       </div>
     </div>
   );
