@@ -45,18 +45,20 @@ const GuestDevotionals = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
-      <div className="container py-8 space-y-8">
+      <div className="container py-4 md:py-8 px-3 md:px-4 space-y-4 md:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold">Daily Devotionals</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold">Daily Devotionals</h1>
+            <p className="text-sm md:text-base text-muted-foreground">
               Spiritual insights and biblical wisdom for daily reflection
             </p>
           </div>
           <Button
             variant="outline"
-            onClick={() => navigate("/")}
+            size="sm"
+            onClick={() => navigate("/guest")}
+            className="self-start sm:self-center"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
@@ -64,15 +66,15 @@ const GuestDevotionals = () => {
         </div>
 
         {/* Devotionals List */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-2/3" />
+                <CardHeader className="p-4 md:p-6">
+                  <Skeleton className="h-5 md:h-6 w-2/3" />
                   <Skeleton className="h-4 w-1/3" />
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
                   <Skeleton className="h-4 w-full mb-2" />
                   <Skeleton className="h-4 w-full mb-2" />
                   <Skeleton className="h-4 w-3/4" />
@@ -81,9 +83,9 @@ const GuestDevotionals = () => {
             ))
           ) : devotionals.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center">
-                <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">
+              <CardContent className="py-8 md:py-12 text-center">
+                <BookOpen className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-sm md:text-base text-muted-foreground">
                   No devotionals available at the moment
                 </p>
               </CardContent>
@@ -91,25 +93,25 @@ const GuestDevotionals = () => {
           ) : (
             devotionals.map((devotional) => (
               <Card key={devotional.id}>
-                <CardHeader>
+                <CardHeader className="p-4 md:p-6">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    <CardTitle>{devotional.title}</CardTitle>
+                    <BookOpen className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                    <CardTitle className="text-base md:text-xl">{devotional.title}</CardTitle>
                   </div>
-                  <CardDescription>
+                  <CardDescription className="text-xs md:text-sm">
                     {format(new Date(devotional.devotional_date), "MMMM d, yyyy")}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-4 pt-0 md:p-6 md:pt-0 space-y-3 md:space-y-4">
                   {devotional.scripture_reference && (
-                    <Badge variant="secondary" className="gap-1">
+                    <Badge variant="secondary" className="gap-1 text-xs md:text-sm">
                       <BookMarked className="h-3 w-3" />
                       {devotional.scripture_reference}
                     </Badge>
                   )}
                   
                   <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+                    <p className="text-sm md:text-base text-foreground whitespace-pre-wrap leading-relaxed">
                       {devotional.content}
                     </p>
                   </div>
@@ -121,9 +123,9 @@ const GuestDevotionals = () => {
 
         {/* Subtle member link at bottom */}
         <div className="text-center pt-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Already a church member?{" "}
-            <Button variant="link" className="p-0 h-auto text-sm" onClick={() => navigate("/auth")}>
+            <Button variant="link" className="p-0 h-auto text-xs md:text-sm" onClick={() => navigate("/auth")}>
               Sign in here
             </Button>
           </p>
