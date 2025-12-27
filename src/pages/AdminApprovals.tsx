@@ -4,6 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +30,8 @@ const AdminApprovals = () => {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userToReject, setUserToReject] = useState<PendingUser | null>(null);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoadUsers();
@@ -118,14 +130,21 @@ const AdminApprovals = () => {
     await loadPendingUsers();
   };
 
-  const handleReject = async (userId: string) => {
+  const handleReject = async (user: PendingUser) => {
+    setUserToReject(user);
+  };
+
+  const confirmReject = async () => {
+    if (!userToReject) return;
+    
+    setIsRejecting(true);
     try {
       // Send rejection email BEFORE deleting the profile (we need the user data)
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.access_token) {
         await supabase.functions.invoke("send-rejection-email", {
-          body: { userId },
+          body: { userId: userToReject.id },
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
@@ -139,14 +158,18 @@ const AdminApprovals = () => {
     const { error } = await supabase
       .from("profiles")
       .delete()
-      .eq("id", userId);
+      .eq("id", userToReject.id);
 
     if (error) {
       toast.error("Failed to reject user");
+      setIsRejecting(false);
+      setUserToReject(null);
       return;
     }
 
     toast.success("User rejected and notified via email");
+    setIsRejecting(false);
+    setUserToReject(null);
     await loadPendingUsers();
   };
 
@@ -164,8 +187,30 @@ const AdminApprovals = () => {
 
   return (
     <div className="min-h-screen bg-background">
-     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
+      <AlertDialog open={!!userToReject} onOpenChange={(open) => !open && setUserToReject(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject User Registration?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to reject <strong>{userToReject?.full_name}</strong>? 
+              This will permanently delete their account and send them a notification email. 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRejecting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmReject}
+              disabled={isRejecting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isRejecting ? "Rejecting..." : "Reject User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
         <div className="container flex h-14 md:h-16 items-center justify-between px-3 md:px-4">
           <div className="flex items-center gap-2 md:gap-4">
             <Button variant="ghost" size="sm" onClick={() => navigate("/home")}>
@@ -217,7 +262,7 @@ const AdminApprovals = () => {
                       Approve
                     </Button>
                     <Button
-                      onClick={() => handleReject(user.id)}
+                      onClick={() => handleReject(user)}
                       variant="destructive"
                       className="flex-1 min-h-[44px]"
                       size="sm"
