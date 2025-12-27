@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const emailResponse = await resend.emails.send({
-      from: "COGMPW <noreply@cogmpw.com>",
+      from: "COGMPW <onboarding@resend.dev>",
       to: [email],
       subject: "Donation Receipt - COGMPW",
       html: `

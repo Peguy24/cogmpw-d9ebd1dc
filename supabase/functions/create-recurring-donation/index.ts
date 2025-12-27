@@ -14,7 +14,7 @@ const logStep = (step: string, details?: any) => {
 
 // 🔴 IMPORTANT: Use HTTPS URL for Stripe redirects - Android App Links will intercept this
 // Stripe doesn't support custom URL schemes, so we use the web URL which Android intercepts
-const APP_BASE_URL = "https://cogmpw.com";
+const APP_BASE_URL = "https://cogmpw.lovable.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -89,10 +89,9 @@ serve(async (req) => {
       ],
       mode: "subscription",
 
-      // ⬇️ Redirect to return-to-app page which will trigger the custom URL scheme (cogmpw://)
-      // This is needed because cogmpw.com doesn't have Android App Links verification
-      success_url: `${APP_BASE_URL}/return-to-app?target=/donation-success&type=subscription&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${APP_BASE_URL}/return-to-app?target=/giving&type=subscription&status=canceled`,
+      // Use donation-success page for subscriptions too - it handles both types
+      success_url: `${APP_BASE_URL}/donation-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
+      cancel_url: `${APP_BASE_URL}/giving?subscription=canceled`,
 
       // Store metadata on the subscription itself (not just the session)
       subscription_data: {

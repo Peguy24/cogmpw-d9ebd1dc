@@ -47,9 +47,9 @@ const GuestEvents = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
-      <div className="container py-4 md:py-8 px-3 md:px-4 space-y-4 md:space-y-8">
+      <div className="container py-8 space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Button
@@ -61,44 +61,51 @@ const GuestEvents = () => {
                 Back
               </Button>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold">Upcoming Events</h1>
-            <p className="text-sm md:text-base text-muted-foreground">
+            <h1 className="text-3xl font-bold">Upcoming Events</h1>
+            <p className="text-muted-foreground">
               Join us for worship, fellowship, and community
             </p>
           </div>
+          <Button onClick={() => navigate("/auth")} size="lg">
+            <LogIn className="mr-2 h-4 w-4" />
+            Sign In to RSVP
+          </Button>
         </div>
 
         {/* Events List */}
         {isLoading ? (
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-6">
             {[1, 2, 3].map((i) => (
               <Card key={i}>
-                <CardHeader className="p-4 md:p-6">
-                  <Skeleton className="h-6 md:h-8 w-3/4" />
+                <CardHeader>
+                  <Skeleton className="h-8 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
                 </CardHeader>
-                <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-                  <Skeleton className="h-20 md:h-24 w-full" />
+                <CardContent>
+                  <Skeleton className="h-24 w-full" />
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : events.length === 0 ? (
           <Card>
-            <CardContent className="py-8 md:py-12 text-center">
-              <Calendar className="h-12 w-12 md:h-16 md:w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg md:text-xl font-semibold mb-2">No Upcoming Events</h3>
-              <p className="text-sm md:text-base text-muted-foreground">
+            <CardContent className="py-12 text-center">
+              <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-xl font-semibold mb-2">No Upcoming Events</h3>
+              <p className="text-muted-foreground mb-6">
                 Check back soon for our next events and gatherings
               </p>
+              <Button onClick={() => navigate("/auth")}>
+                Sign In to View All Events
+              </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4 md:space-y-6">
+          <div className="space-y-6">
             {events.map((event) => (
               <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {event.media_url && (
-                  <div className="relative h-40 sm:h-48 md:h-64 overflow-hidden">
+                  <div className="relative h-48 sm:h-64 overflow-hidden">
                     {event.media_type === "video" ? (
                       <video
                         src={event.media_url}
@@ -114,46 +121,60 @@ const GuestEvents = () => {
                     )}
                   </div>
                 )}
-                <CardHeader className="p-4 md:p-6">
-                  <CardTitle className="text-lg md:text-2xl">{event.title}</CardTitle>
-                  <CardDescription className="space-y-1.5 md:space-y-2 text-sm md:text-base">
+                <CardHeader>
+                  <CardTitle className="text-2xl">{event.title}</CardTitle>
+                  <CardDescription className="space-y-2 text-base">
                     <div className="flex items-center gap-2 text-foreground">
-                      <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary shrink-0" />
-                      <span className="font-medium text-xs md:text-sm">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span className="font-medium">
                         {format(new Date(event.event_date), "EEEE, MMMM d, yyyy")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-foreground">
-                      <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary shrink-0" />
-                      <span className="font-medium text-xs md:text-sm">
+                      <Clock className="h-4 w-4 text-primary" />
+                      <span className="font-medium">
                         {format(new Date(event.event_date), "h:mm a")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-foreground">
-                      <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary shrink-0" />
-                      <span className="font-medium text-xs md:text-sm">{event.location}</span>
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="font-medium">{event.location}</span>
                     </div>
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-                  <p className="text-sm md:text-base text-muted-foreground whitespace-pre-wrap">
+                <CardContent>
+                  <p className="text-muted-foreground whitespace-pre-wrap">
                     {event.description}
                   </p>
+                  <div className="mt-6 pt-6 border-t">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        Want to RSVP and get event reminders?
+                      </p>
+                      <Button onClick={() => navigate("/auth")}>
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Sign In to RSVP
+                      </Button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
 
-        {/* Subtle member link at bottom */}
-        <div className="text-center pt-4">
-          <p className="text-xs md:text-sm text-muted-foreground">
-            Already a church member?{" "}
-            <Button variant="link" className="p-0 h-auto text-xs md:text-sm" onClick={() => navigate("/auth")}>
-              Sign in here
+        {/* CTA Section */}
+        <Card className="bg-primary text-primary-foreground">
+          <CardContent className="py-8 text-center">
+            <h2 className="text-2xl font-bold mb-4">Join Our Community</h2>
+            <p className="text-lg mb-6 opacity-90">
+              Sign in to RSVP for events, receive reminders, and access exclusive member content
+            </p>
+            <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
+              Create Account or Sign In
             </Button>
-          </p>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -91,39 +91,6 @@ export type Database = {
           },
         ]
       }
-      church_info: {
-        Row: {
-          category: string
-          id: string
-          key: string
-          label: string | null
-          sort_order: number | null
-          updated_at: string
-          updated_by: string | null
-          value: string
-        }
-        Insert: {
-          category: string
-          id?: string
-          key: string
-          label?: string | null
-          sort_order?: number | null
-          updated_at?: string
-          updated_by?: string | null
-          value: string
-        }
-        Update: {
-          category?: string
-          id?: string
-          key?: string
-          label?: string | null
-          sort_order?: number | null
-          updated_at?: string
-          updated_by?: string | null
-          value?: string
-        }
-        Relationships: []
-      }
       devotionals: {
         Row: {
           content: string

@@ -205,7 +205,7 @@ serve(async (req) => {
           `;
 
         const emailResponse = await resend.emails.send({
-          from: "COGMPW Church <noreply@cogmpw.com>",
+          from: "COGMPW Church <onboarding@resend.dev>",
           to: [targetUser.email],
           subject: emailSubject,
           html: emailHtml,

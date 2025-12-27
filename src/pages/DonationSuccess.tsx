@@ -43,12 +43,8 @@ export default function DonationSuccess() {
   const [status, setStatus] = useState<"idle" | "recording" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [donationDetails, setDonationDetails] = useState<DonationDetails | null>(null);
-
-  // Robust native detection (see ReturnToApp.tsx for rationale)
-  const ua = navigator.userAgent || "";
-  const isAndroidWebView = /\bwv\b/i.test(ua) || /;\s*wv\)/i.test(ua);
-  const isNative = Capacitor.isNativePlatform() || isAndroidWebView;
-
+  
+  const isNative = Capacitor.isNativePlatform();
   const noAutoOpen = useMemo(() => searchParams.get("no_auto_open") === "1", [searchParams]);
 
   // Countdown state - only starts after user taps "Open in App"

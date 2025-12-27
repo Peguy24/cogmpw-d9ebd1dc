@@ -134,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         try {
           await resend.emails.send({
-            from: "COGMPW Church <noreply@cogmpw.com>",
+            from: "COGMPW Church <onboarding@resend.dev>",
             to: email,
             subject: `Reminder: ${event.title} Tomorrow! ⏰`,
             html: `

@@ -1,20 +1,19 @@
-import { Capacitor } from "@capacitor/core";
-
 export const openCogmpwApp = (deepLinkPath: string, fallbackUrl?: string) => {
   const normalized = deepLinkPath.replace(/^\//, "");
+  const ua = navigator.userAgent || "";
+  const isAndroid = /android/i.test(ua);
 
-  // Use ONLY the custom URL scheme.
-  // intent:// can cause an unwanted switch to Chrome (especially if mis-detected as "not native").
-  window.location.href = `cogmpw://${normalized}`;
+  if (isAndroid) {
+    const fallbackPart = fallbackUrl
+      ? `;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)}`
+      : "";
 
-  // Optional web fallback (only relevant when this runs in a browser)
-  if (fallbackUrl) {
-    window.setTimeout(() => {
-      // If the app didn't open, keep the user on the website
-      if (document.visibilityState === "visible") {
-        window.location.href = fallbackUrl;
-      }
-    }, 1200);
+    // intent:// is generally the most reliable on Android for custom scheme routing.
+    const intentUrl = `intent://${normalized}#Intent;scheme=cogmpw;package=com.peguy24.cogmpw${fallbackPart};end`;
+    window.location.href = intentUrl;
+    return;
   }
-};
 
+  // iOS (and others): use the custom URL scheme.
+  window.location.href = `cogmpw://${normalized}`;
+};

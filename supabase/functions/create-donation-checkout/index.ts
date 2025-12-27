@@ -14,7 +14,7 @@ const logStep = (step: string, details?: any) => {
 
 // 🔴 IMPORTANT: Use HTTPS URL for Stripe redirects - Android App Links will intercept this
 // Stripe doesn't support custom URL schemes, so we use the web URL which Android intercepts
-const APP_BASE_URL = "https://cogmpw.com";
+const APP_BASE_URL = "https://cogmpw.lovable.app";
 
 // Simple in-memory rate limiting (resets when function cold starts)
 // For production, consider using a distributed cache like Redis
@@ -142,10 +142,10 @@ serve(async (req) => {
       ],
       mode: "payment",
 
-      // ⬇️ Redirect to return-to-app page which will trigger the custom URL scheme (cogmpw://)
-      // This is needed because cogmpw.com doesn't have Android App Links verification
-      success_url: `${redirectBaseUrl}/return-to-app?target=/donation-success&type=donation&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${redirectBaseUrl}/return-to-app?target=/giving&type=donation&status=canceled`,
+      // ⬇️ Use the current site URL for redirects (preview/prod). Fallback keeps native app flow working.
+      // Send users to a dedicated success page that records the donation even if the app deep link isn't triggered.
+      success_url: `${redirectBaseUrl}/donation-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${redirectBaseUrl}/giving?donation=canceled`,
 
       metadata: {
         user_id: user?.id || 'guest',

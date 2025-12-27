@@ -68,21 +68,8 @@ const Auth = () => {
       });
 
       if (error) throw error;
-
-      // Notify admins about the new signup (no auth needed, public endpoint)
-      try {
-        await supabase.functions.invoke("notify-admin-new-signup", {
-          body: {
-            userName: formData.fullName,
-            userEmail: validated.email,
-          },
-        });
-      } catch (notifyError) {
-        console.error("Failed to notify admins:", notifyError);
-        // Don't block signup if notification fails
-      }
       
-      toast.success("Account created successfully! Please wait for admin approval.");
+      toast.success("Account created successfully!");
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
