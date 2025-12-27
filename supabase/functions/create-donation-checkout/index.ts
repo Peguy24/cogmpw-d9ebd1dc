@@ -67,10 +67,14 @@ serve(async (req) => {
     
     logStep("Rate limit check passed", { clientIP });
 
-    // Use the current site's origin when available (preview/prod), but keep a safe HTTPS fallback
+    // Use the current site's origin when available (preview/prod)
+    // For native apps, use the deployed site which has the return-to-app page
     const requestOrigin = req.headers.get("origin") || "";
     const redirectBaseUrl = requestOrigin.startsWith("https://") ? requestOrigin : APP_BASE_URL;
-    logStep("Redirect base URL selected", { redirectBaseUrl });
+    
+    // Check if request is from native app (no origin or capacitor origin)
+    const isNativeApp = !requestOrigin || requestOrigin.includes("capacitor://") || requestOrigin.includes("localhost");
+    logStep("Redirect base URL selected", { redirectBaseUrl, isNativeApp, requestOrigin });
 
     const authHeader = req.headers.get("Authorization");
     let user = null;
