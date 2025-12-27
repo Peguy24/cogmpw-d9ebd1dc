@@ -12,6 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import jsPDF from "jspdf";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 
 export default function GivingHistory() {
   const navigate = useNavigate();
@@ -96,7 +99,7 @@ export default function GivingHistory() {
     setReceiptDialogOpen(true);
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!donations || !profile) return;
 
     const yearDonations = donations.filter(d => 
@@ -104,7 +107,7 @@ export default function GivingHistory() {
     );
 
     if (yearDonations.length === 0) {
-      alert(`No donations found for ${selectedYear}`);
+      toast.error(`No donations found for ${selectedYear}`);
       return;
     }
 
@@ -178,8 +181,39 @@ export default function GivingHistory() {
     yPos += 10;
     doc.text("COGMPW is a tax-exempt organization under section 501(c)(3) of the Internal Revenue Code.", 20, yPos);
     
-    // Save
-    doc.save(`COGMPW-Donations-${selectedYear}.pdf`);
+    const fileName = `COGMPW-Donations-${selectedYear}.pdf`;
+
+    // Check if running on native platform (Android/iOS)
+    if (Capacitor.isNativePlatform()) {
+      try {
+        // Get PDF as base64 string
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
+        
+        // Write file to device
+        const result = await Filesystem.writeFile({
+          path: fileName,
+          data: pdfBase64,
+          directory: Directory.Cache,
+        });
+
+        // Share the file
+        await Share.share({
+          title: 'Tax Summary',
+          text: `COGMPW Donations ${selectedYear}`,
+          url: result.uri,
+          dialogTitle: 'Share your tax summary',
+        });
+
+        toast.success("PDF ready to share!");
+      } catch (error) {
+        console.error("Error saving/sharing PDF:", error);
+        toast.error("Failed to create PDF. Please try again.");
+      }
+    } else {
+      // Web browser - use standard download
+      doc.save(fileName);
+      toast.success("PDF downloaded!");
+    }
   };
 
   const totalDonated = donations?.reduce((sum, d) => sum + Number(d.amount), 0) || 0;
