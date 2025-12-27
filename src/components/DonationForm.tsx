@@ -18,12 +18,21 @@ import { DollarSign, Loader2, CreditCard, Heart } from "lucide-react";
 import { setPaymentLoading } from "@/hooks/usePaymentLoading";
 
 const openCheckoutUrl = async (url: string) => {
+  console.log("[DonationForm] Opening checkout URL:", url);
+  console.log("[DonationForm] Is native platform:", Capacitor.isNativePlatform());
+  
   try {
     if (Capacitor.isNativePlatform()) {
       // Show loading overlay for native platforms
       setPaymentLoading(true);
+      console.log("[DonationForm] Opening in Capacitor Browser...");
       // Native app - open in in-app browser (not system Chrome)
-      await Browser.open({ url });
+      await Browser.open({ 
+        url,
+        windowName: '_blank',
+        presentationStyle: 'popover'
+      });
+      console.log("[DonationForm] Browser.open() completed");
     } else {
       // Web - check if we're in an iframe (Lovable preview)
       const isInIframe = window !== window.parent;
@@ -36,7 +45,7 @@ const openCheckoutUrl = async (url: string) => {
       }
     }
   } catch (error) {
-    console.error("Failed to open checkout URL:", error);
+    console.error("[DonationForm] Failed to open checkout URL:", error);
     setPaymentLoading(false);
     toast.error("Unable to open the donation page. Please try again.");
   }
