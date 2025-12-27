@@ -24,13 +24,49 @@ export default function ReturnToApp() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const target = useMemo(() => searchParams.get("target") || "home", [searchParams]);
+  // Get all relevant params
+  const target = useMemo(() => searchParams.get("target") || "/home", [searchParams]);
   const type = useMemo(() => searchParams.get("type") || "donation", [searchParams]);
+  const status = useMemo(() => searchParams.get("status"), [searchParams]);
+  const sessionId = useMemo(() => searchParams.get("session_id"), [searchParams]);
 
+  // Build the deep link path with all necessary query params
   const deepLinkPath = useMemo(() => {
     const normalizedTarget = target.replace(/^\//, "");
-    return `app/${normalizedTarget}?${encodeURIComponent(type)}=success`;
-  }, [target, type]);
+    const params = new URLSearchParams();
+    
+    // Add session_id if present (for donation success tracking)
+    if (sessionId) {
+      params.append("session_id", sessionId);
+    }
+    
+    // Add type if it's a subscription
+    if (type === "subscription") {
+      params.append("type", "subscription");
+    }
+    
+    // Add status (success or canceled)
+    if (status === "canceled") {
+      params.append(type, "canceled");
+    } else {
+      params.append(type, "success");
+    }
+    
+    return `app/${normalizedTarget}?${params.toString()}`;
+  }, [target, type, status, sessionId]);
+
+  // Web fallback URL (for users who want to stay on web)
+  const webFallbackUrl = useMemo(() => {
+    const params = new URLSearchParams();
+    if (sessionId) params.append("session_id", sessionId);
+    if (type === "subscription") params.append("type", "subscription");
+    if (status === "canceled") {
+      params.append(type, "canceled");
+    } else {
+      params.append(type, "success");
+    }
+    return `${window.location.origin}${target}?${params.toString()}`;
+  }, [target, type, status, sessionId]);
 
   useEffect(() => {
     document.title = "Return to App | COGMPW";
@@ -39,11 +75,31 @@ export default function ReturnToApp() {
       "Return to the COGMPW app after completing your donation. If the app doesn't open automatically, follow the steps shown here."
     );
     setCanonical(`${window.location.origin}/return-to-app`);
-  }, []);
+    
+    // Auto-attempt to open the app after a short delay
+    const timer = setTimeout(() => {
+      openCogmpwApp(deepLinkPath, webFallbackUrl);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [deepLinkPath, webFallbackUrl]);
 
   const handleOpenApp = useCallback(() => {
-    openCogmpwApp(deepLinkPath);
-  }, [deepLinkPath]);
+    openCogmpwApp(deepLinkPath, webFallbackUrl);
+  }, [deepLinkPath, webFallbackUrl]);
+
+  const handleContinueOnWeb = useCallback(() => {
+    // Navigate to the target page on web
+    const params = new URLSearchParams();
+    if (sessionId) params.append("session_id", sessionId);
+    if (type === "subscription") params.append("type", "subscription");
+    if (status === "canceled") {
+      params.append(type, "canceled");
+    } else {
+      params.append(type, "success");
+    }
+    navigate(`${target}?${params.toString()}`);
+  }, [navigate, target, type, status, sessionId]);
 
   return (
     <main className="min-h-screen bg-background p-4 md:p-10">
@@ -53,7 +109,12 @@ export default function ReturnToApp() {
             <Smartphone className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold">Return to the App</h1>
-          <p className="text-muted-foreground mt-1">If the app didn’t open automatically, use the button below.</p>
+          <p className="text-muted-foreground mt-1">
+            {status === "canceled" 
+              ? "Your payment was canceled. Tap below to return to the app."
+              : "Your payment was successful! Tap below to return to the app."
+            }
+          </p>
         </header>
 
         <Card>
@@ -72,16 +133,15 @@ export default function ReturnToApp() {
 
             <div className="rounded-lg border border-border bg-muted/40 p-4">
               <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1">
-                <li>Tap “Open COGMPW App”</li>
-                <li>If it doesn’t open, close this browser tab</li>
+                <li>Tap "Open COGMPW App"</li>
+                <li>If it doesn't open, close this browser tab</li>
                 <li>Open COGMPW from your recent apps or home screen</li>
               </ol>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={() => navigate("/home")}
-            >
+            <Button variant="outline" className="w-full" onClick={handleContinueOnWeb}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Website
+              Continue on Website
             </Button>
           </CardContent>
         </Card>
