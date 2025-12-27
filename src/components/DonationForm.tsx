@@ -18,16 +18,11 @@ import { DollarSign, Loader2, CreditCard, Heart } from "lucide-react";
 import { setPaymentLoading } from "@/hooks/usePaymentLoading";
 
 const openCheckoutUrl = async (url: string) => {
-  console.log("[DonationForm] Opening checkout URL:", url);
-  console.log("[DonationForm] Is native platform:", Capacitor.isNativePlatform());
-
   try {
     if (Capacitor.isNativePlatform()) {
       // Show loading overlay for native platforms
       setPaymentLoading(true);
-      console.log("[DonationForm] Opening in Capacitor Browser...");
       await Browser.open({ url });
-      console.log("[DonationForm] Browser.open() completed");
     } else {
       // Web - check if we're in an iframe (Lovable preview)
       const isInIframe = window !== window.parent;
@@ -119,7 +114,7 @@ export const DonationForm = () => {
         return;
       }
 
-      console.log("[DonationForm] Creating donation checkout for:", values);
+      console.log("[DonationForm] Starting checkout");
 
       if (values.type === "recurring") {
         if (!values.interval) {
@@ -326,20 +321,39 @@ export const DonationForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  {Capacitor.isNativePlatform() ? (
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a donation category" />
-                      </SelectTrigger>
+                      <select
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="" disabled>
+                          Select a donation category
+                        </option>
+                        {DONATION_CATEGORIES.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
                     </FormControl>
-                    <SelectContent>
-                      {DONATION_CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  ) : (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a donation category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {DONATION_CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
