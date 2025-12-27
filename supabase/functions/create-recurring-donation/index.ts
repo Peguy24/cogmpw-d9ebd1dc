@@ -12,9 +12,8 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-RECURRING-DONATION] ${step}${detailsStr}`);
 };
 
-// 🔴 IMPORTANT: Use HTTPS URL for Stripe redirects - Android App Links will intercept this
-// Stripe doesn't support custom URL schemes, so we use the web URL which Android intercepts
-const APP_BASE_URL = "https://cogmpw.lovable.app";
+// 🔴 IMPORTANT: Use the return-to-app page for native apps to handle deep linking properly
+const DEPLOYED_APP_URL = "https://cogmpw.lovable.app";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -39,7 +38,7 @@ serve(async (req) => {
     
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { amount, category, notes, interval } = await req.json();
+    const { amount, category, notes, interval, isNativeApp: nativeAppFlag } = await req.json();
     
     if (!amount || amount <= 0) {
       throw new Error("Valid amount is required");
@@ -49,7 +48,7 @@ serve(async (req) => {
       throw new Error("Interval must be 'month' or 'week'");
     }
 
-    logStep("Request validated", { amount, category, interval });
+    logStep("Request validated", { amount, category, interval, nativeAppFlag });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
@@ -68,9 +67,11 @@ serve(async (req) => {
     const intervalLabel = interval === "month" ? "Monthly" : "Weekly";
 
     // Use the current site's origin when available (preview/prod)
+    // For native apps, ALWAYS use the deployed site which has App Links configured
     const requestOrigin = req.headers.get("origin") || "";
-    const redirectBaseUrl = requestOrigin.startsWith("https://") ? requestOrigin : APP_BASE_URL;
-    logStep("Redirect base URL selected", { redirectBaseUrl, requestOrigin });
+    const isNativeApp = nativeAppFlag || !requestOrigin || requestOrigin.includes("capacitor://") || requestOrigin.includes("localhost");
+    const redirectBaseUrl = isNativeApp ? DEPLOYED_APP_URL : (requestOrigin.startsWith("https://") ? requestOrigin : DEPLOYED_APP_URL);
+    logStep("Redirect base URL selected", { redirectBaseUrl, isNativeApp, requestOrigin });
 
     // Create checkout session for subscription
     const session = await stripe.checkout.sessions.create({

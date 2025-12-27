@@ -139,22 +139,29 @@ export default function DonationSuccess() {
         });
         
         // Auto-attempt to open the app (non-native browsers only)
+        // This handles the case where user completes Stripe checkout and lands on this page
+        // in a mobile browser - we need to redirect them back to the native app
         if (!isNative && !noAutoOpen && !autoOpenAttemptedRef.current) {
           autoOpenAttemptedRef.current = true;
           setAutoOpenBannerVisible(true);
           
-          // Wait a moment then attempt to open
+          // Immediately attempt to open the app using intent:// (Android) or custom scheme (iOS)
+          const successType = isSubscription ? "subscription" : "donation";
+          const deepLinkPath = `app/giving-history?${successType}=success`;
+          
+          // For Android: Use intent:// which works better from browser context
+          // This will open the app if installed, or show the fallback
+          const fallbackUrl = `${window.location.origin}/return-to-app?target=giving-history&type=${successType}`;
+          
+          // Small delay to ensure the page renders first
           setTimeout(() => {
-            const successType = isSubscription ? "subscription" : "donation";
-            const deepLinkPath = `app/giving-history?${successType}=success`;
-            const fallbackUrl = `${window.location.origin}/return-to-app?target=giving-history&type=${successType}`;
             openCogmpwApp(deepLinkPath, fallbackUrl);
             
-            // If still on this page after 2s, assume it failed
+            // If still on this page after 2s, assume the app didn't open
             setTimeout(() => {
               setAutoOpenFailed(true);
             }, 2000);
-          }, 500);
+          }, 300);
         }
       } catch (e: any) {
         if (cancelled) return;
