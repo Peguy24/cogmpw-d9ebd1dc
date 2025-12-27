@@ -260,9 +260,22 @@ serve(async (req) => {
     // Send email receipt in background (non-blocking)
     const recipientEmail = user?.email || guest_email || session.customer_email;
     if (recipientEmail) {
+      // Get donor name from various sources
+      let donorName = 'Generous Donor';
+      if (user?.user_metadata?.full_name) {
+        donorName = user.user_metadata.full_name;
+      } else if (session.customer_details?.name) {
+        donorName = session.customer_details.name;
+      } else if (session.customer_email) {
+        // Use email prefix as fallback name
+        donorName = session.customer_email.split('@')[0];
+      }
+      
+      logStep("Sending receipt email", { recipientEmail, donorName });
+      
       sendDonationReceipt({
         email: recipientEmail,
-        donorName: user?.user_metadata?.full_name || 'Generous Donor',
+        donorName,
         amount,
         category: category || 'General',
         transactionId: session.payment_intent as string,
@@ -270,6 +283,8 @@ serve(async (req) => {
       }).catch((err) => {
         logStep("Background email task failed", { error: err });
       });
+    } else {
+      logStep("No email available for receipt", { hasUser: !!user, hasGuestEmail: !!guest_email, hasCustomerEmail: !!session.customer_email });
     }
 
     return new Response(JSON.stringify({ 
