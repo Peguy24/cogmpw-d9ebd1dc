@@ -337,7 +337,7 @@ const Home = () => {
       {/* Bottom Navigation Bar - Mobile Only */}
       {isMobile && (
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
-          <div className="grid grid-cols-5 h-16">
+          <div className="grid grid-cols-6 h-16">
             <button
               onClick={() => setActiveTab("news")}
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
@@ -345,8 +345,9 @@ const Home = () => {
               }`}
             >
               <Newspaper className="h-5 w-5" />
-              <span className="text-xs font-medium">News</span>
+              <span className="text-[11px] font-medium">News</span>
             </button>
+
             <button
               onClick={() => setActiveTab("events")}
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
@@ -354,8 +355,9 @@ const Home = () => {
               }`}
             >
               <Calendar className="h-5 w-5" />
-              <span className="text-xs font-medium">Events</span>
+              <span className="text-[11px] font-medium">Events</span>
             </button>
+
             <button
               onClick={() => setActiveTab("media")}
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
@@ -363,8 +365,9 @@ const Home = () => {
               }`}
             >
               <Video className="h-5 w-5" />
-              <span className="text-xs font-medium">Media</span>
+              <span className="text-[11px] font-medium">Media</span>
             </button>
+
             <button
               onClick={() => setActiveTab("prayer")}
               className={`flex flex-col items-center justify-center gap-1 transition-colors ${
@@ -372,11 +375,30 @@ const Home = () => {
               }`}
             >
               <Heart className="h-5 w-5" />
-              <span className="text-xs font-medium">Prayer</span>
+              <span className="text-[11px] font-medium">Prayer</span>
             </button>
-            <Link to="/giving" className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary">
+
+            <Link
+              to="/community-chat"
+              className="relative flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary"
+              aria-label="Open community chat"
+            >
+              <MessageCircle className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-4 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+              <span className="text-[11px] font-medium">Chat</span>
+            </Link>
+
+            <Link
+              to="/giving"
+              className="flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-primary"
+              aria-label="Open giving"
+            >
               <HandHeart className="h-5 w-5" />
-              <span className="text-xs font-medium">Giving</span>
+              <span className="text-[11px] font-medium">Giving</span>
             </Link>
           </div>
         </nav>
