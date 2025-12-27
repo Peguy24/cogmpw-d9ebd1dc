@@ -3,5 +3,7 @@
     <string name="app_name">COGMPW</string>
     <string name="title_activity_main">COGMPW</string>
     <string name="package_name">com.peguy24.cogmpw</string>
-    <string name="custom_url_scheme">com.peguy24.cogmpw</string>
+    <!-- Must match the deep link scheme used in AndroidManifest.xml and the app code -->
+    <string name="custom_url_scheme">cogmpw</string>
 </resources>
+
