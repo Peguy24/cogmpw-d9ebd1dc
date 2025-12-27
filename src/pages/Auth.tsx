@@ -153,6 +153,7 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
           <CardDescription>Church of God Ministry of Prayer and the Word</CardDescription>
+          <p className="mt-2 text-xs text-muted-foreground">Build: {__APP_BUILD_TIME__}</p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
