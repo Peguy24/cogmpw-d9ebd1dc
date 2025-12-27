@@ -45,32 +45,12 @@ export default function DonationSuccess() {
   const [donationDetails, setDonationDetails] = useState<DonationDetails | null>(null);
   
   const isNative = Capacitor.isNativePlatform();
-  const noAutoOpen = useMemo(() => searchParams.get("no_auto_open") === "1", [searchParams]);
 
   // Countdown state - only starts after user taps "Open in App"
   const [countdownActive, setCountdownActive] = useState(false);
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const [showFallback, setShowFallback] = useState(false);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-open banner state
-  const [autoOpenBannerVisible, setAutoOpenBannerVisible] = useState(false);
-  const [autoOpenFailed, setAutoOpenFailed] = useState(false);
-  const autoOpenAttemptedRef = useRef(false);
-
-  const autoOpenStorageKey = useMemo(
-    () => (sessionId ? `cogmpw:donationSuccess:autoOpenAttempted:${sessionId}` : null),
-    [sessionId]
-  );
-
-  const setAutoOpenAttempted = useCallback(() => {
-    if (!autoOpenStorageKey) return;
-    try {
-      sessionStorage.setItem(autoOpenStorageKey, "1");
-    } catch {
-      // ignore
-    }
-  }, [autoOpenStorageKey]);
 
   useEffect(() => {
     // Basic per-page SEO (no dynamic SEO lib in project)
@@ -137,32 +117,6 @@ export default function DonationSuccess() {
         toast.success(isSubscription ? "Recurring donation set up" : "Donation recorded", {
           description: "You can now view it in your giving history.",
         });
-        
-        // Auto-attempt to open the app (non-native browsers only)
-        // This handles the case where user completes Stripe checkout and lands on this page
-        // in a mobile browser - we need to redirect them back to the native app
-        if (!isNative && !noAutoOpen && !autoOpenAttemptedRef.current) {
-          autoOpenAttemptedRef.current = true;
-          setAutoOpenBannerVisible(true);
-          
-          // Immediately attempt to open the app using intent:// (Android) or custom scheme (iOS)
-          const successType = isSubscription ? "subscription" : "donation";
-          const deepLinkPath = `app/giving-history?${successType}=success`;
-          
-          // For Android: Use intent:// which works better from browser context
-          // This will open the app if installed, or show the fallback
-          const fallbackUrl = `${window.location.origin}/return-to-app?target=giving-history&type=${successType}`;
-          
-          // Small delay to ensure the page renders first
-          setTimeout(() => {
-            openCogmpwApp(deepLinkPath, fallbackUrl);
-            
-            // If still on this page after 2s, assume the app didn't open
-            setTimeout(() => {
-              setAutoOpenFailed(true);
-            }, 2000);
-          }, 300);
-        }
       } catch (e: any) {
         if (cancelled) return;
         console.error("[DonationSuccess] record-donation failed", e);
@@ -174,7 +128,7 @@ export default function DonationSuccess() {
     return () => {
       cancelled = true;
     };
-  }, [queryClient, sessionId, isNative, isSubscription, noAutoOpen]);
+  }, [queryClient, sessionId, isNative, isSubscription]);
 
   // Function to attempt opening the app with a specific path
   const tryOpenApp = useCallback(
@@ -186,9 +140,6 @@ export default function DonationSuccess() {
         ? `app/${normalizedTarget}?${queryParams}`
         : `app/${normalizedTarget}?${successType}=success`;
 
-      // Prevent refresh loops
-      setAutoOpenAttempted();
-
       // If the app doesn't open, send users to a dedicated instruction screen
       // (instead of reloading this thank-you page).
       const fallbackUrl = `${window.location.origin}/return-to-app?target=${encodeURIComponent(
@@ -197,7 +148,7 @@ export default function DonationSuccess() {
 
       openCogmpwApp(deepLinkPath, fallbackUrl);
     },
-    [isSubscription, setAutoOpenAttempted]
+    [isSubscription]
   );
 
   // Handle countdown timer (UX only). We avoid auto-opening from a timer because
@@ -372,41 +323,6 @@ export default function DonationSuccess() {
                 <p className="text-muted-foreground text-center">
                   Your donation has been recorded. View your giving history for details.
                 </p>
-              </div>
-            )}
-
-            {/* Auto-open banner */}
-            {!isNative && autoOpenBannerVisible && (
-              <div className="p-3 bg-primary/10 border border-primary/30 rounded-lg">
-                {!autoOpenFailed ? (
-                  <div className="flex items-center gap-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary flex-shrink-0" />
-                    <span className="text-sm font-medium">Opening COGMPW app…</span>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-2">
-                      <Smartphone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                      <p className="text-sm">
-                        <span className="font-medium">Tap the COGMPW app</span> on your home screen to continue.
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => {
-                        setAutoOpenFailed(false);
-                        const successType = isSubscription ? "subscription" : "donation";
-                        openCogmpwApp(`app/giving-history?${successType}=success`);
-                        setTimeout(() => setAutoOpenFailed(true), 2000);
-                      }}
-                    >
-                      <ExternalLink className="h-3 w-3 mr-2" />
-                      Try opening again
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
 
