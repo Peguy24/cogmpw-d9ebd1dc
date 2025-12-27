@@ -89,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
     const userName = profile?.full_name || "Applicant";
 
     const emailResponse = await resend.emails.send({
-      from: "COGMPW <onboarding@resend.dev>",
+      from: "COGMPW <noreply@cogmpw.com>",
       to: [userEmail],
       subject: "COGMPW Account Application Update",
       html: `
