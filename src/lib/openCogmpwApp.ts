@@ -4,10 +4,11 @@ export const openCogmpwApp = (deepLinkPath: string, fallbackUrl?: string) => {
   const normalized = deepLinkPath.replace(/^\//, "");
   const ua = navigator.userAgent || "";
   const isAndroid = /android/i.test(ua);
+  const isAndroidWebView = /\bwv\b/i.test(ua) || /;\s*wv\)/i.test(ua);
 
   // Safety: if this runs inside the native app WebView, NEVER use intent://
   // because it can switch out to Chrome. Use the custom scheme instead.
-  if (Capacitor.isNativePlatform()) {
+  if (Capacitor.isNativePlatform() || isAndroidWebView) {
     window.location.href = `cogmpw://${normalized}`;
     return;
   }
