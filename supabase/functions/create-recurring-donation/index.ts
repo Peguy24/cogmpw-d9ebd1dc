@@ -14,7 +14,7 @@ const logStep = (step: string, details?: any) => {
 
 // 🔴 IMPORTANT: Use HTTPS URL for Stripe redirects - Android App Links will intercept this
 // Stripe doesn't support custom URL schemes, so we use the web URL which Android intercepts
-const APP_BASE_URL = "https://cogmpw.lovable.app";
+const APP_BASE_URL = "https://cogmpw.com";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

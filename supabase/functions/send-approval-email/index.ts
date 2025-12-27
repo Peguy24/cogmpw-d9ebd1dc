@@ -128,7 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
             </ul>
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://cogmpw.lovable.app" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Open the App</a>
+              <a href="https://cogmpw.com" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Open the App</a>
             </div>
             
             <p style="margin-bottom: 20px;">We're excited to have you as part of our church family!</p>
