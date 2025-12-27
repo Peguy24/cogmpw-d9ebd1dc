@@ -22,8 +22,8 @@ const openCheckoutUrl = async (url: string) => {
     if (Capacitor.isNativePlatform()) {
       // Show loading overlay for native platforms
       setPaymentLoading(true);
-      // Native app - open in system browser for proper deep link handling
-      await Browser.open({ url, windowName: '_system' });
+      // Native app - open in in-app browser (not system Chrome)
+      await Browser.open({ url });
     } else {
       // Web - check if we're in an iframe (Lovable preview)
       const isInIframe = window !== window.parent;

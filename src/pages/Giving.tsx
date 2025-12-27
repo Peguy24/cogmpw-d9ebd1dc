@@ -21,7 +21,8 @@ const openCheckoutUrl = async (url: string) => {
   try {
     if (Capacitor.isNativePlatform()) {
       setPaymentLoading(true);
-      await Browser.open({ url, windowName: '_system' });
+      // Open in in-app browser (not system Chrome)
+      await Browser.open({ url });
     } else {
       const isInIframe = window !== window.parent;
       if (isInIframe) {
