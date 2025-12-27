@@ -11,8 +11,10 @@ const config: CapacitorConfig = {
     },
   },
   server: {
+    // Load the published website so the native app updates without rebuilding.
+    url: "https://cogmpw.lovable.app",
     // Allow navigation to Stripe for payments
-    allowNavigation: ['cogmpw.lovable.app', 'checkout.stripe.com'],
+    allowNavigation: ["cogmpw.lovable.app", "checkout.stripe.com"],
   },
 };
 
