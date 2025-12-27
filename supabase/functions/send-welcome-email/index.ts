@@ -139,7 +139,7 @@ serve(async (req) => {
     `;
 
     const { error: emailError } = await resend.emails.send({
-      from: "COGMPW <onboarding@resend.dev>",
+      from: "COGMPW <noreply@cogmpw.com>",
       to: [targetUser.email],
       subject: "🎉 Welcome to COGMPW - Your Account is Approved!",
       html: emailHtml,

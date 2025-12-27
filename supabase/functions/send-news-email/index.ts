@@ -140,7 +140,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send emails in batches
     const emailResponse = await resend.emails.send({
-      from: "COGMPW Church <onboarding@resend.dev>",
+      from: "COGMPW Church <noreply@cogmpw.com>",
       to: recipientEmails,
       subject: `${isPinned ? '📌 IMPORTANT: ' : ''}${escapeHtml(newsTitle)}`,
       html: `
