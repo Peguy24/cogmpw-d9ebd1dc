@@ -89,9 +89,10 @@ serve(async (req) => {
       ],
       mode: "subscription",
 
-      // Use donation-success page for subscriptions too - it handles both types
-      success_url: `${APP_BASE_URL}/donation-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
-      cancel_url: `${APP_BASE_URL}/giving?subscription=canceled`,
+      // ⬇️ Redirect to return-to-app page which will trigger the custom URL scheme (cogmpw://)
+      // This is needed because cogmpw.com doesn't have Android App Links verification
+      success_url: `${APP_BASE_URL}/return-to-app?target=/donation-success&type=subscription&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${APP_BASE_URL}/return-to-app?target=/giving&type=subscription&status=canceled`,
 
       // Store metadata on the subscription itself (not just the session)
       subscription_data: {
