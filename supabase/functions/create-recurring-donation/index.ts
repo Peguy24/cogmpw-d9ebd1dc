@@ -67,6 +67,11 @@ serve(async (req) => {
 
     const intervalLabel = interval === "month" ? "Monthly" : "Weekly";
 
+    // Use the current site's origin when available (preview/prod)
+    const requestOrigin = req.headers.get("origin") || "";
+    const redirectBaseUrl = requestOrigin.startsWith("https://") ? requestOrigin : APP_BASE_URL;
+    logStep("Redirect base URL selected", { redirectBaseUrl, requestOrigin });
+
     // Create checkout session for subscription
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -89,9 +94,9 @@ serve(async (req) => {
       ],
       mode: "subscription",
 
-      // Use donation-success page for subscriptions too - it handles both types
-      success_url: `${APP_BASE_URL}/donation-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
-      cancel_url: `${APP_BASE_URL}/giving?subscription=canceled`,
+      // Use dynamic redirect URL based on origin
+      success_url: `${redirectBaseUrl}/donation-success?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
+      cancel_url: `${redirectBaseUrl}/giving?subscription=canceled`,
 
       // Store metadata on the subscription itself (not just the session)
       subscription_data: {
