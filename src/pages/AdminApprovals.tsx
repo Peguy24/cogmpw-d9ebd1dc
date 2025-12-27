@@ -119,6 +119,23 @@ const AdminApprovals = () => {
   };
 
   const handleReject = async (userId: string) => {
+    try {
+      // Send rejection email BEFORE deleting the profile (we need the user data)
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.access_token) {
+        await supabase.functions.invoke("send-rejection-email", {
+          body: { userId },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+      }
+    } catch (emailError) {
+      console.error("Failed to send rejection email:", emailError);
+      // Continue with deletion even if email fails
+    }
+
     const { error } = await supabase
       .from("profiles")
       .delete()
@@ -129,7 +146,7 @@ const AdminApprovals = () => {
       return;
     }
 
-    toast.success("User rejected and removed");
+    toast.success("User rejected and notified via email");
     await loadPendingUsers();
   };
 
