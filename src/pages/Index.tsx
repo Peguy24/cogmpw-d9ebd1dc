@@ -5,37 +5,12 @@ import { Church, Calendar, DollarSign, Video, Users, ArrowUp } from "lucide-reac
 import churchBanner from "@/assets/church-banner-new.jpg";
 import churchLogo from "@/assets/church-logo-official.webp";
 import { useEffect, useRef, useState } from "react";
-import { openCogmpwApp } from "@/lib/openCogmpwApp";
 
 const Index = () => {
   const navigate = useNavigate();
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const [showBackToTop, setShowBackToTop] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
-
-  useEffect(() => {
-    // If the user launched a *website shortcut* from the Android home screen (standalone mode),
-    // automatically try to open the installed native app instead of staying in Chrome.
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("noapp") === "1") return;
-
-    const ua = navigator.userAgent || "";
-    const isAndroid = /android/i.test(ua);
-    const isStandalone = window.matchMedia?.("(display-mode: standalone)")?.matches ?? false;
-
-    // Avoid running inside the native Capacitor WebView.
-    const maybeCapacitor = (window as any).Capacitor;
-    const isNative = typeof maybeCapacitor?.isNativePlatform === "function"
-      ? maybeCapacitor.isNativePlatform()
-      : false;
-
-    if (isAndroid && isStandalone && !isNative) {
-      const t = window.setTimeout(() => {
-        openCogmpwApp("/home", `${window.location.origin}/?noapp=1`);
-      }, 300);
-      return () => window.clearTimeout(t);
-    }
-  }, []);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
