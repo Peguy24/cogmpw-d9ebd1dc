@@ -99,6 +99,23 @@ const AdminApprovals = () => {
       return;
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+
+    // Send welcome email
+    if (session?.access_token) {
+      try {
+        await supabase.functions.invoke("send-welcome-email", {
+          body: { userId },
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send welcome email:", emailError);
+        // Don't show error to admin - approval was successful
+      }
+    }
+
     // Get user's push tokens for notification
     const { data: tokens } = await supabase
       .from("push_tokens")
@@ -106,10 +123,8 @@ const AdminApprovals = () => {
       .eq("user_id", userId);
 
     // Send welcome notification if user has push tokens
-    if (tokens && tokens.length > 0) {
+    if (tokens && tokens.length > 0 && session?.access_token) {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
         await supabase.functions.invoke("send-push-notification", {
           body: {
             title: "Welcome to COGMPW! 🎉",
@@ -117,7 +132,7 @@ const AdminApprovals = () => {
             tokens: tokens.map(t => t.token),
           },
           headers: {
-            Authorization: `Bearer ${session?.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
         });
       } catch (notifError) {
@@ -126,7 +141,7 @@ const AdminApprovals = () => {
       }
     }
 
-    toast.success("User approved successfully");
+    toast.success("User approved and notified");
     await loadPendingUsers();
   };
 
