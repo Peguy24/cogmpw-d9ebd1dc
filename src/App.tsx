@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useDeepLinks } from "@/hooks/useDeepLinks";
 import { useClearPaymentLoadingOnResume } from "@/hooks/useClearPaymentLoadingOnResume";
@@ -85,19 +86,21 @@ const AppContent = () => {
 };
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        {/* Global safe area so every page sits below the status bar / camera */}
-        <div
-          className="app-safe-area"
-          style={{ paddingTop: 'env(safe-area-inset-top, 20px)' }}
-        >
-          <AppContent />
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          {/* Global safe area so every page sits below the status bar / camera */}
+          <div
+            className="app-safe-area"
+            style={{ paddingTop: 'env(safe-area-inset-top, 20px)' }}
+          >
+            <AppContent />
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
