@@ -20,13 +20,12 @@ import { setPaymentLoading } from "@/hooks/usePaymentLoading";
 const openCheckoutUrl = async (url: string) => {
   console.log("[DonationForm] Opening checkout URL:", url);
   console.log("[DonationForm] Is native platform:", Capacitor.isNativePlatform());
-  
+
   try {
     if (Capacitor.isNativePlatform()) {
       // Show loading overlay for native platforms
       setPaymentLoading(true);
       console.log("[DonationForm] Opening in Capacitor Browser...");
-      // Native app - open in in-app browser (not system Chrome)
       await Browser.open({ url });
       console.log("[DonationForm] Browser.open() completed");
     } else {
@@ -34,7 +33,7 @@ const openCheckoutUrl = async (url: string) => {
       const isInIframe = window !== window.parent;
       if (isInIframe) {
         // In preview iframe - open in new tab as fallback for testing
-        window.open(url, '_blank');
+        window.open(url, "_blank");
       } else {
         // On deployed site - redirect in same tab
         window.location.href = url;
@@ -99,6 +98,9 @@ export const DonationForm = () => {
   const donationType = form.watch("type");
 
   const onSubmit = async (values: DonationFormValues) => {
+    // Give immediate feedback on mobile/native so it never feels like "nothing happens"
+    const loadingToastId = toast.loading("Preparing secure checkout…");
+
     try {
       setIsSubmitting(true);
 
@@ -112,14 +114,16 @@ export const DonationForm = () => {
 
       // For guests, require email
       if (!session && !values.guest_email) {
+        toast.dismiss(loadingToastId);
         toast.error("Please provide your email address");
         return;
       }
 
-      console.log("Creating donation checkout for:", values);
+      console.log("[DonationForm] Creating donation checkout for:", values);
 
       if (values.type === "recurring") {
         if (!values.interval) {
+          toast.dismiss(loadingToastId);
           toast.error("Please select a recurring interval");
           return;
         }
@@ -137,12 +141,13 @@ export const DonationForm = () => {
 
         if (error) throw error;
 
-        if (data?.url) {
-          toast.success("Opening recurring donation setup...");
-          // Don't reset form before redirect - it causes the page to freeze
-          await openCheckoutUrl(data.url);
-          // Form reset happens after redirect on web, or not at all since page navigates away
+        if (!data?.url) {
+          throw new Error("No checkout URL returned");
         }
+
+        toast.dismiss(loadingToastId);
+        toast.success("Opening recurring donation setup…");
+        await openCheckoutUrl(data.url);
       } else {
         const { data, error } = await supabase.functions.invoke("create-donation-checkout", {
           body: {
@@ -158,19 +163,25 @@ export const DonationForm = () => {
 
         if (error) throw error;
 
-        if (data?.url) {
-          if (data.sessionId) {
-            sessionStorage.setItem("pendingDonationSession", data.sessionId);
-          }
-          sessionStorage.removeItem("selectedCampaignId"); // Clear after use
-          await openCheckoutUrl(data.url);
-          toast.success("Opening donation checkout...");
-          form.reset();
+        if (!data?.url) {
+          throw new Error("No checkout URL returned");
         }
+
+        if (data.sessionId) {
+          sessionStorage.setItem("pendingDonationSession", data.sessionId);
+        }
+        sessionStorage.removeItem("selectedCampaignId"); // Clear after use
+
+        toast.dismiss(loadingToastId);
+        toast.success("Opening secure checkout…");
+        await openCheckoutUrl(data.url);
+        form.reset();
       }
     } catch (error) {
-      console.error("Error creating donation checkout:", error);
-      toast.error("Failed to create donation checkout. Please try again.");
+      console.error("[DonationForm] Error creating donation checkout:", error);
+      toast.dismiss(loadingToastId);
+      toast.error("Failed to open checkout. Please try again.");
+      setPaymentLoading(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -354,7 +365,13 @@ export const DonationForm = () => {
             />
 
             <div className="space-y-3">
-              <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
+              <Button
+                type="button"
+                disabled={isSubmitting}
+                className="w-full"
+                size="lg"
+                onClick={() => form.handleSubmit(onSubmit, onInvalid)()}
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
