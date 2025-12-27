@@ -27,11 +27,7 @@ const openCheckoutUrl = async (url: string) => {
       setPaymentLoading(true);
       console.log("[DonationForm] Opening in Capacitor Browser...");
       // Native app - open in in-app browser (not system Chrome)
-      await Browser.open({ 
-        url,
-        windowName: '_blank',
-        presentationStyle: 'popover'
-      });
+      await Browser.open({ url });
       console.log("[DonationForm] Browser.open() completed");
     } else {
       // Web - check if we're in an iframe (Lovable preview)
@@ -180,6 +176,24 @@ export const DonationForm = () => {
     }
   };
 
+
+  const onInvalid = (errors: any) => {
+    console.log("[DonationForm] Form validation errors:", errors);
+    if (errors?.category) {
+      toast.error("Please select a category");
+      return;
+    }
+    if (errors?.amount) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    if (errors?.guest_email) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    toast.error("Please check the form and try again");
+  };
+
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
@@ -193,7 +207,7 @@ export const DonationForm = () => {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
             <FormField
               control={form.control}
               name="type"
