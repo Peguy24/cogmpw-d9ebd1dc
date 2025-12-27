@@ -215,7 +215,7 @@ const Home = () => {
                   <Settings className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 flex flex-col">
+              <SheetContent side="right" className="w-full sm:w-96 sm:max-w-md flex flex-col">
                 <SheetHeader>
                   <SheetTitle>Settings</SheetTitle>
                   <SheetDescription>

@@ -256,15 +256,15 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Profile Photo Section */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Profile Photo</h3>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Avatar className="h-20 w-20">
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Profile Photo</h3>
+        <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
               <AvatarImage src={avatarUrl || undefined} alt={fullName} />
-              <AvatarFallback className="text-lg bg-primary/10 text-primary">
+              <AvatarFallback className="text-base sm:text-lg bg-primary/10 text-primary">
                 {getInitials(fullName || user.email || "U")}
               </AvatarFallback>
             </Avatar>
@@ -287,11 +287,11 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               className="hidden"
             />
           </div>
-          <div className="flex-1">
-            <p className="font-medium">{fullName || "Member"}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+          <div className="flex-1 text-center sm:text-left min-w-0">
+            <p className="font-medium truncate">{fullName || "Member"}</p>
+            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Click the camera icon to change your photo
+              Tap the camera icon to change your photo
             </p>
           </div>
         </div>
@@ -299,13 +299,13 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
 
       {/* Change Password Section */}
       <div>
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Lock className="h-5 w-5" />
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+          <Lock className="h-4 w-4 sm:h-5 sm:w-5" />
           Change Password
         </h3>
-        <div className="space-y-4 max-w-md">
-          <div className="space-y-2">
-            <Label htmlFor="new-password">New Password</Label>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="new-password" className="text-sm">New Password</Label>
             <div className="relative">
               <Input
                 id="new-password"
@@ -313,19 +313,19 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                className="pr-10"
+                className="pr-10 h-10 sm:h-11"
               />
               <button
                 type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
               >
                 {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm New Password</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="confirm-password" className="text-sm">Confirm New Password</Label>
             <div className="relative">
               <Input
                 id="confirm-password"
@@ -333,12 +333,12 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
-                className="pr-10"
+                className="pr-10 h-10 sm:h-11"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -347,6 +347,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
           <Button 
             onClick={handlePasswordChange} 
             disabled={changingPassword || !newPassword || !confirmPassword}
+            className="w-full sm:w-auto h-10 sm:h-11"
           >
             {changingPassword ? (
               <>
@@ -362,13 +363,13 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
 
       {/* Privacy Settings */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Privacy Settings</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="phone-visibility">Phone Number Visibility</Label>
-              <p className="text-sm text-muted-foreground">
-                Allow other church members to see your phone number in the directory
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Privacy Settings</h3>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+              <Label htmlFor="phone-visibility" className="text-sm">Phone Number Visibility</Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Allow other members to see your phone number
               </p>
             </div>
             <Switch
@@ -376,30 +377,30 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               checked={phoneVisible}
               onCheckedChange={handleTogglePhoneVisibility}
               disabled={saving}
+              className="flex-shrink-0 mt-0.5"
             />
           </div>
         </div>
       </div>
 
-      <div className="rounded-lg border bg-muted/50 p-4">
-        <p className="text-sm text-muted-foreground">
-          <strong>Note:</strong> Church administrators and leaders can always view your contact information
-          for ministry purposes. This setting only affects what other members can see.
+      <div className="rounded-lg border bg-muted/50 p-3 sm:p-4">
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          <strong>Note:</strong> Administrators and leaders can always view your contact info for ministry purposes.
         </p>
       </div>
 
       {/* Notification Preferences */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">Notification Preferences</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Choose which types of notifications you want to receive
+        <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">Notification Preferences</h3>
+        <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+          Choose which notifications you want to receive
         </p>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="news-notifications">News & Announcements</Label>
-              <p className="text-sm text-muted-foreground">
-                Get notified when new church news and announcements are posted
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+              <Label htmlFor="news-notifications" className="text-sm">News & Announcements</Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                New church news and announcements
               </p>
             </div>
             <Switch
@@ -407,14 +408,15 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               checked={newsEnabled}
               onCheckedChange={(checked) => handleToggleNotification('news', checked)}
               disabled={saving}
+              className="flex-shrink-0 mt-0.5"
             />
           </div>
 
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="events-notifications">Events</Label>
-              <p className="text-sm text-muted-foreground">
-                Get notified when new church events are created
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+              <Label htmlFor="events-notifications" className="text-sm">Events</Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                New church events
               </p>
             </div>
             <Switch
@@ -422,14 +424,15 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               checked={eventsEnabled}
               onCheckedChange={(checked) => handleToggleNotification('events', checked)}
               disabled={saving}
+              className="flex-shrink-0 mt-0.5"
             />
           </div>
 
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="sermons-notifications">Sermons</Label>
-              <p className="text-sm text-muted-foreground">
-                Get notified when new sermons are available
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+              <Label htmlFor="sermons-notifications" className="text-sm">Sermons</Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                New sermons available
               </p>
             </div>
             <Switch
@@ -437,14 +440,15 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               checked={sermonsEnabled}
               onCheckedChange={(checked) => handleToggleNotification('sermons', checked)}
               disabled={saving}
+              className="flex-shrink-0 mt-0.5"
             />
           </div>
 
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex-1 space-y-1">
-              <Label htmlFor="devotionals-notifications">Devotionals</Label>
-              <p className="text-sm text-muted-foreground">
-                Get notified when new daily devotionals are posted
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+              <Label htmlFor="devotionals-notifications" className="text-sm">Devotionals</Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                New daily devotionals
               </p>
             </div>
             <Switch
@@ -452,6 +456,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               checked={devotionalsEnabled}
               onCheckedChange={(checked) => handleToggleNotification('devotionals', checked)}
               disabled={saving}
+              className="flex-shrink-0 mt-0.5"
             />
           </div>
         </div>
