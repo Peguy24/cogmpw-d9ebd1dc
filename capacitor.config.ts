@@ -7,14 +7,8 @@ const config: CapacitorConfig = {
   bundledWebRuntime: false,
   plugins: {
     StatusBar: {
-      // This makes Android keep the webview BELOW the status bar / camera cutout
       overlaysWebView: false,
     },
-  },
-  // Deep linking configuration for handling Stripe redirects
-  server: {
-    // Handle deep links with custom URL scheme
-    allowNavigation: ['cogmpw.com', 'www.cogmpw.com', 'checkout.stripe.com'],
   },
 };
 
