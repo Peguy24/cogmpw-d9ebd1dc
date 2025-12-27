@@ -34,6 +34,7 @@ import MyPrayerRequests from "./pages/MyPrayerRequests";
 import DonationSuccess from "./pages/DonationSuccess";
 import ReturnToApp from "./pages/ReturnToApp";
 import CommunityChat from "./pages/CommunityChat";
+import Debug from "./pages/Debug";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const AppContent = () => {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/donation-success" element={<DonationSuccess />} />
         <Route path="/return-to-app" element={<ReturnToApp />} />
+        <Route path="/debug" element={<Debug />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
