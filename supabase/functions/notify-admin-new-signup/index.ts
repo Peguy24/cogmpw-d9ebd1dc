@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (adminEmails.length > 0) {
       try {
         const emailResponse = await resend.emails.send({
-          from: "COGMPW <onboarding@resend.dev>",
+          from: "COGMPW <noreply@cogmpw.com>",
           to: adminEmails,
           subject: "🆕 New Member Signup Awaiting Approval",
           html: `

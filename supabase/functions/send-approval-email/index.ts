@@ -96,7 +96,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send approval email
     const emailResponse = await resend.emails.send({
-      from: "COGMPW <onboarding@resend.dev>",
+      from: "COGMPW <noreply@cogmpw.com>",
       to: [userEmail],
       subject: "🎉 Your COGMPW Account Has Been Approved!",
       html: `
