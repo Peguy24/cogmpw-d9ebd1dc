@@ -25,7 +25,12 @@ export default function ReturnToApp() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const isNative = Capacitor.isNativePlatform();
+  // Robust native detection:
+  // - Capacitor.isNativePlatform() should be true inside the native app.
+  // - Some environments can mis-report early; Android WebView UAs include "wv".
+  const ua = navigator.userAgent || "";
+  const isAndroidWebView = /\bwv\b/i.test(ua) || /;\s*wv\)/i.test(ua);
+  const isNative = Capacitor.isNativePlatform() || isAndroidWebView;
 
   // Get all relevant params
   const target = useMemo(() => searchParams.get("target") || "/home", [searchParams]);
