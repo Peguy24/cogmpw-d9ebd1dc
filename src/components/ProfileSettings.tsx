@@ -7,13 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import { Loader2, Camera, Lock, Eye, EyeOff } from "lucide-react";
+import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface ProfileSettingsProps {
   user: User;
 }
 
 const ProfileSettings = ({ user }: ProfileSettingsProps) => {
+  const { theme, setTheme } = useTheme();
   const [phoneVisible, setPhoneVisible] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -358,6 +360,50 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               'Update Password'
             )}
           </Button>
+        </div>
+      </div>
+
+      {/* Appearance Settings */}
+      <div>
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Appearance</h3>
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+              <Label className="text-sm">Theme</Label>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Choose your preferred color scheme
+              </p>
+            </div>
+            <div className="flex gap-1 flex-shrink-0">
+              <Button
+                variant={theme === "light" ? "default" : "outline"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setTheme("light")}
+                title="Light mode"
+              >
+                <Sun className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={theme === "dark" ? "default" : "outline"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setTheme("dark")}
+                title="Dark mode"
+              >
+                <Moon className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={theme === "system" ? "default" : "outline"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setTheme("system")}
+                title="System default"
+              >
+                <Monitor className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
