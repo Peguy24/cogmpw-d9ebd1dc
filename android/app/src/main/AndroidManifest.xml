@@ -30,16 +30,6 @@
                 <data android:scheme="cogmpw" />
             </intent-filter>
 
-            <!-- Deep link for https://cogmpw.com -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="cogmpw.com" />
-            </intent-filter>
-
         </activity>
 
         <provider
