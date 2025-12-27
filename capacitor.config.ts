@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
   // Deep linking configuration for handling Stripe redirects
   server: {
     // Handle deep links with custom URL scheme
-    allowNavigation: ['cogmpw.lovable.app', 'checkout.stripe.com'],
+    allowNavigation: ['cogmpw.com', 'www.cogmpw.com', 'checkout.stripe.com'],
   },
 };
 

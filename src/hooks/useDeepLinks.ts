@@ -29,7 +29,7 @@ export const useDeepLinks = () => {
         // Parse the URL to extract path and query params
         // URL formats:
         // - cogmpw://app/giving?donation=success (custom scheme)
-        // - https://cogmpw.lovable.app/giving?donation=success (App Links)
+        // - https://cogmpw.com/giving?donation=success (App Links)
         const url = new URL(incomingUrl);
 
         // Get the pathname (e.g., /giving)

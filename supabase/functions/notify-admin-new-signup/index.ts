@@ -99,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <p style="margin-bottom: 20px;">Please review this application and approve or reject the user.</p>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://cogmpw.lovable.app/admin/approvals" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Review Application</a>
+                  <a href="https://cogmpw.com/admin/approvals" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Review Application</a>
                 </div>
                 
                 <p style="color: #666; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
