@@ -125,6 +125,7 @@ export const DonationForm = () => {
             category: values.category,
             notes: values.notes || null,
             interval: values.interval,
+            isNativeApp: Capacitor.isNativePlatform(),
           },
           headers: authHeaders,
         });
@@ -145,6 +146,7 @@ export const DonationForm = () => {
             notes: values.notes || null,
             campaign_id: values.campaign_id || selectedCampaignFromStorage || null,
             guest_email: values.guest_email || null,
+            isNativeApp: Capacitor.isNativePlatform(),
           },
           headers: authHeaders,
         });

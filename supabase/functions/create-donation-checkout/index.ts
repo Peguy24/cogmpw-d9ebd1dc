@@ -12,9 +12,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-DONATION-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// 🔴 IMPORTANT: Use HTTPS URL for Stripe redirects - Android App Links will intercept this
-// Stripe doesn't support custom URL schemes, so we use the web URL which Android intercepts
-const APP_BASE_URL = "https://cogmpw.lovable.app";
+// 🔴 IMPORTANT: Use the return-to-app page for native apps to handle deep linking properly
+// This page will redirect users back to the native app using the custom URL scheme
+const DEPLOYED_APP_URL = "https://cogmpw.lovable.app";
 
 // Simple in-memory rate limiting (resets when function cold starts)
 // For production, consider using a distributed cache like Redis
@@ -67,14 +67,18 @@ serve(async (req) => {
     
     logStep("Rate limit check passed", { clientIP });
 
-    // Use the current site's origin when available (preview/prod)
-    // For native apps, use the deployed site which has the return-to-app page
-    const requestOrigin = req.headers.get("origin") || "";
-    const redirectBaseUrl = requestOrigin.startsWith("https://") ? requestOrigin : APP_BASE_URL;
+    // Parse request body first to check for native app flag
+    const body = await req.json();
+    const { amount, category, notes, campaign_id, guest_email, isNativeApp: nativeAppFlag } = body;
     
-    // Check if request is from native app (no origin or capacitor origin)
-    const isNativeApp = !requestOrigin || requestOrigin.includes("capacitor://") || requestOrigin.includes("localhost");
-    logStep("Redirect base URL selected", { redirectBaseUrl, isNativeApp, requestOrigin });
+    // Use the current site's origin when available (preview/prod)
+    // For native apps, ALWAYS use the deployed site which has App Links configured
+    const requestOrigin = req.headers.get("origin") || "";
+    const isNativeApp = nativeAppFlag || !requestOrigin || requestOrigin.includes("capacitor://") || requestOrigin.includes("localhost");
+    
+    // Native apps MUST use the deployed URL for App Links to work
+    const redirectBaseUrl = isNativeApp ? DEPLOYED_APP_URL : (requestOrigin.startsWith("https://") ? requestOrigin : DEPLOYED_APP_URL);
+    logStep("Redirect base URL selected", { redirectBaseUrl, isNativeApp, requestOrigin, nativeAppFlag });
 
     const authHeader = req.headers.get("Authorization");
     let user = null;
@@ -91,7 +95,7 @@ serve(async (req) => {
       logStep("Guest donation (no auth)");
     }
 
-    const { amount, category, notes, campaign_id, guest_email } = await req.json();
+    // Body already parsed above
     
     if (!amount || amount <= 0) {
       throw new Error("Invalid donation amount");
