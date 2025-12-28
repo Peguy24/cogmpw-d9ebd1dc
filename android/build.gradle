@@ -30,18 +30,26 @@ subprojects {
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        // Some plugins set `--release 21`; this hard-pins it back to 17.
+        // Some modules (notably Capacitor Android) default to Java 21.
+        // If your local JDK is 17, that causes: "invalid source release: 21".
         options.release.set(17)
     }
 
-    // Also enforce Android compileOptions when an Android plugin is present.
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            project.android {
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
+    // Ensure Android modules (app + libraries) use Java 17 regardless of what their own build.gradle sets.
+    plugins.withId("com.android.application") {
+        android {
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
+            }
+        }
+    }
+
+    plugins.withId("com.android.library") {
+        android {
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_17
+                targetCompatibility JavaVersion.VERSION_17
             }
         }
     }
