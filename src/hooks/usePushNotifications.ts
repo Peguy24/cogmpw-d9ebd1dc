@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -7,9 +8,11 @@ export const usePushNotifications = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Prevent runtime errors in the web preview; push notifications are native-only.
+    if (!Capacitor.isNativePlatform()) return;
+
     const initPushNotifications = async () => {
       try {
-        // 1️⃣ Request permission from the user
         const permStatus = await PushNotifications.requestPermissions();
 
         if (permStatus.receive === "granted") {
@@ -25,48 +28,41 @@ export const usePushNotifications = () => {
           return `${token.substring(0, 8)}...${token.substring(token.length - 4)}`;
         };
 
-        // 2️⃣ When registration succeeds, save token to Supabase
-        await PushNotifications.addListener(
-          "registration",
-          async (token) => {
-            console.log(
-              `Push registration successful: ${maskToken(token.value)}`
-            );
+        // When registration succeeds, save token
+        await PushNotifications.addListener("registration", async (token) => {
+          console.log(`Push registration successful: ${maskToken(token.value)}`);
 
-            try {
-              const {
-                data: { user },
-              } = await supabase.auth.getUser();
+          try {
+            const {
+              data: { user },
+            } = await supabase.auth.getUser();
 
-              if (user) {
-                const { error } = await supabase
-                  .from("push_tokens")
-                  .upsert({
-                    user_id: user.id,
-                    token: token.value,
-                    platform: "mobile",
-                  });
+            if (user) {
+              const { error } = await supabase.from("push_tokens").upsert({
+                user_id: user.id,
+                token: token.value,
+                platform: Capacitor.getPlatform(),
+              });
 
-                if (error) {
-                  console.error("Error saving push token:", error);
-                }
-              } else {
-                console.log(
-                  "No authenticated user found; skipping saving push token."
-                );
+              if (error) {
+                console.error("Error saving push token:", error);
               }
-            } catch (err) {
-              console.error("Error fetching user / saving token:", err);
+            } else {
+              console.log(
+                "No authenticated user found; skipping saving push token."
+              );
             }
+          } catch (err) {
+            console.error("Error fetching user / saving token:", err);
           }
-        );
+        });
 
-        // 3️⃣ When registration fails
+        // When registration fails
         await PushNotifications.addListener("registrationError", (error) => {
           console.error("Error on push registration:", JSON.stringify(error));
         });
 
-        // 4️⃣ When a notification is received in foreground
+        // When a notification is received in foreground
         await PushNotifications.addListener(
           "pushNotificationReceived",
           (notification) => {
@@ -79,7 +75,7 @@ export const usePushNotifications = () => {
           }
         );
 
-        // 5️⃣ When the user taps a notification
+        // When the user taps a notification
         await PushNotifications.addListener(
           "pushNotificationActionPerformed",
           (notification) => {
@@ -103,3 +99,4 @@ export const usePushNotifications = () => {
     };
   }, [toast]);
 };
+
