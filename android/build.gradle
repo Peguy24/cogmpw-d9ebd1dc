@@ -26,9 +26,24 @@ allprojects {
 
 // Force Java 17 bytecode across all modules (including capacitor-android)
 subprojects {
+    // Ensure *every* JavaCompile (including Capacitor modules) targets Java 17.
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Some plugins set `--release 21`; this hard-pins it back to 17.
+        options.release.set(17)
+    }
+
+    // Also enforce Android compileOptions when an Android plugin is present.
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
     }
 }
 
