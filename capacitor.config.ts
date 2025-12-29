@@ -11,10 +11,8 @@ const config: CapacitorConfig = {
     },
   },
   server: {
-    // Load the published site so native users see updates immediately after publishing
-    url: "https://cogmpw.lovable.app?forceHideBadge=true",
     // Allow navigation to Stripe for payments
-    allowNavigation: ["cogmpw.lovable.app", "checkout.stripe.com"],
+    allowNavigation: ["checkout.stripe.com"],
   },
 };
 
