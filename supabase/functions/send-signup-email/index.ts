@@ -125,7 +125,7 @@ serve(async (req) => {
     `;
 
     const { error: emailError } = await resend.emails.send({
-      from: "COGMPW <noreply@cogmpw.com>",
+      from: "COGMPW <hello@noreply.cogmpw.com>",
       to: [email],
       subject: "Welcome to COGMPW - Registration Received!",
       html: emailHtml,
