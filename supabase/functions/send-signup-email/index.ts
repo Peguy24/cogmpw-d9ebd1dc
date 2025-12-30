@@ -41,46 +41,82 @@ serve(async (req) => {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #f6f9fc; margin: 0; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <h1 style="color: #2563eb; margin: 0; font-size: 28px;">Welcome to COGMPW!</h1>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #1a1a2e; margin: 0; padding: 40px 20px;">
+        <div style="max-width: 600px; margin: 0 auto;">
+          <!-- Header with Logo -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://cogmpw.lovable.app/logo-source.webp" alt="COGMPW Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #3b82f6;" />
           </div>
           
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            Dear ${fullName || "New Member"},
-          </p>
-          
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            Thank you for registering with the <strong>Church of God Ministry of Prayer and the Word</strong>!
-          </p>
-          
-          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 0 8px 8px 0;">
-            <h3 style="color: #92400e; margin: 0 0 12px 0;">⏳ Pending Approval</h3>
-            <p style="color: #78350f; font-size: 14px; line-height: 22px; margin: 0;">
-              Your account is currently pending approval by our church administrators. You will receive another email once your account has been approved and you have full access to the app.
+          <!-- Main Card -->
+          <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(59, 130, 246, 0.2);">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">Welcome to COGMPW!</h1>
+              <p style="color: #93c5fd; margin: 0; font-size: 14px; letter-spacing: 1px;">CHURCH OF GOD MINISTRY OF PRAYER AND THE WORD</p>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+              <p style="color: #e2e8f0; font-size: 16px; line-height: 26px; margin: 0 0 16px 0;">
+                Dear <strong style="color: #60a5fa;">${fullName || "New Member"}</strong>,
+              </p>
+              
+              <p style="color: #cbd5e1; font-size: 15px; line-height: 24px; margin: 0;">
+                Thank you for registering with our church family! We are blessed to have you join our community of believers.
+              </p>
+            </div>
+            
+            <!-- Pending Approval Notice -->
+            <div style="background: linear-gradient(135deg, #78350f 0%, #451a03 100%); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #fbbf24;">
+              <h3 style="color: #fef3c7; margin: 0 0 8px 0; font-size: 16px; display: flex; align-items: center;">
+                ⏳ Account Pending Approval
+              </h3>
+              <p style="color: #fde68a; font-size: 14px; line-height: 22px; margin: 0;">
+                Your account is currently being reviewed by our church administrators. You will receive a confirmation email once approved.
+              </p>
+            </div>
+            
+            <!-- Features List -->
+            <div style="background: rgba(59, 130, 246, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(59, 130, 246, 0.2);">
+              <h3 style="color: #93c5fd; margin: 0 0 16px 0; font-size: 16px;">🎉 Once approved, you'll be able to:</h3>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📖 View daily devotionals and sermons</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📰 Stay updated with church news and events</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">💬 Connect with other church members</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">🙏 Submit prayer requests</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">💝 Support the church through giving</td>
+                </tr>
+              </table>
+            </div>
+            
+            <p style="color: #94a3b8; font-size: 14px; line-height: 22px; text-align: center; margin: 0 0 24px 0;">
+              We're excited to have you join our community! Please be patient while we review your registration.
             </p>
+            
+            <!-- CTA Button -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <a href="https://cogmpw.lovable.app" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">Open COGMPW App</a>
+            </div>
           </div>
           
-          <div style="background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 16px; margin: 24px 0; border-radius: 0 8px 8px 0;">
-            <h3 style="color: #1e40af; margin: 0 0 12px 0;">What to expect:</h3>
-            <ul style="color: #374151; font-size: 14px; line-height: 22px; margin: 0; padding-left: 20px;">
-              <li>View daily devotionals and sermons</li>
-              <li>Stay updated with church news and events</li>
-              <li>Connect with other church members</li>
-              <li>Submit prayer requests</li>
-              <li>Support the church through giving</li>
-            </ul>
-          </div>
-          
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            We're excited to have you join our community! Please be patient while we review your registration.
-          </p>
-          
-          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              God bless,<br>
-              <strong>COGMPW Ministry Team</strong>
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 32px; padding-top: 24px;">
+            <p style="color: #64748b; font-size: 13px; margin: 0 0 8px 0;">
+              God bless you abundantly!
+            </p>
+            <p style="color: #94a3b8; font-size: 14px; margin: 0; font-weight: 600;">
+              COGMPW Ministry Team
+            </p>
+            <p style="color: #475569; font-size: 12px; margin: 16px 0 0 0;">
+              © ${new Date().getFullYear()} Church of God Ministry of Prayer and the Word
             </p>
           </div>
         </div>
