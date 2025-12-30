@@ -82,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Sending urgent prayer alert to pastor for user:", user.id);
 
     const emailResponse = await resend.emails.send({
-      from: "COGMPW Prayer Requests <noreply@cogmpw.com>",
+      from: "COGMPW Prayer Requests <hello@noreply.cogmpw.com>",
       to: ["cogmoprayer@gmail.com"],
       subject: `🙏 URGENT Prayer Request from ${safeMemberName}`,
       html: `

@@ -133,7 +133,7 @@ const sendDonationReceipt = async ({
     });
 
     const { error } = await resend.emails.send({
-      from: 'COGMPW <noreply@cogmpw.com>',
+      from: 'COGMPW <hello@noreply.cogmpw.com>',
       to: [email],
       subject: `Donation Receipt - $${amount.toFixed(2)} to COGMPW`,
       html,
