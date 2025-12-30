@@ -229,6 +229,12 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="signup">
+              {/* Info message for previously rejected users */}
+              <div className="mb-4 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Previously rejected?</span> If you were rejected before and have now become a member of our church, you can register again using the same email.
+                </p>
+              </div>
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-name">Full Name</Label>
