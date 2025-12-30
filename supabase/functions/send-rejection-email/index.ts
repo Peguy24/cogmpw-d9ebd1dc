@@ -177,8 +177,18 @@ serve(async (req) => {
 
     logStep("Rejection email sent successfully", { email: targetUser.email });
 
+    // Delete the user from auth.users so they can re-register with the same email
+    const { error: deleteAuthError } = await supabaseClient.auth.admin.deleteUser(userId);
+    
+    if (deleteAuthError) {
+      logStep("Error deleting auth user", { error: deleteAuthError });
+      // Don't throw - email was sent, just log the error
+    } else {
+      logStep("User deleted from auth.users", { userId });
+    }
+
     return new Response(
-      JSON.stringify({ success: true, email: targetUser.email }),
+      JSON.stringify({ success: true, email: targetUser.email, userDeleted: !deleteAuthError }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
