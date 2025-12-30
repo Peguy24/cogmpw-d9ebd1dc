@@ -132,8 +132,16 @@ serve(async (req) => {
               </table>
             </div>
             
+            <!-- Appeal Notice -->
+            <div style="background: rgba(59, 130, 246, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(59, 130, 246, 0.2);">
+              <h3 style="color: #60a5fa; margin: 0 0 12px 0; font-size: 16px;">💬 Want to Appeal?</h3>
+              <p style="color: #e2e8f0; font-size: 14px; line-height: 22px; margin: 0;">
+                If you believe this was a mistake or would like to provide additional information, simply <strong style="color: #93c5fd;">reply to this email</strong> and our team will review your request.
+              </p>
+            </div>
+            
             <p style="color: #94a3b8; font-size: 14px; line-height: 22px; text-align: center; margin: 0 0 24px 0;">
-              If you believe this was a mistake or have questions, please contact the church office directly. You're welcome to register again with updated information.
+              You're also welcome to register again with updated information.
             </p>
           </div>
           
@@ -155,7 +163,8 @@ serve(async (req) => {
     `;
 
     const { error: emailError } = await resend.emails.send({
-      from: "COGMPW <noreply@cogmpw.com>",
+      from: "COGMPW <hello@noreply.cogmpw.com>",
+      replyTo: "cogmoprayer@gmail.com",
       to: [targetUser.email],
       subject: "COGMPW App - Registration Update",
       html: emailHtml,
