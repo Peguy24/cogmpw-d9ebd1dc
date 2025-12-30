@@ -7,6 +7,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Sanitize user input to prevent XSS in email HTML
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -136,29 +146,78 @@ const handler = async (req: Request): Promise<Response> => {
           await resend.emails.send({
             from: "COGMPW Church <noreply@cogmpw.com>",
             to: email,
-            subject: `Reminder: ${event.title} Tomorrow! ⏰`,
+            subject: `⏰ Reminder: ${escapeHtml(event.title)} Tomorrow!`,
             html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #333;">Event Reminder ⏰</h1>
-                <p style="color: #666;">Hi ${profile.full_name},</p>
-                <p style="color: #666;">This is a friendly reminder that you RSVP'd to the following event happening tomorrow:</p>
-                
-                <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <h2 style="color: #333; margin-top: 0;">${event.title}</h2>
-                  <p style="color: #666; line-height: 1.6;">${event.description}</p>
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              </head>
+              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #1a1a2e; margin: 0; padding: 40px 20px;">
+                <div style="max-width: 600px; margin: 0 auto;">
+                  <!-- Header with Logo -->
+                  <div style="text-align: center; margin-bottom: 24px;">
+                    <img src="https://cogmpw.lovable.app/logo-source.webp" alt="COGMPW Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #f59e0b;" />
+                  </div>
                   
-                  <div style="margin-top: 15px;">
-                    <p style="margin: 5px 0;"><strong>📍 Location:</strong> ${event.location}</p>
-                    <p style="margin: 5px 0;"><strong>🕐 Date & Time:</strong> ${formattedDate}</p>
+                  <!-- Main Card -->
+                  <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(245, 158, 11, 0.2);">
+                    <div style="text-align: center; margin-bottom: 32px;">
+                      <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">⏰ Event Reminder</h1>
+                      <p style="color: #fbbf24; margin: 0; font-size: 14px; letter-spacing: 1px;">HAPPENING TOMORROW!</p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                      <p style="color: #e2e8f0; font-size: 16px; line-height: 26px; margin: 0 0 16px 0;">
+                        Hi <strong style="color: #60a5fa;">${escapeHtml(profile.full_name)}</strong>,
+                      </p>
+                      
+                      <p style="color: #cbd5e1; font-size: 15px; line-height: 24px; margin: 0;">
+                        This is a friendly reminder that you RSVP'd to the following event happening tomorrow:
+                      </p>
+                    </div>
+                    
+                    <!-- Event Details -->
+                    <div style="background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(245, 158, 11, 0.2);">
+                      <h2 style="color: #fbbf24; margin: 0 0 12px 0; font-size: 20px;">${escapeHtml(event.title)}</h2>
+                      <p style="color: #e2e8f0; font-size: 14px; line-height: 22px; margin: 0 0 16px 0;">${escapeHtml(event.description)}</p>
+                      
+                      <table style="width: 100%;">
+                        <tr>
+                          <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📍 <strong>Location:</strong> ${escapeHtml(event.location)}</td>
+                        </tr>
+                        <tr>
+                          <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">🕐 <strong>Date & Time:</strong> ${formattedDate}</td>
+                        </tr>
+                      </table>
+                    </div>
+                    
+                    <p style="color: #94a3b8; font-size: 14px; line-height: 22px; text-align: center; margin: 0 0 24px 0;">
+                      We look forward to seeing you there!
+                    </p>
+                    
+                    <!-- CTA Button -->
+                    <div style="text-align: center; margin-bottom: 24px;">
+                      <a href="https://cogmpw.lovable.app/home" style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">View Event Details</a>
+                    </div>
+                  </div>
+                  
+                  <!-- Footer -->
+                  <div style="text-align: center; margin-top: 32px; padding-top: 24px;">
+                    <p style="color: #64748b; font-size: 12px; margin: 0 0 8px 0;">
+                      You're receiving this reminder because you RSVP'd to this event.
+                    </p>
+                    <p style="color: #94a3b8; font-size: 14px; margin: 0; font-weight: 600;">
+                      COGMPW Ministry Team
+                    </p>
+                    <p style="color: #475569; font-size: 12px; margin: 16px 0 0 0;">
+                      © ${new Date().getFullYear()} Church of God Ministry of Prayer and the Word
+                    </p>
                   </div>
                 </div>
-                
-                <p style="color: #666;">We look forward to seeing you there!</p>
-                
-                <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                  You're receiving this reminder because you RSVP'd to this event in the COGMPW Church app.
-                </p>
-              </div>
+              </body>
+              </html>
             `,
           });
 

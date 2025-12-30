@@ -92,45 +92,75 @@ serve(async (req) => {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #f6f9fc; margin: 0; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <h1 style="color: #2563eb; margin: 0; font-size: 28px;">🎉 Welcome to COGMPW!</h1>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #1a1a2e; margin: 0; padding: 40px 20px;">
+        <div style="max-width: 600px; margin: 0 auto;">
+          <!-- Header with Logo -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://cogmpw.lovable.app/logo-source.webp" alt="COGMPW Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #10b981;" />
           </div>
           
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            Dear ${profile?.full_name || "Member"},
-          </p>
-          
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            Great news! Your account has been <strong>approved</strong> and you now have full access to the COGMPW church app.
-          </p>
-          
-          <div style="background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 16px; margin: 24px 0; border-radius: 0 8px 8px 0;">
-            <h3 style="color: #1e40af; margin: 0 0 12px 0;">What you can now do:</h3>
-            <ul style="color: #374151; font-size: 14px; line-height: 22px; margin: 0; padding-left: 20px;">
-              <li>View daily devotionals and sermons</li>
-              <li>Stay updated with church news and events</li>
-              <li>Connect with other church members in the community chat</li>
-              <li>Submit prayer requests</li>
-              <li>Support the church through giving</li>
-              <li>RSVP to upcoming events</li>
-            </ul>
+          <!-- Main Card -->
+          <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.2);">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">🎉 You're Approved!</h1>
+              <p style="color: #93c5fd; margin: 0; font-size: 14px; letter-spacing: 1px;">WELCOME TO THE COGMPW FAMILY</p>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+              <p style="color: #e2e8f0; font-size: 16px; line-height: 26px; margin: 0 0 16px 0;">
+                Dear <strong style="color: #60a5fa;">${profile?.full_name || "Member"}</strong>,
+              </p>
+              
+              <p style="color: #cbd5e1; font-size: 15px; line-height: 24px; margin: 0;">
+                Great news! Your account has been <strong style="color: #10b981;">approved</strong> and you now have full access to the COGMPW church app.
+              </p>
+            </div>
+            
+            <!-- Features List -->
+            <div style="background: rgba(16, 185, 129, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(16, 185, 129, 0.2);">
+              <h3 style="color: #6ee7b7; margin: 0 0 16px 0; font-size: 16px;">✨ What you can now do:</h3>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📖 View daily devotionals and sermons</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📰 Stay updated with church news and events</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">💬 Connect with other church members</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">🙏 Submit prayer requests</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">💝 Support the church through giving</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📅 RSVP to upcoming events</td>
+                </tr>
+              </table>
+            </div>
+            
+            <p style="color: #94a3b8; font-size: 14px; line-height: 22px; text-align: center; margin: 0 0 24px 0;">
+              Open the COGMPW app on your device to start exploring all the features available to you.
+            </p>
+            
+            <!-- CTA Button -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <a href="https://cogmpw.lovable.app" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">Open COGMPW App</a>
+            </div>
           </div>
           
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            Open the COGMPW app on your device to start exploring all the features available to you.
-          </p>
-          
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="https://cogmpw.lovable.app" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">Open COGMPW App</a>
-          </div>
-          
-          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              We're blessed to have you as part of our community!<br><br>
-              God bless,<br>
-              <strong>COGMPW Ministry Team</strong>
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 32px; padding-top: 24px;">
+            <p style="color: #64748b; font-size: 13px; margin: 0 0 8px 0;">
+              We're blessed to have you as part of our community!
+            </p>
+            <p style="color: #94a3b8; font-size: 14px; margin: 0; font-weight: 600;">
+              COGMPW Ministry Team
+            </p>
+            <p style="color: #475569; font-size: 12px; margin: 16px 0 0 0;">
+              © ${new Date().getFullYear()} Church of God Ministry of Prayer and the Word
             </p>
           </div>
         </div>
