@@ -144,24 +144,74 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "COGMPW Church <noreply@cogmpw.com>",
       to: recipientEmails,
-      subject: `New Event: ${escapeHtml(eventTitle)}`,
+      subject: `📅 New Event: ${escapeHtml(eventTitle)}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">New Church Event! 📅</h1>
-          <h2 style="color: #555;">${escapeHtml(eventTitle)}</h2>
-          <p style="color: #666; line-height: 1.6;">${escapeHtml(eventDescription)}</p>
-          
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>📍 Location:</strong> ${escapeHtml(eventLocation)}</p>
-            <p style="margin: 5px 0;"><strong>🕐 Date & Time:</strong> ${formattedDate}</p>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #1a1a2e; margin: 0; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto;">
+            <!-- Header with Logo -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="https://cogmpw.lovable.app/logo-source.webp" alt="COGMPW Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #8b5cf6;" />
+            </div>
+            
+            <!-- Main Card -->
+            <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(139, 92, 246, 0.2);">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">📅 New Church Event!</h1>
+                <p style="color: #c4b5fd; margin: 0; font-size: 14px; letter-spacing: 1px;">YOU'RE INVITED</p>
+              </div>
+              
+              <!-- Event Details -->
+              <div style="background: rgba(139, 92, 246, 0.1); border-radius: 12px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(139, 92, 246, 0.2);">
+                <h2 style="color: #a78bfa; margin: 0 0 12px 0; font-size: 22px;">${escapeHtml(eventTitle)}</h2>
+                <p style="color: #e2e8f0; font-size: 15px; line-height: 24px; margin: 0 0 20px 0;">${escapeHtml(eventDescription)}</p>
+                
+                <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 16px;">
+                  <table style="width: 100%;">
+                    <tr>
+                      <td style="color: #e2e8f0; font-size: 14px; padding: 8px 0;">
+                        <strong style="color: #c4b5fd;">📍 Location:</strong> ${escapeHtml(eventLocation)}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="color: #e2e8f0; font-size: 14px; padding: 8px 0;">
+                        <strong style="color: #c4b5fd;">🕐 Date & Time:</strong> ${formattedDate}
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+              </div>
+              
+              <p style="color: #94a3b8; font-size: 14px; line-height: 22px; text-align: center; margin: 0 0 24px 0;">
+                Open the COGMPW app to RSVP and get more details!
+              </p>
+              
+              <!-- CTA Button -->
+              <div style="text-align: center; margin-bottom: 24px;">
+                <a href="https://cogmpw.lovable.app/home" style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);">RSVP Now</a>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 32px; padding-top: 24px;">
+              <p style="color: #64748b; font-size: 12px; margin: 0 0 8px 0;">
+                You're receiving this email because you're a member of COGMPW Church.
+              </p>
+              <p style="color: #94a3b8; font-size: 14px; margin: 0; font-weight: 600;">
+                COGMPW Ministry Team
+              </p>
+              <p style="color: #475569; font-size: 12px; margin: 16px 0 0 0;">
+                © ${new Date().getFullYear()} Church of God Ministry of Prayer and the Word
+              </p>
+            </div>
           </div>
-          
-          <p style="color: #666;">Open the COGMPW Church app to RSVP and get more details!</p>
-          
-          <p style="color: #999; font-size: 12px; margin-top: 30px;">
-            You're receiving this email because you're a member of COGMPW Church.
-          </p>
-        </div>
+        </body>
+        </html>
       `,
     });
 

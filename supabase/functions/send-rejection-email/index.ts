@@ -92,36 +92,61 @@ serve(async (req) => {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #f6f9fc; margin: 0; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <h2 style="color: #1f2937; margin-bottom: 24px;">Account Registration Update</h2>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #1a1a2e; margin: 0; padding: 40px 20px;">
+        <div style="max-width: 600px; margin: 0 auto;">
+          <!-- Header with Logo -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <img src="https://cogmpw.lovable.app/logo-source.webp" alt="COGMPW Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #6b7280;" />
+          </div>
           
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            Dear ${profile?.full_name || "Applicant"},
-          </p>
+          <!-- Main Card -->
+          <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(107, 114, 128, 0.2);">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 24px; font-weight: 700;">Account Registration Update</h1>
+              <p style="color: #93c5fd; margin: 0; font-size: 14px; letter-spacing: 1px;">COGMPW CHURCH APP</p>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+              <p style="color: #e2e8f0; font-size: 16px; line-height: 26px; margin: 0 0 16px 0;">
+                Dear <strong style="color: #60a5fa;">${profile?.full_name || "Applicant"}</strong>,
+              </p>
+              
+              <p style="color: #cbd5e1; font-size: 15px; line-height: 24px; margin: 0;">
+                Thank you for your interest in joining the COGMPW church community app. After careful review, we were unable to approve your registration at this time.
+              </p>
+            </div>
+            
+            <!-- Reasons -->
+            <div style="background: rgba(107, 114, 128, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(107, 114, 128, 0.2);">
+              <h3 style="color: #9ca3af; margin: 0 0 16px 0; font-size: 16px;">This may be because:</h3>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• We couldn't verify your connection to our church community</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• The registration information provided was incomplete</td>
+                </tr>
+                <tr>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• There may have been a duplicate registration</td>
+                </tr>
+              </table>
+            </div>
+            
+            <p style="color: #94a3b8; font-size: 14px; line-height: 22px; text-align: center; margin: 0 0 24px 0;">
+              If you believe this was a mistake or have questions, please contact the church office directly. You're welcome to register again with updated information.
+            </p>
+          </div>
           
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            Thank you for your interest in joining the COGMPW church community app. After careful review, we were unable to approve your registration at this time.
-          </p>
-          
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            This may be because:
-          </p>
-          
-          <ul style="color: #374151; font-size: 16px; line-height: 24px;">
-            <li>We couldn't verify your connection to our church community</li>
-            <li>The registration information provided was incomplete</li>
-            <li>There may have been a duplicate registration</li>
-          </ul>
-          
-          <p style="color: #374151; font-size: 16px; line-height: 24px;">
-            If you believe this was a mistake or have questions, please contact the church office directly. You're welcome to register again with updated information.
-          </p>
-          
-          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">
-              God bless,<br>
-              <strong>COGMPW Ministry Team</strong>
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 32px; padding-top: 24px;">
+            <p style="color: #64748b; font-size: 13px; margin: 0 0 8px 0;">
+              God bless you!
+            </p>
+            <p style="color: #94a3b8; font-size: 14px; margin: 0; font-weight: 600;">
+              COGMPW Ministry Team
+            </p>
+            <p style="color: #475569; font-size: 12px; margin: 16px 0 0 0;">
+              © ${new Date().getFullYear()} Church of God Ministry of Prayer and the Word
             </p>
           </div>
         </div>
