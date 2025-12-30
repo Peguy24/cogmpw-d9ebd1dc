@@ -78,7 +78,19 @@ const Auth = () => {
 
       if (error) throw error;
       
-      toast.success("Account created successfully!");
+      // Send welcome email
+      try {
+        await supabase.functions.invoke('send-signup-email', {
+          body: {
+            email: validated.email,
+            fullName: formData.fullName,
+          },
+        });
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+      }
+      
+      toast.success("Account created successfully! Check your email.");
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
