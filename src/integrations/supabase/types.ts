@@ -236,6 +236,38 @@ export type Database = {
           },
         ]
       }
+      event_checkins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_reminders_sent: {
         Row: {
           event_id: string
@@ -377,6 +409,45 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      guest_event_checkins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string
+          event_id: string
+          guest_rsvp_id: string
+          id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by: string
+          event_id: string
+          guest_rsvp_id: string
+          id?: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string
+          event_id?: string
+          guest_rsvp_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guest_event_checkins_guest_rsvp_id_fkey"
+            columns: ["guest_rsvp_id"]
+            isOneToOne: false
+            referencedRelation: "guest_event_rsvps"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       guest_event_reminders_sent: {
         Row: {

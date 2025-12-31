@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Calendar, MapPin, Users, Check, Pencil, Trash2, Eye, Lock, Globe, UserPlus } from "lucide-react";
+import { Calendar, MapPin, Users, Check, Pencil, Trash2, Eye, Lock, Globe, UserPlus, UserCheck } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import EventPostForm from "./EventPostForm";
 import EventEditDialog from "./EventEditDialog";
 import EventAttendeesDialog from "./EventAttendeesDialog";
 import GuestRSVPDialog from "./GuestRSVPDialog";
+import EventCheckinDialog from "./EventCheckinDialog";
 import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface EventItem {
@@ -38,7 +39,7 @@ const EventsCalendar = () => {
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [viewingAttendeesEvent, setViewingAttendeesEvent] = useState<EventItem | null>(null);
   const [guestRsvpEvent, setGuestRsvpEvent] = useState<EventItem | null>(null);
-
+  const [checkinEvent, setCheckinEvent] = useState<EventItem | null>(null);
   useEffect(() => {
     getCurrentUser();
     fetchEvents();
@@ -278,6 +279,15 @@ const EventsCalendar = () => {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 md:h-9 md:w-9"
+                      title="Check-in attendees"
+                      onClick={() => setCheckinEvent(event)}
+                    >
+                      <UserCheck className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 md:h-9 md:w-9"
                       onClick={() => setEditingEvent(event)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -394,6 +404,15 @@ const EventsCalendar = () => {
           open={!!guestRsvpEvent}
           onOpenChange={(open) => !open && setGuestRsvpEvent(null)}
           onSuccess={fetchEvents}
+        />
+      )}
+
+      {checkinEvent && (
+        <EventCheckinDialog
+          eventId={checkinEvent.id}
+          eventTitle={checkinEvent.title}
+          open={!!checkinEvent}
+          onOpenChange={(open) => !open && setCheckinEvent(null)}
         />
       )}
 
