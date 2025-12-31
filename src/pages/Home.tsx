@@ -69,13 +69,12 @@ const Home = () => {
       if (userIsAdmin || userIsSuperLeader) {
         setIsAdmin(true);
         setIsOnlyAdmin(userIsAdmin);
-        if (userIsAdmin) {
-          const { count } = await supabase
-            .from("profiles")
-            .select("*", { count: "exact", head: true })
-            .eq("is_approved", false);
-          setPendingCount(count || 0);
-        }
+        // Both admins and super leaders can see pending approvals count
+        const { count } = await supabase
+          .from("profiles")
+          .select("*", { count: "exact", head: true })
+          .eq("is_approved", false);
+        setPendingCount(count || 0);
       }
 
       setLoading(false);
