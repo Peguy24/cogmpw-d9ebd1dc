@@ -98,10 +98,36 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to fetch admin roles");
     }
 
-    // Get user emails from auth
+    // Get unique user IDs
+    const uniqueUserIds = [...new Set((adminRoles || []).map(r => r.user_id))];
+    
+    console.log(`Creating in-app notifications for ${uniqueUserIds.length} admins/super leaders`);
+
+    // Create in-app notifications for all admins and super leaders
+    if (uniqueUserIds.length > 0) {
+      const notifications = uniqueUserIds.map(userId => ({
+        user_id: userId,
+        title: "🙏 URGENT Prayer Request",
+        message: `${memberName} submitted an urgent prayer request: "${title}"`,
+        type: "urgent_prayer",
+        related_id: null,
+      }));
+
+      const { error: notifError } = await supabaseAdmin
+        .from('notifications')
+        .insert(notifications);
+
+      if (notifError) {
+        console.error("Error creating in-app notifications:", notifError);
+      } else {
+        console.log(`Created ${notifications.length} in-app notifications`);
+      }
+    }
+
+    // Get user emails from auth for email notifications
     const adminEmails: string[] = [];
-    for (const roleEntry of adminRoles || []) {
-      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(roleEntry.user_id);
+    for (const userId of uniqueUserIds) {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
       if (!userError && userData?.user?.email) {
         adminEmails.push(userData.user.email);
       }
@@ -110,11 +136,11 @@ const handler = async (req: Request): Promise<Response> => {
     // Remove duplicates
     const uniqueEmails = [...new Set(adminEmails)];
     
-    console.log(`Sending urgent prayer alert to ${uniqueEmails.length} admins/super leaders`);
+    console.log(`Sending urgent prayer alert emails to ${uniqueEmails.length} admins/super leaders`);
 
     if (uniqueEmails.length === 0) {
       console.warn("No admin/super leader emails found");
-      return new Response(JSON.stringify({ message: "No recipients found" }), {
+      return new Response(JSON.stringify({ message: "No email recipients found, but in-app notifications created" }), {
         status: 200,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
