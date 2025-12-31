@@ -69,7 +69,7 @@ serve(async (req: Request) => {
 
     console.log(`Exporting attendees for event: ${eventId}`);
 
-    // Fetch RSVPs
+    // Fetch member RSVPs
     const { data: rsvps, error: rsvpsError } = await supabaseAdmin
       .from("event_rsvps")
       .select("user_id, created_at")
@@ -81,28 +81,41 @@ serve(async (req: Request) => {
       throw rsvpsError;
     }
 
-    if (!rsvps || rsvps.length === 0) {
+    // Fetch guest RSVPs
+    const { data: guestRsvps, error: guestRsvpsError } = await supabaseAdmin
+      .from("guest_event_rsvps")
+      .select("full_name, email, phone, created_at")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: true });
+
+    if (guestRsvpsError) {
+      console.error("Error fetching guest RSVPs:", guestRsvpsError);
+    }
+
+    const memberCount = rsvps?.length || 0;
+    const guestCount = guestRsvps?.length || 0;
+
+    if (memberCount === 0 && guestCount === 0) {
       return new Response(
-        JSON.stringify({ csv: "No attendees registered for this event." }),
+        JSON.stringify({ csv: "No attendees registered for this event.", count: 0 }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Fetch profiles and auth emails
-    const attendeesData = await Promise.all(
-      rsvps.map(async (rsvp, index) => {
-        // Get profile
+    // Fetch profiles and auth emails for members
+    const memberData = await Promise.all(
+      (rsvps || []).map(async (rsvp, index) => {
         const { data: profile } = await supabaseAdmin
           .from("profiles")
           .select("full_name, phone, phone_visible, ministry")
           .eq("id", rsvp.user_id)
           .single();
 
-        // Get email from auth.users
         const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(rsvp.user_id);
 
         return {
           number: index + 1,
+          type: "Member",
           name: profile?.full_name || "Unknown",
           email: authUser?.user?.email || "",
           phone: profile?.phone_visible && profile?.phone ? profile.phone : "",
@@ -112,17 +125,30 @@ serve(async (req: Request) => {
       })
     );
 
+    // Map guest data
+    const guestData = (guestRsvps || []).map((guest, index) => ({
+      number: memberCount + index + 1,
+      type: "Guest",
+      name: guest.full_name,
+      email: guest.email,
+      phone: guest.phone || "",
+      ministry: "",
+      registeredAt: new Date(guest.created_at).toLocaleDateString(),
+    }));
+
+    const allAttendees = [...memberData, ...guestData];
+
     // Generate CSV
-    const csvHeader = "No,Name,Email,Phone,Ministry,Registration Date";
-    const csvRows = attendeesData.map(
-      (a) => `${a.number},"${a.name}","${a.email}","${a.phone}","${a.ministry}","${a.registeredAt}"`
+    const csvHeader = "No,Type,Name,Email,Phone,Ministry,Registration Date";
+    const csvRows = allAttendees.map(
+      (a) => `${a.number},"${a.type}","${a.name}","${a.email}","${a.phone}","${a.ministry}","${a.registeredAt}"`
     );
     const csv = [csvHeader, ...csvRows].join("\n");
 
-    console.log(`Successfully exported ${attendeesData.length} attendees`);
+    console.log(`Successfully exported ${allAttendees.length} attendees (${memberCount} members, ${guestCount} guests)`);
 
     return new Response(
-      JSON.stringify({ csv, count: attendeesData.length }),
+      JSON.stringify({ csv, count: allAttendees.length }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {

@@ -80,7 +80,7 @@ serve(async (req: Request) => {
 
     console.log(`Notifying attendees for event: ${eventId}, email: ${sendEmail}, push: ${sendPush}`);
 
-    // Fetch attendees
+    // Fetch member attendees
     const { data: rsvps, error: rsvpsError } = await supabaseAdmin
       .from("event_rsvps")
       .select("user_id")
@@ -88,14 +88,27 @@ serve(async (req: Request) => {
 
     if (rsvpsError) throw rsvpsError;
 
-    if (!rsvps || rsvps.length === 0) {
+    // Fetch guest attendees
+    const { data: guestRsvps, error: guestRsvpsError } = await supabaseAdmin
+      .from("guest_event_rsvps")
+      .select("email, full_name")
+      .eq("event_id", eventId);
+
+    if (guestRsvpsError) {
+      console.error("Error fetching guest RSVPs:", guestRsvpsError);
+    }
+
+    const memberCount = rsvps?.length || 0;
+    const guestCount = guestRsvps?.length || 0;
+
+    if (memberCount === 0 && guestCount === 0) {
       return new Response(
         JSON.stringify({ success: true, emailsSent: 0, pushSent: 0, message: "No attendees to notify" }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userIds = rsvps.map(r => r.user_id);
+    const userIds = rsvps?.map(r => r.user_id) || [];
     let emailsSent = 0;
     let pushSent = 0;
 
@@ -103,15 +116,20 @@ serve(async (req: Request) => {
     if (sendEmail && resendApiKey) {
       const resend = new Resend(resendApiKey);
       
-      // Get emails for all attendees
-      const emailPromises = userIds.map(async (userId) => {
+      // Get emails for member attendees
+      const memberEmailPromises = userIds.map(async (userId) => {
         const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
         return authUser?.user?.email;
       });
       
-      const emails = (await Promise.all(emailPromises)).filter(Boolean) as string[];
+      const memberEmails = (await Promise.all(memberEmailPromises)).filter(Boolean) as string[];
       
-      if (emails.length > 0) {
+      // Get guest emails
+      const guestEmails = (guestRsvps || []).map(g => g.email).filter(Boolean);
+      
+      const allEmails = [...memberEmails, ...guestEmails];
+      
+      if (allEmails.length > 0) {
         const formattedDate = new Date(eventDate).toLocaleDateString('en-US', {
           weekday: 'long',
           year: 'numeric',
@@ -154,8 +172,8 @@ serve(async (req: Request) => {
         try {
           // Send batch email (Resend supports up to 100 recipients per batch)
           const batchSize = 50;
-          for (let i = 0; i < emails.length; i += batchSize) {
-            const batch = emails.slice(i, i + batchSize);
+          for (let i = 0; i < allEmails.length; i += batchSize) {
+            const batch = allEmails.slice(i, i + batchSize);
             await resend.emails.send({
               from: "COGMPW Events <onboarding@resend.dev>",
               to: batch,

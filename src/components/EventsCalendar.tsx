@@ -4,12 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Calendar, MapPin, Users, Check, Pencil, Trash2, Eye, Lock, Globe } from "lucide-react";
+import { Calendar, MapPin, Users, Check, Pencil, Trash2, Eye, Lock, Globe, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import EventPostForm from "./EventPostForm";
 import EventEditDialog from "./EventEditDialog";
 import EventAttendeesDialog from "./EventAttendeesDialog";
+import GuestRSVPDialog from "./GuestRSVPDialog";
 import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface EventItem {
@@ -23,6 +24,7 @@ interface EventItem {
   media_type: string | null;
   visibility: string;
   rsvp_count?: number;
+  guest_rsvp_count?: number;
   user_rsvp?: boolean;
 }
 
@@ -35,6 +37,7 @@ const EventsCalendar = () => {
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
   const [viewingAttendeesEvent, setViewingAttendeesEvent] = useState<EventItem | null>(null);
+  const [guestRsvpEvent, setGuestRsvpEvent] = useState<EventItem | null>(null);
 
   useEffect(() => {
     getCurrentUser();
@@ -88,8 +91,15 @@ const EventsCalendar = () => {
 
       const eventsWithRsvps = await Promise.all(
         (eventsData || []).map(async (event) => {
-          const { count } = await supabase
+          // Get member RSVP count
+          const { count: memberCount } = await supabase
             .from("event_rsvps")
+            .select("*", { count: "exact", head: true })
+            .eq("event_id", event.id);
+
+          // Get guest RSVP count (only for admins/leaders - will return 0 for others due to RLS)
+          const { count: guestCount } = await supabase
+            .from("guest_event_rsvps")
             .select("*", { count: "exact", head: true })
             .eq("event_id", event.id);
 
@@ -102,7 +112,8 @@ const EventsCalendar = () => {
 
           return {
             ...event,
-            rsvp_count: count || 0,
+            rsvp_count: (memberCount || 0) + (guestCount || 0),
+            guest_rsvp_count: guestCount || 0,
             user_rsvp: !!userRsvp,
           } as EventItem;
         })
@@ -312,27 +323,39 @@ const EventsCalendar = () => {
                   <Users className="h-4 w-4 shrink-0" />
                   <span>
                     {event.rsvp_count} {event.rsvp_count === 1 ? "person" : "people"} going
-                    {canCreateEvent && " (View)"}
+                    {canCreateEvent && event.guest_rsvp_count ? ` (${event.guest_rsvp_count} guests)` : ""}
+                    {canCreateEvent && " - View"}
                   </span>
                 </button>
 
-                <Button
-                  variant={event.user_rsvp ? "secondary" : "default"}
-                  onClick={() => handleRSVP(event.id, event.user_rsvp || false)}
-                  className="gap-2 w-full sm:w-auto text-sm md:text-base h-9 md:h-10"
-                >
-                  {event.user_rsvp ? (
-                    <>
-                      <Check className="h-4 w-4" />
-                      I'm Going
-                    </>
-                  ) : (
-                    "RSVP"
-                  )}
-                </Button>
+                {userId ? (
+                  <Button
+                    variant={event.user_rsvp ? "secondary" : "default"}
+                    onClick={() => handleRSVP(event.id, event.user_rsvp || false)}
+                    className="gap-2 w-full sm:w-auto text-sm md:text-base h-9 md:h-10"
+                  >
+                    {event.user_rsvp ? (
+                      <>
+                        <Check className="h-4 w-4" />
+                        I'm Going
+                      </>
+                    ) : (
+                      "RSVP"
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    onClick={() => setGuestRsvpEvent(event)}
+                    className="gap-2 w-full sm:w-auto text-sm md:text-base h-9 md:h-10"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Register as Guest
+                  </Button>
+                )}
               </div>
 
-              {event.user_rsvp && (
+              {event.user_rsvp && userId && (
                 <Badge variant="outline" className="w-fit text-xs">
                   You're attending this event
                 </Badge>
@@ -359,6 +382,16 @@ const EventsCalendar = () => {
           eventLocation={viewingAttendeesEvent.location}
           open={!!viewingAttendeesEvent}
           onOpenChange={(open) => !open && setViewingAttendeesEvent(null)}
+        />
+      )}
+
+      {guestRsvpEvent && (
+        <GuestRSVPDialog
+          eventId={guestRsvpEvent.id}
+          eventTitle={guestRsvpEvent.title}
+          open={!!guestRsvpEvent}
+          onOpenChange={(open) => !open && setGuestRsvpEvent(null)}
+          onSuccess={fetchEvents}
         />
       )}
 
