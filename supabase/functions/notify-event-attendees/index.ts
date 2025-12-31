@@ -117,18 +117,32 @@ serve(async (req: Request) => {
       const resend = new Resend(resendApiKey);
       
       // Get emails for member attendees
+      console.log(`Fetching emails for ${userIds.length} member attendees`);
       const memberEmailPromises = userIds.map(async (userId) => {
-        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
-        return authUser?.user?.email;
+        try {
+          const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+          if (authError) {
+            console.error(`Error fetching user ${userId}:`, authError.message);
+            return null;
+          }
+          const email = authUser?.user?.email;
+          console.log(`User ${userId} email: ${email || 'NOT FOUND'}`);
+          return email;
+        } catch (err) {
+          console.error(`Exception fetching user ${userId}:`, err);
+          return null;
+        }
       });
       
       const memberEmails = (await Promise.all(memberEmailPromises)).filter(Boolean) as string[];
+      console.log(`Found ${memberEmails.length} member emails:`, memberEmails);
       
       // Get guest emails
       const guestEmails = (guestRsvps || []).map(g => g.email).filter(Boolean);
+      console.log(`Found ${guestEmails.length} guest emails:`, guestEmails);
       
       const allEmails = [...memberEmails, ...guestEmails];
-      
+      console.log(`Total emails to send: ${allEmails.length}`);
       if (allEmails.length > 0) {
         const formattedDate = new Date(eventDate).toLocaleDateString('en-US', {
           weekday: 'long',
