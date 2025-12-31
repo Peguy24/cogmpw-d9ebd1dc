@@ -24,6 +24,8 @@ const guestRsvpSchema = z.object({
 interface GuestRSVPDialogProps {
   eventId: string;
   eventTitle: string;
+  eventDate: string;
+  eventLocation: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
@@ -32,6 +34,8 @@ interface GuestRSVPDialogProps {
 const GuestRSVPDialog = ({
   eventId,
   eventTitle,
+  eventDate,
+  eventLocation,
   open,
   onOpenChange,
   onSuccess,
@@ -72,7 +76,24 @@ const GuestRSVPDialog = ({
 
       if (error) throw error;
 
-      toast.success("You're registered! See you at the event 🙏");
+      // Send confirmation email (non-blocking)
+      supabase.functions.invoke("send-guest-rsvp-confirmation", {
+        body: {
+          guestName: result.data.full_name,
+          guestEmail: result.data.email,
+          eventTitle,
+          eventDate,
+          eventLocation,
+        },
+      }).then((res) => {
+        if (res.error) {
+          console.error("Failed to send confirmation email:", res.error);
+        } else {
+          console.log("Confirmation email sent");
+        }
+      });
+
+      toast.success("You're registered! Check your email for confirmation 🙏");
       onOpenChange(false);
       setFullName("");
       setEmail("");

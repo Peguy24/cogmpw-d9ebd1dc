@@ -389,6 +389,8 @@ const EventsCalendar = () => {
         <GuestRSVPDialog
           eventId={guestRsvpEvent.id}
           eventTitle={guestRsvpEvent.title}
+          eventDate={guestRsvpEvent.event_date}
+          eventLocation={guestRsvpEvent.location}
           open={!!guestRsvpEvent}
           onOpenChange={(open) => !open && setGuestRsvpEvent(null)}
           onSuccess={fetchEvents}
