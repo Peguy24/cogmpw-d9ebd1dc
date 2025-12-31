@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Church, Calendar, DollarSign, Video, Users, ArrowUp } from "lucide-react";
 import churchBanner from "@/assets/church-banner-new.jpg";
-import churchLogo from "@/assets/church-logo-official.webp";
+import churchLogo from "@/assets/church-logo-gold.png";
 import { useEffect, useRef, useState } from "react";
 
 const Index = () => {
