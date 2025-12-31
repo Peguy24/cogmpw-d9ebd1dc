@@ -34,6 +34,7 @@ import MyPrayerRequests from "./pages/MyPrayerRequests";
 import DonationSuccess from "./pages/DonationSuccess";
 import ReturnToApp from "./pages/ReturnToApp";
 import CommunityChat from "./pages/CommunityChat";
+import PermissionsSummary from "./pages/PermissionsSummary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const AppContent = () => {
         <Route path="/campaign/:id" element={<CampaignDetails />} />
         <Route path="/manage-subscriptions" element={<ManageSubscriptions />} />
         <Route path="/community-chat" element={<CommunityChat />} />
+        <Route path="/permissions-summary" element={<PermissionsSummary />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/donation-success" element={<DonationSuccess />} />
         <Route path="/return-to-app" element={<ReturnToApp />} />
