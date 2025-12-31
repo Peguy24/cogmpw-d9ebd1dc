@@ -189,9 +189,9 @@ serve(async (req: Request) => {
           for (let i = 0; i < allEmails.length; i += batchSize) {
             const batch = allEmails.slice(i, i + batchSize);
 
-            // Use your verified domain sender (matches other email flows)
+            // Use a verified sender domain (this must match what you've verified in Resend)
             const emailResponse = await resend.emails.send({
-              from: "COGMPW Events <noreply@cogmpw.com>",
+              from: "COGMPW Events <hello@noreply.cogmpw.com>",
               to: batch,
               subject: `${subject} - ${eventTitle}`,
               html: htmlContent,
@@ -202,13 +202,18 @@ serve(async (req: Request) => {
               emailResponse,
             );
 
+            if (emailResponse?.error) {
+              throw new Error(emailResponse.error.message || "Resend rejected the send");
+            }
+
             emailsSent += batch.length;
           }
           console.log(`Sent ${emailsSent} emails`);
         } catch (emailError) {
+          const msg = emailError instanceof Error ? emailError.message : "Unknown email error";
           console.error("Error sending emails:", emailError);
           return new Response(
-            JSON.stringify({ error: "Failed to send email notifications" }),
+            JSON.stringify({ error: msg }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
           );
         }

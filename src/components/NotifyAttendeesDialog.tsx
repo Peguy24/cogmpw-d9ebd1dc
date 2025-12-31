@@ -72,9 +72,13 @@ const NotifyAttendeesDialog = ({
       toast.success(data?.message || "Notifications sent successfully");
       onOpenChange(false);
       setMessage("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending notifications:", error);
-      toast.error("Failed to send notifications");
+      const msg =
+        error?.context?.error ||
+        error?.message ||
+        "Failed to send notifications";
+      toast.error(msg);
     } finally {
       setSending(false);
     }
