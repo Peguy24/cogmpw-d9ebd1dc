@@ -162,7 +162,7 @@ serve(async (req: Request) => {
           </head>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #d4af37, #b8962e); padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">📅 Event Update</h1>
+              <h1 style="color: white; margin: 0; font-size: 24px;">Event Update</h1>
             </div>
             <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px;">
               <h2 style="color: #333; margin-top: 0;">${subject}</h2>
@@ -170,9 +170,9 @@ serve(async (req: Request) => {
               
               <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #d4af37;">
                 <h3 style="margin-top: 0; color: #d4af37;">Event Details</h3>
-                <p style="margin: 8px 0;"><strong>📌 Event:</strong> ${eventTitle}</p>
-                <p style="margin: 8px 0;"><strong>📅 Date:</strong> ${formattedDate}</p>
-                <p style="margin: 8px 0;"><strong>📍 Location:</strong> ${eventLocation}</p>
+                <p style="margin: 8px 0;"><strong>Event:</strong> ${eventTitle}</p>
+                <p style="margin: 8px 0;"><strong>Date:</strong> ${formattedDate}</p>
+                <p style="margin: 8px 0;"><strong>Location:</strong> ${eventLocation}</p>
               </div>
               
               <p style="color: #666; font-size: 14px; margin-top: 20px;">
