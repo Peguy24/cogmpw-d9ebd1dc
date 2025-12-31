@@ -53,9 +53,12 @@ const CommunityChat = () => {
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string>("");
+  const [currentUserEmail, setCurrentUserEmail] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [deleteMessageId, setDeleteMessageId] = useState<string | null>(null);
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -65,6 +68,9 @@ const CommunityChat = () => {
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const SUPER_ADMIN_EMAIL = "labordepeguy2020@gmail.com";
+  const isSuperAdmin = currentUserEmail === SUPER_ADMIN_EMAIL;
 
   // Mark messages as read when component mounts
   useEffect(() => {
@@ -79,6 +85,7 @@ const CommunityChat = () => {
         return;
       }
       setCurrentUserId(user.id);
+      setCurrentUserEmail(user.email || "");
 
       // Check if user is approved and get name
       const { data: profile } = await supabase
@@ -408,6 +415,32 @@ const CommunityChat = () => {
     }
   };
 
+  const deleteAllMessages = async () => {
+    if (!isSuperAdmin) return;
+    
+    setDeletingAll(true);
+    try {
+      const { error } = await supabase
+        .from("chat_messages")
+        .update({ is_deleted: true, deleted_by: currentUserId })
+        .neq("is_deleted", true);
+
+      if (error) {
+        toast.error("Failed to delete messages");
+        console.error(error);
+      } else {
+        toast.success("All messages have been deleted");
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred");
+    } finally {
+      setDeletingAll(false);
+      setShowDeleteAllDialog(false);
+    }
+  };
+
   if (!isApproved) {
     return null;
   }
@@ -429,11 +462,24 @@ const CommunityChat = () => {
             <MessageCircle className="h-5 w-5 text-primary shrink-0" />
             <h1 className="font-semibold text-sm sm:text-base truncate">Community Chat</h1>
           </div>
-          {isAdmin && (
-            <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-2 py-1 rounded-full shrink-0">
-              Mod
-            </span>
-          )}
+          <div className="flex items-center gap-1 sm:gap-2">
+            {isSuperAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 sm:px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => setShowDeleteAllDialog(true)}
+              >
+                <Trash2 className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline text-xs">Clear All</span>
+              </Button>
+            )}
+            {isAdmin && (
+              <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-2 py-1 rounded-full shrink-0">
+                Mod
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
@@ -774,6 +820,28 @@ const CommunityChat = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Messages Dialog - Super Admin Only */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Messages</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete ALL messages in the community chat? This action cannot be undone and will remove all conversation history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingAll}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteAllMessages}
+              disabled={deletingAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingAll ? "Deleting..." : "Delete All"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
