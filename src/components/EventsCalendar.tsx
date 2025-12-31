@@ -355,6 +355,8 @@ const EventsCalendar = () => {
         <EventAttendeesDialog
           eventId={viewingAttendeesEvent.id}
           eventTitle={viewingAttendeesEvent.title}
+          eventDate={viewingAttendeesEvent.event_date}
+          eventLocation={viewingAttendeesEvent.location}
           open={!!viewingAttendeesEvent}
           onOpenChange={(open) => !open && setViewingAttendeesEvent(null)}
         />
