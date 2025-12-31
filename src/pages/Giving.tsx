@@ -116,17 +116,15 @@ const Giving = () => {
             queryClient.invalidateQueries({ queryKey: ["donations-history"] });
 
             // Try to fetch the recorded donation details (only works for authenticated users)
-            if (data?.paymentIntentId) {
-              const { data: donations, error: fetchError } = await supabase
+            if (data?.donationId) {
+              const { data: donation, error: fetchError } = await supabase
                 .from("donations")
-                .select("*, user_id")
-                .eq("stripe_payment_intent_id", data.paymentIntentId)
-                .order("created_at", { ascending: false })
-                .limit(1)
+                .select("*")
+                .eq("id", data.donationId)
                 .maybeSingle();
 
-              if (!fetchError && donations) {
-                setDonationDetails(donations);
+              if (!fetchError && donation) {
+                setDonationDetails(donation);
                 setShowReceiptDialog(true);
               } else {
                 // Guest donation or fetch failed - still show success

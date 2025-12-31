@@ -53,7 +53,7 @@ const EventsCalendar = () => {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .in("role", ["admin", "leader"]);
+        .in("role", ["admin", "leader", "super_leader"]);
 
       if (error) throw error;
 
@@ -191,7 +191,7 @@ const EventsCalendar = () => {
     );
   }
 
-  const canCreateEvent = userRole === "admin" || userRole === "leader";
+  const canCreateEvent = userRole === "admin" || userRole === "leader" || userRole === "super_leader";
 
   const handleRefresh = async () => {
     await fetchEvents();
