@@ -26,6 +26,7 @@ const Home = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isOnlyAdmin, setIsOnlyAdmin] = useState(false); // true admin, not just super_leader
   const [pendingCount, setPendingCount] = useState(0);
   const [activeTab, setActiveTab] = useState("news");
   const isMobile = useIsMobile();
@@ -56,21 +57,25 @@ const Home = () => {
 
       setUser(session.user);
       
-      // Check if user is admin and load pending count
+      // Check if user is admin or super_leader and load pending count
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", session.user.id)
-        .eq("role", "admin")
-        .single();
+        .eq("user_id", session.user.id);
 
-      if (roles) {
+      const userIsAdmin = roles?.some(r => r.role === "admin") || false;
+      const userIsSuperLeader = roles?.some(r => (r.role as string) === "super_leader") || false;
+      
+      if (userIsAdmin || userIsSuperLeader) {
         setIsAdmin(true);
-        const { count } = await supabase
-          .from("profiles")
-          .select("*", { count: "exact", head: true })
-          .eq("is_approved", false);
-        setPendingCount(count || 0);
+        setIsOnlyAdmin(userIsAdmin);
+        if (userIsAdmin) {
+          const { count } = await supabase
+            .from("profiles")
+            .select("*", { count: "exact", head: true })
+            .eq("is_approved", false);
+          setPendingCount(count || 0);
+        }
       }
 
       setLoading(false);
@@ -178,12 +183,14 @@ const Home = () => {
                         )}
                       </Button>
                     </Link>
-                    <Link to="/admin/users" className="block">
-                      <Button variant="ghost" className="w-full justify-start">
-                        <Shield className="h-5 w-5 mr-3" />
-                        User Management
-                      </Button>
-                    </Link>
+                    {isOnlyAdmin && (
+                      <Link to="/admin/users" className="block">
+                        <Button variant="ghost" className="w-full justify-start">
+                          <Shield className="h-5 w-5 mr-3" />
+                          User Management
+                        </Button>
+                      </Link>
+                    )}
                     <Link to="/admin/giving" className="block">
                       <Button variant="ghost" className="w-full justify-start">
                         <DollarSign className="h-5 w-5 mr-3" />

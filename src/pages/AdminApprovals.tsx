@@ -49,16 +49,16 @@ const AdminApprovals = () => {
       return;
     }
 
-    // Check if user is admin
+    // Check if user is admin or super_leader
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .eq("user_id", user.id);
 
-    if (!roles) {
-      toast.error("Access denied. Admin privileges required.");
+    const hasAccess = roles?.some(r => r.role === "admin" || (r.role as string) === "super_leader");
+
+    if (!hasAccess) {
+      toast.error("Access denied. Admin or Super Leader privileges required.");
       navigate("/home");
       return;
     }

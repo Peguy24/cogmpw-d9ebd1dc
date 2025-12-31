@@ -79,15 +79,15 @@ const AdminGivingReports = () => {
         return;
       }
 
-      const { data: roleData } = await supabase
+      const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .single();
+        .eq("user_id", user.id);
 
-      if (!roleData) {
-        toast.error("Access denied: Admin only");
+      const hasAccess = roles?.some(r => r.role === "admin" || (r.role as string) === "super_leader");
+
+      if (!hasAccess) {
+        toast.error("Access denied: Admin or Super Leader only");
         navigate("/home");
         return;
       }
