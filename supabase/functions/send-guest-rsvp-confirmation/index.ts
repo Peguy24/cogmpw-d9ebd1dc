@@ -25,14 +25,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending RSVP confirmation to ${guestEmail} for event: ${eventTitle}`);
 
-    const formattedDate = new Date(eventDate).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
-    });
+    // eventDate is already formatted from the frontend, use it directly
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -76,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <h3 style="color: #1a1a2e; margin: 0 0 15px; font-size: 18px;">${eventTitle}</h3>
                   <p style="color: #555555; margin: 0 0 10px; font-size: 14px;">
                     <strong>Date & Time:</strong><br>
-                    ${formattedDate}
+                    ${eventDate}
                   </p>
                   <p style="color: #555555; margin: 0; font-size: 14px;">
                     <strong>Location:</strong><br>
