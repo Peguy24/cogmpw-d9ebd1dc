@@ -54,7 +54,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "COGMPW <hello@noreply.cogmpw.com>",
       to: [email],
-      subject: "💝 Donation Receipt - COGMPW",
+      subject: "Donation Receipt - COGMPW",
       html: `
         <!DOCTYPE html>
         <html>
@@ -94,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <!-- Transaction Details -->
               <div style="background: rgba(59, 130, 246, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(59, 130, 246, 0.2);">
-                <h3 style="color: #93c5fd; margin: 0 0 16px 0; font-size: 16px;">📋 Transaction Details</h3>
+                <h3 style="color: #93c5fd; margin: 0 0 16px 0; font-size: 16px;">Transaction Details</h3>
                 <table style="width: 100%;">
                   <tr>
                     <td style="color: #94a3b8; font-size: 14px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">Category</td>
@@ -119,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <!-- Tax Info -->
               <div style="background: linear-gradient(135deg, #78350f 0%, #451a03 100%); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #fbbf24;">
-                <h3 style="color: #fef3c7; margin: 0 0 8px 0; font-size: 16px;">📄 Tax Information</h3>
+                <h3 style="color: #fef3c7; margin: 0 0 8px 0; font-size: 16px;">Tax Information</h3>
                 <p style="color: #fde68a; font-size: 13px; line-height: 20px; margin: 0 0 8px 0;">
                   COGMPW is a 501(c)(3) tax-exempt organization. This receipt serves as documentation of your charitable contribution for tax purposes. No goods or services were provided in exchange for this donation.
                 </p>

@@ -144,7 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "COGMPW Church <hello@noreply.cogmpw.com>",
       to: recipientEmails,
-      subject: `📅 New Event: ${escapeHtml(eventTitle)}`,
+      subject: `New Event: ${escapeHtml(eventTitle)}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -162,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
             <!-- Main Card -->
             <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(139, 92, 246, 0.2);">
               <div style="text-align: center; margin-bottom: 32px;">
-                <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">📅 New Church Event!</h1>
+                <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">New Church Event!</h1>
                 <p style="color: #c4b5fd; margin: 0; font-size: 14px; letter-spacing: 1px;">YOU'RE INVITED</p>
               </div>
               
@@ -175,12 +175,12 @@ const handler = async (req: Request): Promise<Response> => {
                   <table style="width: 100%;">
                     <tr>
                       <td style="color: #e2e8f0; font-size: 14px; padding: 8px 0;">
-                        <strong style="color: #c4b5fd;">📍 Location:</strong> ${escapeHtml(eventLocation)}
+                        <strong style="color: #c4b5fd;">Location:</strong> ${escapeHtml(eventLocation)}
                       </td>
                     </tr>
                     <tr>
                       <td style="color: #e2e8f0; font-size: 14px; padding: 8px 0;">
-                        <strong style="color: #c4b5fd;">🕐 Date & Time:</strong> ${formattedDate}
+                        <strong style="color: #c4b5fd;">Date & Time:</strong> ${formattedDate}
                       </td>
                     </tr>
                   </table>

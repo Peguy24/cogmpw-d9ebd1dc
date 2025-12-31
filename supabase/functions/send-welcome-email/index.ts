@@ -102,7 +102,7 @@ serve(async (req) => {
           <!-- Main Card -->
           <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(16, 185, 129, 0.2);">
             <div style="text-align: center; margin-bottom: 32px;">
-              <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">🎉 You're Approved!</h1>
+              <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">You're Approved!</h1>
               <p style="color: #93c5fd; margin: 0; font-size: 14px; letter-spacing: 1px;">WELCOME TO THE COGMPW FAMILY</p>
             </div>
             
@@ -118,25 +118,25 @@ serve(async (req) => {
             
             <!-- Features List -->
             <div style="background: rgba(16, 185, 129, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border: 1px solid rgba(16, 185, 129, 0.2);">
-              <h3 style="color: #6ee7b7; margin: 0 0 16px 0; font-size: 16px;">✨ What you can now do:</h3>
+              <h3 style="color: #6ee7b7; margin: 0 0 16px 0; font-size: 16px;">What you can now do:</h3>
               <table style="width: 100%;">
                 <tr>
-                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📖 View daily devotionals and sermons</td>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• View daily devotionals and sermons</td>
                 </tr>
                 <tr>
-                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📰 Stay updated with church news and events</td>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• Stay updated with church news and events</td>
                 </tr>
                 <tr>
-                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">💬 Connect with other church members</td>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• Connect with other church members</td>
                 </tr>
                 <tr>
-                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">🙏 Submit prayer requests</td>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• Submit prayer requests</td>
                 </tr>
                 <tr>
-                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">💝 Support the church through giving</td>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• Support the church through giving</td>
                 </tr>
                 <tr>
-                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📅 RSVP to upcoming events</td>
+                  <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">• RSVP to upcoming events</td>
                 </tr>
               </table>
             </div>
@@ -171,7 +171,7 @@ serve(async (req) => {
     const { error: emailError } = await resend.emails.send({
       from: "COGMPW <hello@noreply.cogmpw.com>",
       to: [targetUser.email],
-      subject: "🎉 Welcome to COGMPW - Your Account is Approved!",
+      subject: "Welcome to COGMPW - Your Account is Approved!",
       html: emailHtml,
     });
 

@@ -40,7 +40,7 @@ const generateReminderEmail = (
         <!-- Main Card -->
         <div style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); border-radius: 16px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(245, 158, 11, 0.2);">
           <div style="text-align: center; margin-bottom: 32px;">
-            <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">⏰ Event Reminder</h1>
+            <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 28px; font-weight: 700;">Event Reminder</h1>
             <p style="color: #fbbf24; margin: 0; font-size: 14px; letter-spacing: 1px;">HAPPENING TOMORROW!</p>
           </div>
           
@@ -61,10 +61,10 @@ const generateReminderEmail = (
             
             <table style="width: 100%;">
               <tr>
-                <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">📍 <strong>Location:</strong> ${escapeHtml(event.location)}</td>
+                <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;"><strong>Location:</strong> ${escapeHtml(event.location)}</td>
               </tr>
               <tr>
-                <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;">🕐 <strong>Date & Time:</strong> ${formattedDate}</td>
+                <td style="color: #e2e8f0; font-size: 14px; padding: 6px 0;"><strong>Date & Time:</strong> ${formattedDate}</td>
               </tr>
             </table>
           </div>
@@ -214,9 +214,9 @@ const handler = async (req: Request): Promise<Response> => {
 
             try {
               await resend.emails.send({
-                from: "COGMPW <noreply@cogmpw.com>",
+                from: "COGMPW <hello@noreply.cogmpw.com>",
                 to: email,
-                subject: `⏰ Reminder: ${escapeHtml(event.title)} Tomorrow!`,
+                subject: `Reminder: ${escapeHtml(event.title)} Tomorrow!`,
                 html: generateReminderEmail(escapeHtml(profile.full_name), event, formattedDate),
               });
 
@@ -280,9 +280,9 @@ const handler = async (req: Request): Promise<Response> => {
 
             try {
               await resend.emails.send({
-                from: "COGMPW <noreply@cogmpw.com>",
+                from: "COGMPW <hello@noreply.cogmpw.com>",
                 to: guest.email,
-                subject: `⏰ Reminder: ${escapeHtml(event.title)} Tomorrow!`,
+                subject: `Reminder: ${escapeHtml(event.title)} Tomorrow!`,
                 html: generateReminderEmail(escapeHtml(guest.full_name), event, formattedDate),
               });
 
