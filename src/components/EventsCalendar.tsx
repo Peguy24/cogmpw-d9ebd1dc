@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import EventPostForm from "./EventPostForm";
 import EventEditDialog from "./EventEditDialog";
+import EventAttendeesDialog from "./EventAttendeesDialog";
 import PullToRefresh from "react-simple-pull-to-refresh";
 
 interface EventItem {
@@ -33,6 +34,7 @@ const EventsCalendar = () => {
   const [checkingRole, setCheckingRole] = useState(true);
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+  const [viewingAttendeesEvent, setViewingAttendeesEvent] = useState<EventItem | null>(null);
 
   useEffect(() => {
     getCurrentUser();
@@ -302,12 +304,17 @@ const EventsCalendar = () => {
               <p className="text-sm md:text-base text-foreground break-words">{event.description}</p>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground">
+                <button
+                  onClick={() => canCreateEvent && setViewingAttendeesEvent(event)}
+                  className={`flex items-center gap-2 text-xs md:text-sm text-muted-foreground ${canCreateEvent ? "hover:text-foreground cursor-pointer transition-colors" : ""}`}
+                  disabled={!canCreateEvent}
+                >
                   <Users className="h-4 w-4 shrink-0" />
                   <span>
                     {event.rsvp_count} {event.rsvp_count === 1 ? "person" : "people"} going
+                    {canCreateEvent && " (View)"}
                   </span>
-                </div>
+                </button>
 
                 <Button
                   variant={event.user_rsvp ? "secondary" : "default"}
@@ -341,6 +348,15 @@ const EventsCalendar = () => {
           open={!!editingEvent}
           onOpenChange={(open) => !open && setEditingEvent(null)}
           onSuccess={fetchEvents}
+        />
+      )}
+
+      {viewingAttendeesEvent && (
+        <EventAttendeesDialog
+          eventId={viewingAttendeesEvent.id}
+          eventTitle={viewingAttendeesEvent.title}
+          open={!!viewingAttendeesEvent}
+          onOpenChange={(open) => !open && setViewingAttendeesEvent(null)}
         />
       )}
 
