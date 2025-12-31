@@ -415,57 +415,58 @@ const CommunityChat = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center gap-4 px-4">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-top">
+        <div className="flex h-12 sm:h-14 items-center gap-2 sm:gap-4 px-2 sm:px-4">
           <Button
             variant="ghost"
             size="icon"
+            className="h-10 w-10 sm:h-9 sm:w-9"
             onClick={() => navigate("/home")}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
-            <h1 className="font-semibold">Community Chat</h1>
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <MessageCircle className="h-5 w-5 text-primary shrink-0" />
+            <h1 className="font-semibold text-sm sm:text-base truncate">Community Chat</h1>
           </div>
           {isAdmin && (
-            <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-              Moderator
+            <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-2 py-1 rounded-full shrink-0">
+              Mod
             </span>
           )}
         </div>
       </header>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <ScrollArea className="flex-1 px-2 sm:px-4 py-3" ref={scrollRef}>
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">Loading messages...</p>
+            <p className="text-muted-foreground text-sm">Loading messages...</p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <MessageCircle className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">No messages yet</p>
-            <p className="text-sm text-muted-foreground">Be the first to say hello!</p>
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <MessageCircle className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50 mb-3 sm:mb-4" />
+            <p className="text-muted-foreground text-sm sm:text-base">No messages yet</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Be the first to say hello!</p>
           </div>
         ) : (
-          <div className="space-y-4 pb-4">
+          <div className="space-y-3 sm:space-y-4 pb-4">
             {/* Pinned Messages Section */}
             {messages.filter(m => m.is_pinned && !m.is_deleted).length > 0 && (
-              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Pin className="h-4 w-4 text-amber-600" />
-                  <span className="text-sm font-medium text-amber-700 dark:text-amber-400">Pinned Messages</span>
+                  <Pin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
+                  <span className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-400">Pinned</span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   {messages.filter(m => m.is_pinned && !m.is_deleted).map((pinnedMsg) => (
                     <button
                       key={`pinned-${pinnedMsg.id}`}
                       onClick={() => scrollToMessage(pinnedMsg.id)}
-                      className="w-full text-left p-2 bg-background/50 rounded-lg hover:bg-background/80 transition-colors"
+                      className="w-full text-left p-2 bg-background/50 rounded-lg hover:bg-background/80 active:bg-background/90 transition-colors touch-manipulation"
                     >
-                      <p className="text-xs font-medium text-muted-foreground">{pinnedMsg.profiles?.full_name}</p>
-                      <p className="text-sm truncate">{pinnedMsg.content}</p>
+                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">{pinnedMsg.profiles?.full_name}</p>
+                      <p className="text-xs sm:text-sm truncate">{pinnedMsg.content}</p>
                     </button>
                   ))}
                 </div>
@@ -494,22 +495,22 @@ const CommunityChat = () => {
                 <div
                   key={message.id}
                   id={`message-${message.id}`}
-                  className={`flex items-start gap-2 transition-colors duration-300 rounded-lg ${isOwn ? "flex-row-reverse" : "flex-row"}`}
+                  className={`flex items-start gap-1.5 sm:gap-2 transition-colors duration-300 rounded-lg ${isOwn ? "flex-row-reverse" : "flex-row"}`}
                 >
-                  <Avatar className="h-8 w-8 shrink-0">
+                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
                     <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
-                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                    <AvatarFallback className="text-[10px] sm:text-xs bg-primary/10 text-primary">
                       {getInitials(message.profiles?.full_name || "?")}
                     </AvatarFallback>
                   </Avatar>
                   <div
-                    className={`group max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}
+                    className={`group max-w-[80%] sm:max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
+                      <span className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate max-w-[120px] sm:max-w-none">
                         {message.profiles?.full_name || "Unknown"}
                       </span>
-                      <span className="text-xs text-muted-foreground/60">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground/60">
                         {format(new Date(message.created_at), "h:mm a")}
                       </span>
                     </div>
@@ -518,25 +519,25 @@ const CommunityChat = () => {
                     {replyMessage && (
                       <button
                         onClick={() => scrollToMessage(replyMessage.id)}
-                        className={`flex items-start gap-1.5 mb-1 px-2 py-1 rounded-lg text-left transition-colors hover:bg-muted/50 ${
+                        className={`flex items-start gap-1.5 mb-1 px-2 py-1 rounded-lg text-left transition-colors hover:bg-muted/50 active:bg-muted/70 touch-manipulation ${
                           isOwn ? "bg-primary/20" : "bg-muted/80"
                         }`}
                       >
-                        <Reply className="h-3 w-3 mt-0.5 shrink-0 text-muted-foreground" />
+                        <Reply className="h-2.5 w-2.5 sm:h-3 sm:w-3 mt-0.5 shrink-0 text-muted-foreground" />
                         <div className="min-w-0">
-                          <p className="text-xs font-medium text-muted-foreground">
+                          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">
                             {replyMessage.profiles?.full_name || "Unknown"}
                           </p>
-                          <p className="text-xs text-muted-foreground/80 truncate max-w-[200px]">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground/80 truncate max-w-[150px] sm:max-w-[200px]">
                             {replyMessage.is_deleted ? "Message deleted" : replyMessage.content}
                           </p>
                         </div>
                       </button>
                     )}
                     
-                    <div className={`flex items-center gap-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
+                    <div className={`flex items-start gap-0.5 sm:gap-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
                       <div
-                        className={`rounded-2xl px-4 py-2 max-w-full ${
+                        className={`rounded-2xl px-3 py-1.5 sm:px-4 sm:py-2 max-w-full ${
                           isOwn
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
@@ -548,7 +549,7 @@ const CommunityChat = () => {
                             <img 
                               src={message.media_url} 
                               alt="Shared image" 
-                              className="max-w-[250px] max-h-[200px] rounded-lg mb-2 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                              className="max-w-[180px] sm:max-w-[250px] max-h-[150px] sm:max-h-[200px] rounded-lg mb-1.5 sm:mb-2 object-cover cursor-pointer hover:opacity-90 active:opacity-80 transition-opacity"
                             />
                           </a>
                         )}
@@ -557,43 +558,43 @@ const CommunityChat = () => {
                             href={message.media_url} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className={`flex items-center gap-2 p-2 rounded-lg mb-2 ${
+                            className={`flex items-center gap-2 p-1.5 sm:p-2 rounded-lg mb-1.5 sm:mb-2 ${
                               isOwn ? "bg-primary-foreground/10" : "bg-background/50"
                             }`}
                           >
-                            <FileText className="h-5 w-5 shrink-0" />
-                            <span className="text-sm truncate max-w-[180px]">
+                            <FileText className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                            <span className="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-[180px]">
                               {message.content || "File"}
                             </span>
                           </a>
                         )}
                         {/* Text content (only show if no file or has additional text) */}
                         {(!message.media_url || (message.media_url && message.content && message.content !== message.media_url.split('/').pop())) && (
-                          <p className="text-sm whitespace-pre-wrap break-words">
+                          <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">
                             {message.content}
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-0 sm:gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6"
+                          className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
                           onClick={() => handleReply(message)}
                         >
-                          <Reply className="h-3 w-3 text-muted-foreground" />
+                          <Reply className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground" />
                         </Button>
                         {isAdmin && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6"
+                            className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
                             onClick={() => togglePinMessage(message.id, !!message.is_pinned)}
                           >
                             {message.is_pinned ? (
-                              <PinOff className="h-3 w-3 text-amber-500" />
+                              <PinOff className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-amber-500" />
                             ) : (
-                              <Pin className="h-3 w-3 text-muted-foreground" />
+                              <Pin className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground" />
                             )}
                           </Button>
                         )}
@@ -601,10 +602,10 @@ const CommunityChat = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6"
+                            className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
                             onClick={() => setDeleteMessageId(message.id)}
                           >
-                            <Trash2 className="h-3 w-3 text-destructive" />
+                            <Trash2 className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-destructive" />
                           </Button>
                         )}
                       </div>
@@ -627,15 +628,15 @@ const CommunityChat = () => {
 
       {/* Reply Preview */}
       {replyingTo && (
-        <div className="border-t bg-muted/50 px-4 py-2">
+        <div className="border-t bg-muted/50 px-2 sm:px-4 py-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <Reply className="h-4 w-4 text-primary shrink-0" />
+              <Reply className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-primary">
+                <p className="text-[10px] sm:text-xs font-medium text-primary">
                   Replying to {replyingTo.profiles?.full_name || "Unknown"}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   {replyingTo.content}
                 </p>
               </div>
@@ -643,7 +644,7 @@ const CommunityChat = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0"
+              className="h-8 w-8 sm:h-6 sm:w-6 shrink-0 touch-manipulation"
               onClick={() => setReplyingTo(null)}
             >
               <X className="h-4 w-4" />
@@ -654,14 +655,14 @@ const CommunityChat = () => {
 
       {/* Typing Indicator */}
       {typingUsers.length > 0 && (
-        <div className="px-4 py-2 border-t bg-muted/30">
+        <div className="px-2 sm:px-4 py-1.5 sm:py-2 border-t bg-muted/30">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
-              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-              <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
               {typingUsers.length === 1
                 ? `${typingUsers[0].full_name} is typing...`
                 : typingUsers.length === 2
@@ -674,23 +675,23 @@ const CommunityChat = () => {
 
       {/* Selected File Preview */}
       {selectedFile && (
-        <div className="border-t bg-muted/50 px-4 py-2">
+        <div className="border-t bg-muted/50 px-2 sm:px-4 py-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               {selectedFile.type.startsWith('image/') ? (
                 <img 
                   src={URL.createObjectURL(selectedFile)} 
                   alt="Preview" 
-                  className="h-12 w-12 object-cover rounded"
+                  className="h-10 w-10 sm:h-12 sm:w-12 object-cover rounded"
                 />
               ) : (
-                <div className="h-12 w-12 bg-muted rounded flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-muted-foreground" />
+                <div className="h-10 w-10 sm:h-12 sm:w-12 bg-muted rounded flex items-center justify-center">
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs sm:text-sm font-medium truncate max-w-[150px] sm:max-w-none">{selectedFile.name}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   {(selectedFile.size / 1024).toFixed(1)} KB
                 </p>
               </div>
@@ -698,7 +699,7 @@ const CommunityChat = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0"
+              className="h-8 w-8 sm:h-6 sm:w-6 shrink-0 touch-manipulation"
               onClick={clearSelectedFile}
             >
               <X className="h-4 w-4" />
@@ -708,8 +709,8 @@ const CommunityChat = () => {
       )}
 
       {/* Input Area */}
-      <div className="sticky bottom-0 border-t bg-background p-4 safe-area-bottom">
-        <form onSubmit={(e) => { sendMessage(e); stopTyping(); }} className="flex gap-2">
+      <div className="sticky bottom-0 border-t bg-background px-2 sm:px-4 py-2 sm:py-3 safe-area-bottom">
+        <form onSubmit={(e) => { sendMessage(e); stopTyping(); }} className="flex gap-1.5 sm:gap-2 items-center">
           <input
             type="file"
             ref={fileInputRef}
@@ -721,6 +722,7 @@ const CommunityChat = () => {
             type="button"
             variant="ghost"
             size="icon"
+            className="h-10 w-10 sm:h-9 sm:w-9 shrink-0 touch-manipulation"
             onClick={() => fileInputRef.current?.click()}
             disabled={sending || uploadingFile}
           >
@@ -737,13 +739,14 @@ const CommunityChat = () => {
                 stopTyping();
               }
             }}
-            placeholder={replyingTo ? "Type your reply..." : "Type a message..."}
-            className="flex-1"
+            placeholder={replyingTo ? "Reply..." : "Message..."}
+            className="flex-1 h-10 sm:h-9 text-sm"
             disabled={sending}
           />
           <Button 
             type="submit" 
             size="icon" 
+            className="h-10 w-10 sm:h-9 sm:w-9 shrink-0 touch-manipulation"
             disabled={(!newMessage.trim() && !selectedFile) || sending}
           >
             {uploadingFile ? (
