@@ -12,9 +12,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Phone, Download, Loader2 } from "lucide-react";
+import { User, Phone, Download, Loader2, Send } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import NotifyAttendeesDialog from "./NotifyAttendeesDialog";
 
 interface Attendee {
   id: string;
@@ -33,6 +34,8 @@ interface Attendee {
 interface EventAttendeesDialogProps {
   eventId: string;
   eventTitle: string;
+  eventDate: string;
+  eventLocation: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -40,12 +43,15 @@ interface EventAttendeesDialogProps {
 const EventAttendeesDialog = ({
   eventId,
   eventTitle,
+  eventDate,
+  eventLocation,
   open,
   onOpenChange,
 }: EventAttendeesDialogProps) => {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [showNotifyDialog, setShowNotifyDialog] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -165,24 +171,36 @@ const EventAttendeesDialog = ({
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <div className="text-sm text-muted-foreground">
                   {attendees.length} {attendees.length === 1 ? "person" : "people"} registered
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportCSV}
-                  disabled={exporting || attendees.length === 0}
-                  className="gap-2"
-                >
-                  {exporting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  Export CSV
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowNotifyDialog(true)}
+                    disabled={attendees.length === 0}
+                    className="gap-1"
+                  >
+                    <Send className="h-3 w-3" />
+                    Notify
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportCSV}
+                    disabled={exporting || attendees.length === 0}
+                    className="gap-1"
+                  >
+                    {exporting ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Download className="h-3 w-3" />
+                    )}
+                    Export
+                  </Button>
+                </div>
               </div>
               {attendees.map((attendee, index) => (
                 <div
@@ -235,6 +253,16 @@ const EventAttendeesDialog = ({
           )}
         </ScrollArea>
       </DialogContent>
+
+      <NotifyAttendeesDialog
+        eventId={eventId}
+        eventTitle={eventTitle}
+        eventDate={eventDate}
+        eventLocation={eventLocation}
+        attendeeCount={attendees.length}
+        open={showNotifyDialog}
+        onOpenChange={setShowNotifyDialog}
+      />
     </Dialog>
   );
 };
