@@ -9,10 +9,12 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Phone, Mail } from "lucide-react";
+import { User, Phone, Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface Attendee {
   id: string;
@@ -43,6 +45,7 @@ const EventAttendeesDialog = ({
 }: EventAttendeesDialogProps) => {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -90,6 +93,37 @@ const EventAttendeesDialog = ({
     }
   };
 
+  const handleExportCSV = async () => {
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-event-attendees", {
+        body: { eventId, eventTitle },
+      });
+
+      if (error) throw error;
+
+      if (data?.csv) {
+        // Create and download the CSV file
+        const blob = new Blob([data.csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${eventTitle.replace(/[^a-z0-9]/gi, "_")}_attendees.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast.success(`Exported ${data.count} attendees`);
+      }
+    } catch (error) {
+      console.error("Error exporting attendees:", error);
+      toast.error("Failed to export attendees");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -131,8 +165,24 @@ const EventAttendeesDialog = ({
             </div>
           ) : (
             <div className="space-y-2">
-              <div className="text-sm text-muted-foreground mb-3">
-                {attendees.length} {attendees.length === 1 ? "person" : "people"} registered
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm text-muted-foreground">
+                  {attendees.length} {attendees.length === 1 ? "person" : "people"} registered
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCSV}
+                  disabled={exporting || attendees.length === 0}
+                  className="gap-2"
+                >
+                  {exporting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  Export CSV
+                </Button>
               </div>
               {attendees.map((attendee, index) => (
                 <div
