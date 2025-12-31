@@ -160,6 +160,35 @@ export type Database = {
         }
         Relationships: []
       }
+      donation_payment_details: {
+        Row: {
+          created_at: string
+          donation_id: string
+          id: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          donation_id: string
+          id?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          donation_id?: string
+          id?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donation_payment_details_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: true
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donations: {
         Row: {
           amount: number
@@ -170,7 +199,6 @@ export type Database = {
           notes: string | null
           payment_method: string
           status: string
-          stripe_payment_intent_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -183,7 +211,6 @@ export type Database = {
           notes?: string | null
           payment_method: string
           status?: string
-          stripe_payment_intent_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -196,7 +223,6 @@ export type Database = {
           notes?: string | null
           payment_method?: string
           status?: string
-          stripe_payment_intent_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
