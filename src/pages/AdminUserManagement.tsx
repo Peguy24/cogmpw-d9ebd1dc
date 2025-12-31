@@ -27,6 +27,7 @@ const AdminUserManagement = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperLeaderOnly, setIsSuperLeaderOnly] = useState(false); // super_leader but not admin
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
@@ -46,21 +47,23 @@ const AdminUserManagement = () => {
 
     setCurrentUserId(user.id);
 
-    // Check if user is admin
+    // Check if user is admin or super_leader
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .single();
+      .eq("user_id", user.id);
 
-    if (!roles) {
-      toast.error("Access denied. Admin privileges required.");
+    const hasAdminRole = roles?.some(r => r.role === "admin") || false;
+    const hasSuperLeaderRole = roles?.some(r => (r.role as string) === "super_leader") || false;
+
+    if (!hasAdminRole && !hasSuperLeaderRole) {
+      toast.error("Access denied. Admin or Super Leader privileges required.");
       navigate("/home");
       return;
     }
 
-    setIsAdmin(true);
+    setIsAdmin(hasAdminRole || hasSuperLeaderRole); // allows access to page
+    setIsSuperLeaderOnly(hasSuperLeaderRole && !hasAdminRole); // limits what they can do
     await loadUsers();
     setLoading(false);
   };
@@ -505,18 +508,20 @@ const AdminUserManagement = () => {
               )}
             </div>
           </CardHeader>
-          {selectedUsers.size > 0 && (
+        {selectedUsers.size > 0 && (
             <CardContent className="pt-0">
               <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="default"
-                  onClick={() => bulkAssignRole('admin')}
-                  disabled={processing}
-                >
-                  <UserPlus className="h-4 w-4 mr-1" />
-                  Make Admin
-                </Button>
+                {!isSuperLeaderOnly && (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => bulkAssignRole('admin')}
+                    disabled={processing}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Make Admin
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="secondary"
@@ -526,24 +531,28 @@ const AdminUserManagement = () => {
                   <UserPlus className="h-4 w-4 mr-1" />
                   Make Leader
                 </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => bulkAssignRole('super_leader')}
-                  disabled={processing}
-                >
-                  <UserPlus className="h-4 w-4 mr-1" />
-                  Make Super Leader
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => bulkRemoveRole('admin')}
-                  disabled={processing}
-                >
-                  <UserMinus className="h-4 w-4 mr-1" />
-                  Remove Admin
-                </Button>
+                {!isSuperLeaderOnly && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => bulkAssignRole('super_leader')}
+                    disabled={processing}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Make Super Leader
+                  </Button>
+                )}
+                {!isSuperLeaderOnly && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => bulkRemoveRole('admin')}
+                    disabled={processing}
+                  >
+                    <UserMinus className="h-4 w-4 mr-1" />
+                    Remove Admin
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -553,15 +562,17 @@ const AdminUserManagement = () => {
                   <UserMinus className="h-4 w-4 mr-1" />
                   Remove Leader
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => bulkRemoveRole('super_leader')}
-                  disabled={processing}
-                >
-                  <UserMinus className="h-4 w-4 mr-1" />
-                  Remove Super Leader
-                </Button>
+                {!isSuperLeaderOnly && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => bulkRemoveRole('super_leader')}
+                    disabled={processing}
+                  >
+                    <UserMinus className="h-4 w-4 mr-1" />
+                    Remove Super Leader
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
@@ -656,43 +667,50 @@ const AdminUserManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b">
-                    <div className="space-y-0.5 flex-1">
-                      <Label htmlFor={`admin-${user.id}`} className="text-sm md:text-base">
-                        Admin Permissions
-                      </Label>
-                      <div className="text-xs md:text-sm text-muted-foreground">
-                        Full access to all features including user management
+                  {/* Admin permissions - only visible to admins */}
+                  {!isSuperLeaderOnly && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b">
+                      <div className="space-y-0.5 flex-1">
+                        <Label htmlFor={`admin-${user.id}`} className="text-sm md:text-base">
+                          Admin Permissions
+                        </Label>
+                        <div className="text-xs md:text-sm text-muted-foreground">
+                          Full access to all features including user management
+                        </div>
                       </div>
+                      <Switch
+                        id={`admin-${user.id}`}
+                        checked={user.isAdmin}
+                        disabled={user.id === currentUserId}
+                        onCheckedChange={() => toggleAdminRole(user.id, user.isAdmin)}
+                        className="shrink-0"
+                      />
                     </div>
-                    <Switch
-                      id={`admin-${user.id}`}
-                      checked={user.isAdmin}
-                      disabled={user.id === currentUserId}
-                      onCheckedChange={() => toggleAdminRole(user.id, user.isAdmin)}
-                      className="shrink-0"
-                    />
-                  </div>
+                  )}
 
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b">
-                    <div className="space-y-0.5 flex-1">
-                      <Label htmlFor={`super-leader-${user.id}`} className="text-sm md:text-base">
-                        Super Leader Permissions
-                      </Label>
-                      <div className="text-xs md:text-sm text-muted-foreground">
-                        Can view and manage prayer requests (pastor-level access)
+                  {/* Super Leader permissions - only visible to admins */}
+                  {!isSuperLeaderOnly && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b">
+                      <div className="space-y-0.5 flex-1">
+                        <Label htmlFor={`super-leader-${user.id}`} className="text-sm md:text-base">
+                          Super Leader Permissions
+                        </Label>
+                        <div className="text-xs md:text-sm text-muted-foreground">
+                          Can view and manage prayer requests (pastor-level access)
+                        </div>
                       </div>
+                      <Switch
+                        id={`super-leader-${user.id}`}
+                        checked={user.isSuperLeader}
+                        disabled={user.isAdmin || user.id === currentUserId}
+                        onCheckedChange={() => toggleSuperLeaderRole(user.id, user.isSuperLeader)}
+                        className="shrink-0"
+                      />
                     </div>
-                    <Switch
-                      id={`super-leader-${user.id}`}
-                      checked={user.isSuperLeader}
-                      disabled={user.isAdmin || user.id === currentUserId}
-                      onCheckedChange={() => toggleSuperLeaderRole(user.id, user.isSuperLeader)}
-                      className="shrink-0"
-                    />
-                  </div>
+                  )}
 
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  {/* Leader permissions - visible to both admin and super_leader */}
+                  <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${!isSuperLeaderOnly ? '' : 'pb-3'}`}>
                     <div className="space-y-0.5 flex-1">
                       <Label htmlFor={`leader-${user.id}`} className="text-sm md:text-base">
                         Leader Permissions
@@ -704,18 +722,18 @@ const AdminUserManagement = () => {
                     <Switch
                       id={`leader-${user.id}`}
                       checked={user.isLeader}
-                      disabled={user.isAdmin || user.isSuperLeader || user.id === currentUserId}
+                      disabled={user.isAdmin || user.isSuperLeader || user.id === currentUserId || (isSuperLeaderOnly && (user.isAdmin || user.isSuperLeader))}
                       onCheckedChange={() => toggleLeaderRole(user.id, user.isLeader)}
                       className="shrink-0"
                     />
                   </div>
 
-                  {user.isAdmin && (
+                  {user.isAdmin && !isSuperLeaderOnly && (
                     <p className="text-xs text-muted-foreground">
                       Admins automatically have all permissions
                     </p>
                   )}
-                  {user.isSuperLeader && !user.isAdmin && (
+                  {user.isSuperLeader && !user.isAdmin && !isSuperLeaderOnly && (
                     <p className="text-xs text-muted-foreground">
                       Super Leaders have leader permissions plus prayer request access
                     </p>
@@ -723,6 +741,11 @@ const AdminUserManagement = () => {
                   {user.id === currentUserId && (
                     <p className="text-xs text-muted-foreground">
                       You cannot modify your own roles
+                    </p>
+                  )}
+                  {isSuperLeaderOnly && (user.isAdmin || user.isSuperLeader) && user.id !== currentUserId && (
+                    <p className="text-xs text-muted-foreground">
+                      You cannot modify admin or super leader roles
                     </p>
                   )}
                 </div>

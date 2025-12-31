@@ -183,14 +183,12 @@ const Home = () => {
                         )}
                       </Button>
                     </Link>
-                    {isOnlyAdmin && (
-                      <Link to="/admin/users" className="block">
-                        <Button variant="ghost" className="w-full justify-start">
-                          <Shield className="h-5 w-5 mr-3" />
-                          User Management
-                        </Button>
-                      </Link>
-                    )}
+                    <Link to="/admin/users" className="block">
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Shield className="h-5 w-5 mr-3" />
+                        User Management
+                      </Button>
+                    </Link>
                     <Link to="/admin/giving" className="block">
                       <Button variant="ghost" className="w-full justify-start">
                         <DollarSign className="h-5 w-5 mr-3" />
