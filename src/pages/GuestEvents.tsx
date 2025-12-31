@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, MapPin, Clock, ArrowLeft, LogIn } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowLeft, UserPlus } from "lucide-react";
 import { format } from "date-fns";
+import GuestRSVPDialog from "@/components/GuestRSVPDialog";
 
 interface Event {
   id: string;
@@ -22,6 +23,8 @@ const GuestEvents = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showRSVPDialog, setShowRSVPDialog] = useState(false);
 
   useEffect(() => {
     fetchGuestEvents();
@@ -45,6 +48,11 @@ const GuestEvents = () => {
     }
   };
 
+  const handleRSVPClick = (event: Event) => {
+    setSelectedEvent(event);
+    setShowRSVPDialog(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
       <div className="container py-8 space-y-8">
@@ -66,10 +74,6 @@ const GuestEvents = () => {
               Join us for worship, fellowship, and community
             </p>
           </div>
-          <Button onClick={() => navigate("/auth")} size="lg">
-            <LogIn className="mr-2 h-4 w-4" />
-            Sign In to RSVP
-          </Button>
         </div>
 
         {/* Events List */}
@@ -92,12 +96,9 @@ const GuestEvents = () => {
             <CardContent className="py-12 text-center">
               <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
               <h3 className="text-xl font-semibold mb-2">No Upcoming Events</h3>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground">
                 Check back soon for our next events and gatherings
               </p>
-              <Button onClick={() => navigate("/auth")}>
-                Sign In to View All Events
-              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -149,11 +150,11 @@ const GuestEvents = () => {
                   <div className="mt-6 pt-6 border-t">
                     <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
                       <p className="text-sm text-muted-foreground">
-                        Want to RSVP and get event reminders?
+                        Register to receive event reminders
                       </p>
-                      <Button onClick={() => navigate("/auth")}>
-                        <LogIn className="mr-2 h-4 w-4" />
-                        Sign In to RSVP
+                      <Button onClick={() => handleRSVPClick(event)}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Register for Event
                       </Button>
                     </div>
                   </div>
@@ -166,16 +167,31 @@ const GuestEvents = () => {
         {/* CTA Section */}
         <Card className="bg-primary text-primary-foreground">
           <CardContent className="py-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Join Our Community</h2>
+            <h2 className="text-2xl font-bold mb-4">Already a Member?</h2>
             <p className="text-lg mb-6 opacity-90">
-              Sign in to RSVP for events, receive reminders, and access exclusive member content
+              Sign in to access exclusive member content and features
             </p>
             <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
-              Create Account or Sign In
+              Sign In
             </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Guest RSVP Dialog */}
+      {selectedEvent && (
+        <GuestRSVPDialog
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
+          eventDate={format(new Date(selectedEvent.event_date), "EEEE, MMMM d, yyyy 'at' h:mm a")}
+          eventLocation={selectedEvent.location}
+          open={showRSVPDialog}
+          onOpenChange={setShowRSVPDialog}
+          onSuccess={() => {
+            // Optionally refresh or show confirmation
+          }}
+        />
+      )}
     </div>
   );
 };
