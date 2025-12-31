@@ -75,11 +75,11 @@ const handler = async (req: Request): Promise<Response> => {
                 <div style="background-color: #f8f9fa; border-left: 4px solid #d4af37; padding: 20px; margin: 0 0 25px; border-radius: 0 8px 8px 0;">
                   <h3 style="color: #1a1a2e; margin: 0 0 15px; font-size: 18px;">${eventTitle}</h3>
                   <p style="color: #555555; margin: 0 0 10px; font-size: 14px;">
-                    <strong>📅 Date & Time:</strong><br>
+                    <strong>Date & Time:</strong><br>
                     ${formattedDate}
                   </p>
                   <p style="color: #555555; margin: 0; font-size: 14px;">
-                    <strong>📍 Location:</strong><br>
+                    <strong>Location:</strong><br>
                     ${eventLocation}
                   </p>
                 </div>
