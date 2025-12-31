@@ -8,8 +8,19 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Shield, Users, UserPlus, UserMinus } from "lucide-react";
+import { ArrowLeft, Shield, Users, UserPlus, UserMinus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface UserWithRole {
   id: string;
@@ -32,6 +43,7 @@ const AdminUserManagement = () => {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [processing, setProcessing] = useState(false);
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'leader' | 'member'>('all');
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAdminAndLoadUsers();
@@ -296,6 +308,39 @@ const AdminUserManagement = () => {
     }
 
     await loadUsers();
+  };
+
+  const deleteMember = async (userId: string, userName: string) => {
+    setDeletingUserId(userId);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-member', {
+        body: { userId }
+      });
+
+      if (error) {
+        toast.error(`Failed to delete member: ${error.message}`);
+        return;
+      }
+
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success(`${userName} has been deleted`);
+      await loadUsers();
+      setSelectedUsers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Delete member error:', error);
+      toast.error('Failed to delete member');
+    } finally {
+      setDeletingUserId(null);
+    }
   };
 
   const toggleUserSelection = (userId: string) => {
@@ -747,6 +792,43 @@ const AdminUserManagement = () => {
                     <p className="text-xs text-muted-foreground">
                       You cannot modify admin or super leader roles
                     </p>
+                  )}
+
+                  {/* Delete button - only for admins, not for self or other admins */}
+                  {!isSuperLeaderOnly && user.id !== currentUserId && !user.isAdmin && (
+                    <div className="pt-4 border-t">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            disabled={deletingUserId === user.id}
+                            className="w-full sm:w-auto"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {deletingUserId === user.id ? "Deleting..." : "Delete Member"}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Member</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to permanently delete <strong>{user.full_name}</strong>? 
+                              This action cannot be undone. The user will need to register again to access the app.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => deleteMember(user.id, user.full_name)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   )}
                 </div>
               </CardContent>
