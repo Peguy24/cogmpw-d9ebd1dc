@@ -50,7 +50,7 @@ const NewsFeed = () => {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .in("role", ["admin", "leader"]);
+        .in("role", ["admin", "leader", "super_leader"]);
 
       if (error) throw error;
 
@@ -169,7 +169,7 @@ const NewsFeed = () => {
     }
   };
 
-  const canPostNews = userRole === "admin" || userRole === "leader";
+  const canPostNews = userRole === "admin" || userRole === "leader" || userRole === "super_leader";
 
   const handleRefresh = async () => {
     await fetchNews();

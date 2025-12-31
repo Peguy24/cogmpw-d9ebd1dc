@@ -202,19 +202,19 @@ serve(async (req) => {
     const { user_id, category, notes, campaign_id, guest_email } = session.metadata || {};
     const amount = (session.amount_total || 0) / 100; // Convert from cents
 
-    // Check if donation already recorded (prevent duplicates)
-    const { data: existingDonation } = await supabaseClient
-      .from('donations')
-      .select('id')
+    // Check if donation already recorded (prevent duplicates) - check the payment details table
+    const { data: existingPaymentDetail } = await supabaseClient
+      .from('donation_payment_details')
+      .select('donation_id')
       .eq('stripe_payment_intent_id', session.payment_intent as string)
       .maybeSingle();
 
-    if (existingDonation) {
-      logStep("Donation already recorded", { donationId: existingDonation.id });
+    if (existingPaymentDetail) {
+      logStep("Donation already recorded", { donationId: existingPaymentDetail.donation_id });
       return new Response(JSON.stringify({ 
         success: true,
         alreadyRecorded: true,
-        paymentIntentId: session.payment_intent as string,
+        donationId: existingPaymentDetail.donation_id,
         amount,
         category: category || 'General',
       }), {
@@ -237,7 +237,7 @@ serve(async (req) => {
     logStep("Determined user ID", { effectiveUserId, isGuest: !effectiveUserId });
 
     // Insert donation record using service role (bypasses RLS)
-    const { error: insertError } = await supabaseClient
+    const { data: newDonation, error: insertError } = await supabaseClient
       .from('donations')
       .insert({
         user_id: effectiveUserId,
@@ -245,17 +245,31 @@ serve(async (req) => {
         category: category || 'General',
         payment_method: 'stripe',
         status: 'completed',
-        stripe_payment_intent_id: session.payment_intent as string,
         notes: notes || null,
         campaign_id: campaign_id || null,
-      });
+      })
+      .select('id')
+      .single();
 
     if (insertError) {
       logStep("Error inserting donation", { error: insertError });
       throw insertError;
     }
 
-    logStep("Donation recorded successfully", { amount, category, userId: effectiveUserId });
+    // Store payment intent ID in separate secure table
+    const { error: paymentDetailError } = await supabaseClient
+      .from('donation_payment_details')
+      .insert({
+        donation_id: newDonation.id,
+        stripe_payment_intent_id: session.payment_intent as string,
+      });
+
+    if (paymentDetailError) {
+      logStep("Error storing payment details", { error: paymentDetailError });
+      // Don't throw - donation is already recorded, this is secondary
+    }
+
+    logStep("Donation recorded successfully", { donationId: newDonation.id, amount, category, userId: effectiveUserId });
 
     // Send email receipt in background (non-blocking)
     const recipientEmail = user?.email || guest_email || session.customer_email;
@@ -289,7 +303,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true,
-      paymentIntentId: session.payment_intent as string,
+      donationId: newDonation.id,
       amount,
       category: category || 'General',
     }), {
