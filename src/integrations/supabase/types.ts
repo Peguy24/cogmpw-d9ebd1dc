@@ -378,6 +378,35 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_event_reminders_sent: {
+        Row: {
+          event_id: string
+          guest_email: string
+          id: string
+          sent_at: string
+        }
+        Insert: {
+          event_id: string
+          guest_email: string
+          id?: string
+          sent_at?: string
+        }
+        Update: {
+          event_id?: string
+          guest_email?: string
+          id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_event_reminders_sent_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       guest_event_rsvps: {
         Row: {
           created_at: string
