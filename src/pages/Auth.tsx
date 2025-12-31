@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
-import churchLogo from "@/assets/church-logo-official.webp";
+import churchLogo from "@/assets/church-logo-gold.png";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
