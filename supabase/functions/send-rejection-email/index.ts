@@ -42,16 +42,16 @@ serve(async (req) => {
       throw new Error("Unauthorized");
     }
 
-    // Verify the requesting user is an admin
-    const { data: adminRole } = await supabaseClient
+    // Verify the requesting user is an admin or super_leader
+    const { data: userRoles } = await supabaseClient
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .single();
+      .eq("user_id", user.id);
 
-    if (!adminRole) {
-      throw new Error("Only admins can send rejection emails");
+    const hasPermission = userRoles?.some(r => r.role === "admin" || r.role === "super_leader");
+
+    if (!hasPermission) {
+      throw new Error("Only admins and super leaders can send rejection emails");
     }
 
     const { userId }: RejectionEmailRequest = await req.json();
