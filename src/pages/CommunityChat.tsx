@@ -420,17 +420,18 @@ const CommunityChat = () => {
     
     setDeletingAll(true);
     try {
+      // Hard delete all messages permanently
       const { error } = await supabase
         .from("chat_messages")
-        .update({ is_deleted: true, deleted_by: currentUserId })
-        .neq("is_deleted", true);
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000"); // Delete all rows
 
       if (error) {
         toast.error("Failed to delete messages");
         console.error(error);
       } else {
-        toast.success("All messages have been deleted");
-        fetchMessages();
+        toast.success("All messages have been permanently deleted");
+        setMessages([]); // Clear local state immediately
       }
     } catch (err) {
       console.error(err);
