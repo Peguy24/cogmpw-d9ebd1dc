@@ -188,17 +188,29 @@ serve(async (req: Request) => {
           const batchSize = 50;
           for (let i = 0; i < allEmails.length; i += batchSize) {
             const batch = allEmails.slice(i, i + batchSize);
-            await resend.emails.send({
-              from: "COGMPW Events <onboarding@resend.dev>",
+
+            // Use your verified domain sender (matches other email flows)
+            const emailResponse = await resend.emails.send({
+              from: "COGMPW Events <noreply@cogmpw.com>",
               to: batch,
               subject: `${subject} - ${eventTitle}`,
               html: htmlContent,
             });
+
+            console.log(
+              `Resend response for batch ${i / batchSize + 1} (${batch.length} recipients):`,
+              emailResponse,
+            );
+
             emailsSent += batch.length;
           }
           console.log(`Sent ${emailsSent} emails`);
         } catch (emailError) {
           console.error("Error sending emails:", emailError);
+          return new Response(
+            JSON.stringify({ error: "Failed to send email notifications" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
         }
       }
     }
