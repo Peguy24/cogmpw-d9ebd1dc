@@ -79,61 +79,102 @@ const handler = async (req: Request): Promise<Response> => {
     const safeTitle = escapeHtml(title);
     const safeContent = escapeHtml(content);
 
-    console.log("Sending urgent prayer alert to pastor for user:", user.id);
+    console.log("Fetching admins and super leaders for urgent prayer alert");
+
+    // Use service role client to fetch admin/super_leader emails
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get all admins and super leaders
+    const { data: adminRoles, error: rolesError } = await supabaseAdmin
+      .from('user_roles')
+      .select('user_id, role')
+      .in('role', ['admin', 'super_leader']);
+
+    if (rolesError) {
+      console.error("Error fetching admin roles:", rolesError);
+      throw new Error("Failed to fetch admin roles");
+    }
+
+    // Get user emails from auth
+    const adminEmails: string[] = [];
+    for (const roleEntry of adminRoles || []) {
+      const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(roleEntry.user_id);
+      if (!userError && userData?.user?.email) {
+        adminEmails.push(userData.user.email);
+      }
+    }
+
+    // Remove duplicates
+    const uniqueEmails = [...new Set(adminEmails)];
+    
+    console.log(`Sending urgent prayer alert to ${uniqueEmails.length} admins/super leaders`);
+
+    if (uniqueEmails.length === 0) {
+      console.warn("No admin/super leader emails found");
+      return new Response(JSON.stringify({ message: "No recipients found" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #fef2f2; margin: 0; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <h1 style="color: #dc2626; margin: 0; font-size: 24px;">🙏 URGENT Prayer Request</h1>
+          </div>
+          
+          <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+            <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px;">
+              <strong>From:</strong> ${safeMemberName}
+            </p>
+            <p style="color: #374151; margin: 0; font-size: 14px;">
+              <strong>Submitted:</strong> ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}
+            </p>
+          </div>
+          
+          <div style="margin: 24px 0;">
+            <h2 style="color: #991b1b; margin: 0 0 12px 0; font-size: 18px;">${safeTitle}</h2>
+            <p style="color: #374151; font-size: 16px; line-height: 24px; white-space: pre-wrap; margin: 0;">${safeContent}</p>
+          </div>
+          
+          <div style="background-color: #fef3c7; border-radius: 8px; padding: 16px; margin: 24px 0;">
+            <p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 500;">
+              ⚠️ This prayer request has been marked as <strong>URGENT</strong> and requires immediate attention.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="https://cogmpw.lovable.app/admin/prayer-requests" style="display: inline-block; background-color: #dc2626; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">View in COGMPW App</a>
+          </div>
+          
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 12px; margin: 0; text-align: center;">
+              This is an automated notification from the COGMPW Church App.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
 
     const emailResponse = await resend.emails.send({
       from: "COGMPW Prayer Requests <hello@noreply.cogmpw.com>",
-      to: ["cogmoprayer@gmail.com"],
+      to: uniqueEmails,
       subject: `🙏 URGENT Prayer Request from ${safeMemberName}`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; background-color: #fef2f2; margin: 0; padding: 20px;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; padding: 32px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <h1 style="color: #dc2626; margin: 0; font-size: 24px;">🙏 URGENT Prayer Request</h1>
-            </div>
-            
-            <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-              <p style="color: #374151; margin: 0 0 8px 0; font-size: 14px;">
-                <strong>From:</strong> ${safeMemberName}
-              </p>
-              <p style="color: #374151; margin: 0; font-size: 14px;">
-                <strong>Submitted:</strong> ${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}
-              </p>
-            </div>
-            
-            <div style="margin: 24px 0;">
-              <h2 style="color: #991b1b; margin: 0 0 12px 0; font-size: 18px;">${safeTitle}</h2>
-              <p style="color: #374151; font-size: 16px; line-height: 24px; white-space: pre-wrap; margin: 0;">${safeContent}</p>
-            </div>
-            
-            <div style="background-color: #fef3c7; border-radius: 8px; padding: 16px; margin: 24px 0;">
-              <p style="color: #92400e; font-size: 14px; margin: 0; font-weight: 500;">
-                ⚠️ This prayer request has been marked as <strong>URGENT</strong> and requires immediate attention.
-              </p>
-            </div>
-            
-            <div style="text-align: center; margin-top: 24px;">
-              <a href="https://cogmpw.lovable.app/admin/prayer-requests" style="display: inline-block; background-color: #dc2626; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px;">View in COGMPW App</a>
-            </div>
-            
-            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
-              <p style="color: #6b7280; font-size: 12px; margin: 0; text-align: center;">
-                This is an automated notification from the COGMPW Church App.
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+      html: emailHtml,
     });
 
-    console.log("Urgent prayer alert sent successfully:", emailResponse);
+    console.log("Urgent prayer alert sent successfully to:", uniqueEmails, emailResponse);
 
     return new Response(JSON.stringify(emailResponse), {
       status: 200,
