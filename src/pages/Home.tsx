@@ -18,7 +18,7 @@ import PrayerRequestForm from "@/components/PrayerRequestForm";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
-import churchLogo from "@/assets/church-logo.webp";
+import churchLogo from "@/assets/church-logo-gold.png";
 import pastorPhoto from "@/assets/pastor-photo.jpg";
 
 const Home = () => {

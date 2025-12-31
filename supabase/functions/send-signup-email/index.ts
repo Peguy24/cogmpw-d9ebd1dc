@@ -45,7 +45,7 @@ serve(async (req) => {
         <div style="max-width: 600px; margin: 0 auto;">
           <!-- Header with Logo -->
           <div style="text-align: center; margin-bottom: 24px;">
-            <img src="https://cogmpw.lovable.app/logo-source.webp" alt="COGMPW Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #3b82f6;" />
+            <img src="https://cogmpw.lovable.app/church-logo-gold.png" alt="COGMPW Logo" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #3b82f6;" />
           </div>
           
           <!-- Main Card -->
