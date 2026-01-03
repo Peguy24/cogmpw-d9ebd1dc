@@ -7,8 +7,9 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor } from "lucide-react";
+import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, ExternalLink } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Link } from "react-router-dom";
 
 interface ProfileSettingsProps {
   user: User;
@@ -505,6 +506,48 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               className="flex-shrink-0 mt-0.5"
             />
           </div>
+        </div>
+      </div>
+
+      {/* Account Deletion Section */}
+      <div>
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-destructive">
+          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+          Delete Account
+        </h3>
+        <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 sm:p-4 space-y-3">
+          <p className="text-xs sm:text-sm text-foreground/90">
+            You can request the deletion of your account and all associated data. This action is irreversible.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              asChild
+              className="w-full sm:w-auto"
+            >
+              <a 
+                href="mailto:contact@cogmpw.org?subject=Account%20Deletion%20Request&body=I%20would%20like%20to%20request%20the%20deletion%20of%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%20address%20is%3A%20%5BYour%20email%20here%5D%0A%0APlease%20confirm%20once%20my%20account%20has%20been%20deleted."
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Request Account Deletion
+              </a>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="w-full sm:w-auto"
+            >
+              <Link to="/privacy-policy#delete-account">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View Deletion Policy
+              </Link>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            We will process your request within 30 days.
+          </p>
         </div>
       </div>
     </div>
