@@ -527,7 +527,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               className="w-full sm:w-auto"
             >
               <a 
-                href="mailto:contact@cogmpw.org?subject=Account%20Deletion%20Request&body=I%20would%20like%20to%20request%20the%20deletion%20of%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%20address%20is%3A%20%5BYour%20email%20here%5D%0A%0APlease%20confirm%20once%20my%20account%20has%20been%20deleted."
+                href="mailto:ministryofprayer2@gmail.com?subject=Account%20Deletion%20Request&body=I%20would%20like%20to%20request%20the%20deletion%20of%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%20address%20is%3A%20%5BYour%20email%20here%5D%0A%0APlease%20confirm%20once%20my%20account%20has%20been%20deleted."
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Request Account Deletion

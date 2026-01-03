@@ -42,8 +42,8 @@ const Support = () => {
                 <Mail className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <a href="mailto:contact@cogmpw.org" className="text-primary underline">
-                    contact@cogmpw.org
+                  <a href="mailto:ministryofprayer2@gmail.com" className="text-primary underline">
+                    ministryofprayer2@gmail.com
                   </a>
                 </div>
               </div>
@@ -122,8 +122,8 @@ const Support = () => {
                 <h4 className="font-medium">Delete My Account</h4>
                 <p className="text-muted-foreground text-sm">
                   To request deletion of your account and all associated data, please send an email to{" "}
-                  <a href="mailto:contact@cogmpw.org?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%3A%20%5Benter%20your%20email%5D" className="text-primary underline">
-                    contact@cogmpw.org
+                  <a href="mailto:ministryofprayer2@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%3A%20%5Benter%20your%20email%5D" className="text-primary underline">
+                    ministryofprayer2@gmail.com
                   </a>
                 </p>
                 <p className="text-muted-foreground text-sm">
@@ -135,7 +135,7 @@ const Support = () => {
                 className="w-full"
                 asChild
               >
-                <a href="mailto:contact@cogmpw.org?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%3A%20%5Benter%20your%20email%5D">
+                <a href="mailto:ministryofprayer2@gmail.com?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%3A%20%5Benter%20your%20email%5D">
                   <UserX className="mr-2 h-4 w-4" />
                   Request Account Deletion
                 </a>
