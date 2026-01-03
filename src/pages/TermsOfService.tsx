@@ -139,8 +139,8 @@ const TermsOfService = () => {
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-foreground">
                 <strong>Email:</strong>{" "}
-                <a href="mailto:contact@cogmpw.org" className="text-primary underline">
-                  contact@cogmpw.org
+                <a href="mailto:ministryofprayer2@gmail.com" className="text-primary underline">
+                  ministryofprayer2@gmail.com
                 </a>
               </p>
               <p className="text-foreground mt-2">

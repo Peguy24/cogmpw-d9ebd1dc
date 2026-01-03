@@ -151,7 +151,7 @@ const PrivacyPolicy = () => {
                 To request the deletion of your account and all associated data, please send an email to:
               </p>
               <a 
-                href="mailto:contact@cogmpw.org?subject=Account%20Deletion%20Request&body=I%20would%20like%20to%20request%20the%20deletion%20of%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%20address%20is%3A%20%5BYour%20email%20here%5D%0A%0APlease%20confirm%20once%20my%20account%20has%20been%20deleted."
+                href="mailto:ministryofprayer2@gmail.com?subject=Account%20Deletion%20Request&body=I%20would%20like%20to%20request%20the%20deletion%20of%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%20address%20is%3A%20%5BYour%20email%20here%5D%0A%0APlease%20confirm%20once%20my%20account%20has%20been%20deleted."
                 className="inline-flex items-center gap-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md hover:bg-destructive/90 transition-colors font-medium"
               >
                 Request Account Deletion
@@ -183,7 +183,7 @@ const PrivacyPolicy = () => {
             </p>
             <div className="bg-muted p-4 rounded-lg">
               <p className="text-foreground/90">COGMPW Church</p>
-              <p className="text-foreground/90">Email: contact@cogmpw.org</p>
+              <p className="text-foreground/90">Email: <a href="mailto:ministryofprayer2@gmail.com" className="text-primary underline">ministryofprayer2@gmail.com</a></p>
             </div>
           </section>
         </div>
