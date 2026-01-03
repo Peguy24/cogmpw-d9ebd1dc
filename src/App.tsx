@@ -26,6 +26,8 @@ import GivingCampaigns from "./pages/GivingCampaigns";
 import CampaignDetails from "./pages/CampaignDetails";
 import ManageSubscriptions from "./pages/ManageSubscriptions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Support from "./pages/Support";
 import GuestLanding from "./pages/GuestLanding";
 import GuestEvents from "./pages/GuestEvents";
 import GuestSermons from "./pages/GuestSermons";
@@ -78,6 +80,8 @@ const AppContent = () => {
         <Route path="/community-chat" element={<CommunityChat />} />
         <Route path="/permissions-summary" element={<PermissionsSummary />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/donation-success" element={<DonationSuccess />} />
         <Route path="/return-to-app" element={<ReturnToApp />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
