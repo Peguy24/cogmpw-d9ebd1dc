@@ -127,6 +127,41 @@ const PrivacyPolicy = () => {
             </ul>
           </section>
 
+          <section className="space-y-4" id="delete-account">
+            <h2 className="text-2xl font-semibold">Account & Data Deletion</h2>
+            <p className="text-foreground/90 leading-relaxed">
+              You have the right to request the deletion of your account and all associated personal data. 
+              Upon deletion, the following data will be permanently removed:
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-foreground/90 ml-4">
+              <li>Your profile information (name, email, phone number, profile photo)</li>
+              <li>Your notification preferences</li>
+              <li>Your event RSVPs and check-in history</li>
+              <li>Your chat messages in community discussions</li>
+              <li>Your prayer requests</li>
+              <li>Your push notification tokens</li>
+            </ul>
+            <p className="text-foreground/90 leading-relaxed">
+              <strong>Note:</strong> Donation records may be retained for legal and tax compliance purposes, 
+              but will be anonymized and no longer linked to your personal information.
+            </p>
+            <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-destructive mb-2">Request Account Deletion</h3>
+              <p className="text-foreground/90 text-sm mb-3">
+                To request the deletion of your account and all associated data, please send an email to:
+              </p>
+              <a 
+                href="mailto:contact@cogmpw.org?subject=Account%20Deletion%20Request&body=I%20would%20like%20to%20request%20the%20deletion%20of%20my%20account%20and%20all%20associated%20data.%0A%0AMy%20registered%20email%20address%20is%3A%20%5BYour%20email%20here%5D%0A%0APlease%20confirm%20once%20my%20account%20has%20been%20deleted."
+                className="inline-flex items-center gap-2 bg-destructive text-destructive-foreground px-4 py-2 rounded-md hover:bg-destructive/90 transition-colors font-medium"
+              >
+                Request Account Deletion
+              </a>
+              <p className="text-xs text-muted-foreground mt-3">
+                We will process your request within 30 days and send you a confirmation email.
+              </p>
+            </div>
+          </section>
+
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold">Children's Privacy</h2>
             <p className="text-foreground/90 leading-relaxed">
