@@ -98,10 +98,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           {/* Global safe area so every page sits below the status bar / camera */}
-          <div
-            className="app-safe-area"
-            style={{ paddingTop: 'env(safe-area-inset-top, 20px)' }}
-          >
+          <div className="app-safe-area">
             <AppContent />
           </div>
         </BrowserRouter>
