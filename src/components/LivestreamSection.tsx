@@ -262,9 +262,13 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
             <iframe
               src={embedUrl}
               className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               allowFullScreen
               title="YouTube Livestream"
+              frameBorder="0"
+              referrerPolicy="no-referrer-when-downgrade"
+              loading="lazy"
+              style={{ border: 0 }}
             />
           </div>
         );
@@ -279,11 +283,14 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
           <div className="aspect-video bg-muted rounded-lg overflow-hidden">
             <iframe
               src={embedUrl}
-              className="w-full h-full border-0"
-              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              className="w-full h-full"
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share; fullscreen"
               allowFullScreen
               title="Facebook Livestream"
+              frameBorder="0"
               scrolling="no"
+              loading="lazy"
+              style={{ border: 0, overflow: 'hidden' }}
             />
           </div>
         );
