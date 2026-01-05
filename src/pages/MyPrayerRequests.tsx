@@ -5,7 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Pencil } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { PrayerRequestEditDialog } from "@/components/PrayerRequestEditDialog";
 
@@ -23,6 +33,8 @@ export default function MyPrayerRequests() {
   const [prayerRequests, setPrayerRequests] = useState<PrayerRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingRequest, setEditingRequest] = useState<PrayerRequest | null>(null);
+  const [deletingRequest, setDeletingRequest] = useState<PrayerRequest | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadMyPrayerRequests();
@@ -51,6 +63,29 @@ export default function MyPrayerRequests() {
       toast.error("Failed to load your prayer requests");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteRequest = async () => {
+    if (!deletingRequest) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("prayer_requests")
+        .delete()
+        .eq("id", deletingRequest.id);
+
+      if (error) throw error;
+
+      toast.success("Prayer request deleted");
+      setDeletingRequest(null);
+      loadMyPrayerRequests();
+    } catch (error: any) {
+      console.error("Error deleting prayer request:", error);
+      toast.error("Failed to delete prayer request");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -136,16 +171,26 @@ export default function MyPrayerRequests() {
                     <p className="whitespace-pre-wrap text-sm md:text-base break-words flex-1">
                       {request.content}
                     </p>
-                    {!request.is_answered && (
+                    <div className="flex gap-1 shrink-0">
+                      {!request.is_answered && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingRequest(request)}
+                          className="min-h-[44px] min-w-[44px]"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setEditingRequest(request)}
-                        className="min-h-[44px] min-w-[44px] shrink-0"
+                        onClick={() => setDeletingRequest(request)}
+                        className="min-h-[44px] min-w-[44px] text-destructive hover:text-destructive"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    )}
+                    </div>
                   </div>
                   
                   {request.is_answered && (
@@ -175,6 +220,34 @@ export default function MyPrayerRequests() {
           onOpenChange={(open) => !open && setEditingRequest(null)}
           onSaved={loadMyPrayerRequests}
         />
+
+        <AlertDialog open={!!deletingRequest} onOpenChange={(open) => !open && setDeletingRequest(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Prayer Request</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this prayer request? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting} className="min-h-[44px]">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteRequest}
+                disabled={isDeleting}
+                className="min-h-[44px] bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
