@@ -91,6 +91,30 @@ export type Database = {
           },
         ]
       }
+      chat_read_status: {
+        Row: {
+          created_at: string
+          id: string
+          last_read_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       church_info: {
         Row: {
           category: string
