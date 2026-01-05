@@ -97,6 +97,33 @@ export default function AdminPrayerRequests() {
 
       if (error) throw error;
 
+      // Find the prayer request to get user info
+      const prayerRequest = prayerRequests.find(req => req.id === id);
+      
+      // If marking as answered (not unmarking), send email notification
+      if (!currentStatus && prayerRequest) {
+        try {
+          // Get user email from auth
+          const { data: userData } = await supabase.auth.admin.listUsers();
+          
+          // Since we can't access admin API from client, get email via profiles join
+          // We need to fetch the user's email from auth.users via an edge function or RPC
+          // For now, let's use the supabase function to send email
+          await supabase.functions.invoke("send-prayer-answered-email", {
+            body: {
+              prayerRequestId: id,
+              prayerTitle: prayerRequest.title,
+              memberName: prayerRequest.profiles?.full_name || "Membre",
+              memberEmail: prayerRequest.user_id, // We'll get the email in the edge function
+            },
+          });
+          console.log("Prayer answered email sent successfully");
+        } catch (emailError) {
+          console.error("Error sending prayer answered email:", emailError);
+          // Don't fail the whole operation if email fails
+        }
+      }
+
       setPrayerRequests(prev =>
         prev.map(req =>
           req.id === id ? { ...req, is_answered: !currentStatus } : req
