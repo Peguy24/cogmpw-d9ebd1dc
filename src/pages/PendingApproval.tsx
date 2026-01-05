@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock } from "lucide-react";
+import { Clock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 const PendingApproval = () => {
@@ -67,6 +67,13 @@ const PendingApproval = () => {
           >
             Sign Out
           </Button>
+          <Link 
+            to="/" 
+            className="inline-flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors w-full"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Continuer en tant qu'invité
+          </Link>
         </CardContent>
       </Card>
     </div>
