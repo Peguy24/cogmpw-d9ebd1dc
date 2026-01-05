@@ -549,7 +549,7 @@ const CommunityChat = () => {
                 className="w-full text-left p-2 bg-background/50 rounded-lg hover:bg-background/80 active:bg-background/90 transition-colors touch-manipulation"
               >
                 <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">{pinnedMsg.profiles?.full_name}</p>
-                <p className="text-xs sm:text-sm truncate">{pinnedMsg.content}</p>
+                <p className="text-xs sm:text-sm line-clamp-3 whitespace-pre-wrap">{pinnedMsg.content}</p>
               </button>
             ))}
           </div>
