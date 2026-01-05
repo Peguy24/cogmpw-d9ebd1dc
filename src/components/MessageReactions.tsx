@@ -68,24 +68,57 @@ export const MessageReactions = ({ messageId, currentUserId, isOwnMessage }: Mes
     if (loading) return;
     setLoading(true);
 
-    const existingReaction = reactions.find(
-      (r) => r.user_id === currentUserId && r.reaction_type === reactionType
-    );
+    try {
+      const existingReaction = reactions.find(
+        (r) => r.user_id === currentUserId && r.reaction_type === reactionType
+      );
 
-    if (existingReaction) {
-      await supabase
-        .from("message_reactions")
-        .delete()
-        .eq("id", existingReaction.id);
-    } else {
-      await supabase.from("message_reactions").insert({
-        message_id: messageId,
-        user_id: currentUserId,
-        reaction_type: reactionType,
-      });
+      if (existingReaction) {
+        // Optimistically update UI first
+        setReactions(prev => prev.filter(r => r.id !== existingReaction.id));
+        
+        const { error } = await supabase
+          .from("message_reactions")
+          .delete()
+          .eq("id", existingReaction.id);
+        
+        if (error) {
+          console.error("Error removing reaction:", error);
+          // Revert on error
+          await fetchReactions();
+        }
+      } else {
+        // Optimistically add reaction
+        const tempId = `temp-${Date.now()}`;
+        const newReaction: Reaction = {
+          id: tempId,
+          message_id: messageId,
+          user_id: currentUserId,
+          reaction_type: reactionType,
+        };
+        setReactions(prev => [...prev, newReaction]);
+
+        const { error } = await supabase.from("message_reactions").insert({
+          message_id: messageId,
+          user_id: currentUserId,
+          reaction_type: reactionType,
+        });
+
+        if (error) {
+          console.error("Error adding reaction:", error);
+          // Revert on error
+          setReactions(prev => prev.filter(r => r.id !== tempId));
+        } else {
+          // Fetch to get real ID
+          await fetchReactions();
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling reaction:", error);
+      await fetchReactions();
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const getReactionCounts = () => {
