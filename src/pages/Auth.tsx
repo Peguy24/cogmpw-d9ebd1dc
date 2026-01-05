@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 import churchLogo from "@/assets/church-logo-gold.png";
 
 const authSchema = z.object({
@@ -165,6 +166,13 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
           <CardDescription>Church of God Ministry of Prayer and the Word</CardDescription>
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mt-2 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Continuer en tant qu'invité
+          </Link>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
