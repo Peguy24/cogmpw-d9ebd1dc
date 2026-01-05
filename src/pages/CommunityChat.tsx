@@ -392,6 +392,18 @@ const CommunityChat = () => {
   };
 
   const togglePinMessage = async (messageId: string, currentlyPinned: boolean) => {
+    // Optimistically update UI first
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { 
+            ...msg, 
+            is_pinned: !currentlyPinned,
+            pinned_at: !currentlyPinned ? new Date().toISOString() : null,
+            pinned_by: !currentlyPinned ? currentUserId : null,
+          }
+        : msg
+    ));
+
     const { error } = await supabase
       .from("chat_messages")
       .update({
@@ -404,9 +416,10 @@ const CommunityChat = () => {
     if (error) {
       toast.error("Failed to update pin status");
       console.error(error);
+      // Revert on error
+      fetchMessages();
     } else {
       toast.success(currentlyPinned ? "Message unpinned" : "Message pinned");
-      fetchMessages();
     }
   };
 
