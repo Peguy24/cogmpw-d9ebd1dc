@@ -1,44 +1,74 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-const LAST_READ_KEY = "chat_last_read_at";
 
 export const useUnreadMessages = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [lastReadAt, setLastReadAt] = useState<string | null>(null);
 
-  const getLastReadTimestamp = () => {
-    return localStorage.getItem(LAST_READ_KEY) || new Date(0).toISOString();
-  };
+  // Fetch or create read status from database
+  const getLastReadTimestamp = useCallback(async (userId: string): Promise<string> => {
+    const { data, error } = await supabase
+      .from("chat_read_status")
+      .select("last_read_at")
+      .eq("user_id", userId)
+      .single();
 
-  const markAsRead = () => {
-    localStorage.setItem(LAST_READ_KEY, new Date().toISOString());
-    setUnreadCount(0);
-  };
+    if (error || !data) {
+      // If no record exists, return epoch (all messages are unread)
+      return new Date(0).toISOString();
+    }
 
-  const fetchUnreadCount = async (userId: string | null) => {
+    return data.last_read_at;
+  }, []);
+
+  const markAsRead = useCallback(async () => {
+    if (!currentUserId) return;
+
+    const now = new Date().toISOString();
+
+    // Upsert the read status in database
+    const { error } = await supabase
+      .from("chat_read_status")
+      .upsert(
+        { 
+          user_id: currentUserId, 
+          last_read_at: now,
+          updated_at: now
+        },
+        { onConflict: "user_id" }
+      );
+
+    if (!error) {
+      setLastReadAt(now);
+      setUnreadCount(0);
+    }
+  }, [currentUserId]);
+
+  const fetchUnreadCount = useCallback(async (userId: string | null, lastRead?: string) => {
     if (!userId) {
       setUnreadCount(0);
       return;
     }
 
-    const lastRead = getLastReadTimestamp();
+    // Use provided lastRead or fetch from database
+    const timestamp = lastRead || await getLastReadTimestamp(userId);
     
     // Count messages that are:
     // 1. Not deleted
     // 2. Created after the last read timestamp
-    // 3. NOT sent by the current user (so your own messages don't count as unread)
+    // 3. NOT sent by the current user
     const { count, error } = await supabase
       .from("chat_messages")
       .select("*", { count: "exact", head: true })
       .eq("is_deleted", false)
-      .gt("created_at", lastRead)
+      .gt("created_at", timestamp)
       .neq("user_id", userId);
 
     if (!error && count !== null) {
       setUnreadCount(count);
     }
-  };
+  }, [getLastReadTimestamp]);
 
   useEffect(() => {
     // Get current user
@@ -46,7 +76,12 @@ export const useUnreadMessages = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const userId = user?.id || null;
       setCurrentUserId(userId);
-      fetchUnreadCount(userId);
+      
+      if (userId) {
+        const timestamp = await getLastReadTimestamp(userId);
+        setLastReadAt(timestamp);
+        fetchUnreadCount(userId, timestamp);
+      }
     };
 
     getCurrentUser();
@@ -73,7 +108,11 @@ export const useUnreadMessages = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId]);
+  }, [currentUserId, fetchUnreadCount, getLastReadTimestamp]);
 
-  return { unreadCount, markAsRead, fetchUnreadCount: () => fetchUnreadCount(currentUserId) };
+  return { 
+    unreadCount, 
+    markAsRead, 
+    fetchUnreadCount: () => fetchUnreadCount(currentUserId, lastReadAt) 
+  };
 };
