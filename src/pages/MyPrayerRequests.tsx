@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Pencil } from "lucide-react";
 import { format } from "date-fns";
+import { PrayerRequestEditDialog } from "@/components/PrayerRequestEditDialog";
 
 interface PrayerRequest {
   id: string;
@@ -21,6 +22,7 @@ export default function MyPrayerRequests() {
   const navigate = useNavigate();
   const [prayerRequests, setPrayerRequests] = useState<PrayerRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingRequest, setEditingRequest] = useState<PrayerRequest | null>(null);
 
   useEffect(() => {
     loadMyPrayerRequests();
@@ -130,9 +132,21 @@ export default function MyPrayerRequests() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-wrap text-sm md:text-base break-words">
-                    {request.content}
-                  </p>
+                  <div className="flex justify-between items-start gap-2 mb-3">
+                    <p className="whitespace-pre-wrap text-sm md:text-base break-words flex-1">
+                      {request.content}
+                    </p>
+                    {!request.is_answered && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingRequest(request)}
+                        className="min-h-[44px] min-w-[44px] shrink-0"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   
                   {request.is_answered && (
                     <div className="mt-4 p-3 md:p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg">
@@ -154,6 +168,13 @@ export default function MyPrayerRequests() {
             ))}
           </div>
         )}
+
+        <PrayerRequestEditDialog
+          request={editingRequest}
+          open={!!editingRequest}
+          onOpenChange={(open) => !open && setEditingRequest(null)}
+          onSaved={loadMyPrayerRequests}
+        />
       </main>
     </div>
   );
