@@ -121,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "COGMPW <onboarding@resend.dev>",
+        from: "COGMPW <hello@noreply.cogmpw.com>",
         to: [memberEmail],
         subject: "🙏 Le Pasteur a reçu votre demande de prière - COGMPW",
         html: emailHtml,
