@@ -197,10 +197,25 @@ const CommunityChat = () => {
     };
   }, [isApproved]);
 
+  const isInitialLoad = useRef(true);
+  
   useEffect(() => {
-    // Scroll to bottom on new messages
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    // Scroll to bottom only on initial load and when sending a new message
+    if (scrollRef.current && messages.length > 0) {
+      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        // Always scroll on initial load
+        if (isInitialLoad.current) {
+          scrollElement.scrollTop = scrollElement.scrollHeight;
+          isInitialLoad.current = false;
+        } else {
+          // Only auto-scroll if user is near the bottom (within 150px)
+          const isNearBottom = scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight < 150;
+          if (isNearBottom) {
+            scrollElement.scrollTop = scrollElement.scrollHeight;
+          }
+        }
+      }
     }
   }, [messages]);
 
@@ -519,6 +534,28 @@ const CommunityChat = () => {
         </div>
       </header>
 
+      {/* Sticky Pinned Messages Section */}
+      {messages.filter(m => m.is_pinned && !m.is_deleted).length > 0 && (
+        <div className="sticky top-0 z-10 mx-2 sm:mx-4 mb-2 p-2 sm:p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <Pin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
+            <span className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-400">Pinned</span>
+          </div>
+          <div className="space-y-1.5 sm:space-y-2 max-h-32 overflow-y-auto">
+            {messages.filter(m => m.is_pinned && !m.is_deleted).map((pinnedMsg) => (
+              <button
+                key={`pinned-${pinnedMsg.id}`}
+                onClick={() => scrollToMessage(pinnedMsg.id)}
+                className="w-full text-left p-2 bg-background/50 rounded-lg hover:bg-background/80 active:bg-background/90 transition-colors touch-manipulation"
+              >
+                <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">{pinnedMsg.profiles?.full_name}</p>
+                <p className="text-xs sm:text-sm truncate">{pinnedMsg.content}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Messages Area */}
       <ScrollArea className="flex-1 px-2 sm:px-4 py-3" ref={scrollRef}>
         {loading ? (
@@ -533,27 +570,6 @@ const CommunityChat = () => {
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4 pb-4">
-            {/* Pinned Messages Section */}
-            {messages.filter(m => m.is_pinned && !m.is_deleted).length > 0 && (
-              <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Pin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
-                  <span className="text-xs sm:text-sm font-medium text-amber-700 dark:text-amber-400">Pinned</span>
-                </div>
-                <div className="space-y-1.5 sm:space-y-2">
-                  {messages.filter(m => m.is_pinned && !m.is_deleted).map((pinnedMsg) => (
-                    <button
-                      key={`pinned-${pinnedMsg.id}`}
-                      onClick={() => scrollToMessage(pinnedMsg.id)}
-                      className="w-full text-left p-2 bg-background/50 rounded-lg hover:bg-background/80 active:bg-background/90 transition-colors touch-manipulation"
-                    >
-                      <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">{pinnedMsg.profiles?.full_name}</p>
-                      <p className="text-xs sm:text-sm truncate">{pinnedMsg.content}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
             {messages.map((message) => {
               const isOwn = message.user_id === currentUserId;
               const canDelete = isOwn || isAdmin;
