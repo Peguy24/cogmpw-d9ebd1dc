@@ -1,9 +1,38 @@
 import { useState, useEffect, useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
-import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import { supabase } from "@/integrations/supabase/client";
 
 const CREDENTIALS_SERVER = "cogmpw.com";
+
+// Biometry types matching capacitor-native-biometric
+enum BiometryType {
+  NONE = 0,
+  TOUCH_ID = 1,
+  FACE_ID = 2,
+  FINGERPRINT = 3,
+  FACE_AUTHENTICATION = 4,
+  IRIS_AUTHENTICATION = 5,
+  MULTIPLE = 6,
+}
+
+// Lazy load the native biometric module only on native platforms
+let NativeBiometric: any = null;
+
+const loadNativeBiometric = async () => {
+  if (NativeBiometric) return NativeBiometric;
+  
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const module = await import("capacitor-native-biometric");
+      NativeBiometric = module.NativeBiometric;
+      return NativeBiometric;
+    } catch (error) {
+      console.log("Failed to load native biometric module:", error);
+      return null;
+    }
+  }
+  return null;
+};
 
 interface BiometricState {
   isAvailable: boolean;
@@ -29,13 +58,16 @@ export const useBiometricAuth = () => {
         return;
       }
 
+      const biometric = await loadNativeBiometric();
+      if (!biometric) return;
+
       try {
-        const result = await NativeBiometric.isAvailable();
+        const result = await biometric.isAvailable();
         
         // Check for stored credentials
         let hasCredentials = false;
         try {
-          await NativeBiometric.getCredentials({ server: CREDENTIALS_SERVER });
+          await biometric.getCredentials({ server: CREDENTIALS_SERVER });
           hasCredentials = true;
         } catch {
           // No credentials stored
@@ -79,8 +111,11 @@ export const useBiometricAuth = () => {
   const saveCredentials = useCallback(async (email: string, password: string) => {
     if (!Capacitor.isNativePlatform()) return false;
 
+    const biometric = await loadNativeBiometric();
+    if (!biometric) return false;
+
     try {
-      await NativeBiometric.setCredentials({
+      await biometric.setCredentials({
         username: email,
         password: password,
         server: CREDENTIALS_SERVER,
@@ -100,11 +135,16 @@ export const useBiometricAuth = () => {
       return { success: false, error: "Biometric not available" };
     }
 
+    const biometric = await loadNativeBiometric();
+    if (!biometric) {
+      return { success: false, error: "Biometric module not available" };
+    }
+
     setIsLoading(true);
 
     try {
       // Verify biometric first
-      await NativeBiometric.verifyIdentity({
+      await biometric.verifyIdentity({
         reason: "Sign in to COGMPW",
         title: "Biometric Login",
         subtitle: "Use your biometric to sign in",
@@ -112,7 +152,7 @@ export const useBiometricAuth = () => {
       });
 
       // Get stored credentials
-      const credentials = await NativeBiometric.getCredentials({
+      const credentials = await biometric.getCredentials({
         server: CREDENTIALS_SERVER,
       });
 
@@ -146,8 +186,11 @@ export const useBiometricAuth = () => {
   const deleteCredentials = useCallback(async () => {
     if (!Capacitor.isNativePlatform()) return;
 
+    const biometric = await loadNativeBiometric();
+    if (!biometric) return;
+
     try {
-      await NativeBiometric.deleteCredentials({
+      await biometric.deleteCredentials({
         server: CREDENTIALS_SERVER,
       });
       setState(prev => ({ ...prev, hasStoredCredentials: false }));
