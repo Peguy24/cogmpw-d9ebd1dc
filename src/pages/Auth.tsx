@@ -159,8 +159,9 @@ const Auth = () => {
 
       if (error) throw error;
       
-      // On successful login, show biometric opt-in dialog (if available and not already set up)
-      if (biometric.isAvailable && !biometric.hasStoredCredentials && pendingCredentials.current) {
+      // On successful login, show biometric opt-in dialog (if available, not already set up, and not dismissed before)
+      const biometricDismissed = localStorage.getItem('biometric_opt_in_dismissed');
+      if (biometric.isAvailable && !biometric.hasStoredCredentials && pendingCredentials.current && !biometricDismissed) {
         setShowBiometricOptIn(true);
         // Don't navigate yet - wait for user choice
       } else {
@@ -199,6 +200,8 @@ const Auth = () => {
 
   // Handle biometric opt-in cancel
   const handleBiometricOptInCancel = () => {
+    // Store flag to not show prompt again on this device
+    localStorage.setItem('biometric_opt_in_dismissed', 'true');
     pendingCredentials.current = null;
     setShowBiometricOptIn(false);
     toast.success("Signed in successfully!");
