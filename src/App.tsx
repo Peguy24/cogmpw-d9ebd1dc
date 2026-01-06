@@ -12,6 +12,7 @@ import { subscribePaymentLoading } from "@/hooks/usePaymentLoading";
 import { PaymentLoadingOverlay } from "@/components/PaymentLoadingOverlay";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Home from "./pages/Home";
 import PendingApproval from "./pages/PendingApproval";
 import AdminApprovals from "./pages/AdminApprovals";
@@ -63,6 +64,7 @@ const AppContent = () => {
         <Route path="/guest/sermons" element={<GuestSermons />} />
         <Route path="/guest/devotionals" element={<GuestDevotionals />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/home" element={<Home />} />
         <Route path="/pending-approval" element={<PendingApproval />} />
         <Route path="/admin/approvals" element={<AdminApprovals />} />
