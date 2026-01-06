@@ -380,11 +380,11 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 <p className="text-xs sm:text-sm text-muted-foreground">
                   {biometric.hasStoredCredentials 
                     ? `Use ${biometric.getBiometryName()} to sign in quickly` 
-                    : "Sign in with password to enable biometric login"
+                    : "Enable to sign in faster next time"
                   }
                 </p>
               </div>
-              {biometric.hasStoredCredentials && (
+              {biometric.hasStoredCredentials ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -394,6 +394,18 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                   }}
                 >
                   Disable
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Clear the dismissed flag and prompt user to re-login to enable
+                    localStorage.removeItem('biometric_opt_in_dismissed');
+                    toast.info("Sign out and sign in again to enable biometric login");
+                  }}
+                >
+                  Enable
                 </Button>
               )}
             </div>
