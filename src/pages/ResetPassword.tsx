@@ -6,11 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Eye, EyeOff, CheckCircle, AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, AlertTriangle, RefreshCw, ArrowLeft, Smartphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import churchLogo from "@/assets/church-logo-gold.png";
+import { openCogmpwApp } from "@/lib/openCogmpwApp";
 
 type ResetState = "loading" | "ready" | "expired" | "success" | "error";
+
+const isMobileDevice = () => {
+  const ua = navigator.userAgent || "";
+  return /android|iphone|ipad|ipod|mobile/i.test(ua);
+};
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -110,10 +116,12 @@ const ResetPassword = () => {
       setResetState("success");
       toast.success("Password updated successfully!");
 
-      // Redirect to home after a short delay
-      setTimeout(() => {
-        navigate("/home");
-      }, 2000);
+      // Auto-redirect only on desktop; mobile users will use the "Open App" button
+      if (!isMobileDevice()) {
+        setTimeout(() => {
+          navigate("/home");
+        }, 2000);
+      }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -167,6 +175,12 @@ const ResetPassword = () => {
 
   // Success state
   if (resetState === "success") {
+    const isMobile = isMobileDevice();
+
+    const handleOpenApp = () => {
+      openCogmpwApp("/home", `${window.location.origin}/home`);
+    };
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
         <Card className="w-full max-w-md">
@@ -180,13 +194,35 @@ const ResetPassword = () => {
               Password Updated!
             </CardTitle>
             <CardDescription>
-              Your password has been successfully changed. Redirecting you to the app...
+              Your password has been successfully changed.
+              {!isMobile && " Redirecting you to the app..."}
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <Button onClick={() => navigate("/home")} className="mt-4">
-              Go to Home
-            </Button>
+          <CardContent className="space-y-3">
+            {isMobile ? (
+              <>
+                <Button onClick={handleOpenApp} className="w-full" size="lg">
+                  <Smartphone className="h-5 w-5 mr-2" />
+                  Open COGMPW App
+                </Button>
+                <p className="text-xs text-center text-muted-foreground">
+                  If you don't have the app installed, you'll be redirected to the web version.
+                </p>
+                <div className="pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate("/home")}
+                    className="w-full"
+                  >
+                    Continue in Browser
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Button onClick={() => navigate("/home")} className="w-full">
+                Go to Home
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
