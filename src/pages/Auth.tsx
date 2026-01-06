@@ -12,6 +12,7 @@ import { Eye, EyeOff, ArrowLeft, Fingerprint } from "lucide-react";
 import { Link } from "react-router-dom";
 import churchLogo from "@/assets/church-logo-gold.png";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { BiometricOptInDialog } from "@/components/BiometricOptInDialog";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -56,6 +57,9 @@ const Auth = () => {
   
   // Store credentials temporarily for saving after successful login
   const pendingCredentials = useRef<{ email: string; password: string } | null>(null);
+  
+  // Biometric opt-in dialog state
+  const [showBiometricOptIn, setShowBiometricOptIn] = useState(false);
   
   // Biometric authentication hook
   const biometric = useBiometricAuth();
@@ -155,22 +159,14 @@ const Auth = () => {
 
       if (error) throw error;
       
-      // On successful login, offer to save credentials for biometric (if available)
+      // On successful login, show biometric opt-in dialog (if available and not already set up)
       if (biometric.isAvailable && !biometric.hasStoredCredentials && pendingCredentials.current) {
-        const saved = await biometric.saveCredentials(
-          pendingCredentials.current.email, 
-          pendingCredentials.current.password
-        );
-        if (saved) {
-          toast.success(`Signed in! ${biometric.getBiometryName()} enabled for next time.`);
-        } else {
-          toast.success("Signed in successfully!");
-        }
+        setShowBiometricOptIn(true);
+        // Don't navigate yet - wait for user choice
       } else {
         toast.success("Signed in successfully!");
+        // Navigation handled by auth state listener
       }
-      
-      pendingCredentials.current = null;
     } catch (error) {
       pendingCredentials.current = null;
       if (error instanceof z.ZodError) {
@@ -181,6 +177,32 @@ const Auth = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Handle biometric opt-in confirmation
+  const handleBiometricOptInConfirm = async () => {
+    if (pendingCredentials.current) {
+      const saved = await biometric.saveCredentials(
+        pendingCredentials.current.email,
+        pendingCredentials.current.password
+      );
+      if (saved) {
+        toast.success(`${biometric.getBiometryName()} enabled for faster sign-in!`);
+      } else {
+        toast.success("Signed in successfully!");
+      }
+    }
+    pendingCredentials.current = null;
+    setShowBiometricOptIn(false);
+    navigate("/home");
+  };
+
+  // Handle biometric opt-in cancel
+  const handleBiometricOptInCancel = () => {
+    pendingCredentials.current = null;
+    setShowBiometricOptIn(false);
+    toast.success("Signed in successfully!");
+    navigate("/home");
   };
 
   // Handle biometric login
@@ -549,6 +571,14 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+      
+      {/* Biometric Opt-In Dialog */}
+      <BiometricOptInDialog
+        open={showBiometricOptIn}
+        biometryName={biometric.getBiometryName()}
+        onConfirm={handleBiometricOptInConfirm}
+        onCancel={handleBiometricOptInCancel}
+      />
     </div>
   );
 };
