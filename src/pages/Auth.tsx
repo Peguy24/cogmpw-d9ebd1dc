@@ -19,6 +19,23 @@ const authSchema = z.object({
   phone: z.string().optional(),
 });
 
+const getPublicSiteUrl = () => {
+  const host = window.location.hostname;
+
+  // When testing from preview/dev domains, force the public custom domain so
+  // password-reset links never bounce users to an internal Lovable domain.
+  if (
+    host === "localhost" ||
+    host.endsWith("lovable.app") ||
+    host.endsWith("lovableproject.com") ||
+    host.endsWith("lovable.dev")
+  ) {
+    return "https://cogmpw.com";
+  }
+
+  return window.location.origin;
+};
+
 const Auth = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +97,7 @@ const Auth = () => {
         email: validated.email,
         password: validated.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/home`,
+          emailRedirectTo: `${getPublicSiteUrl()}/home`,
           data: {
             full_name: formData.fullName,
             phone: formData.phone,
@@ -151,7 +168,7 @@ const Auth = () => {
       const { error } = await supabase.functions.invoke('send-password-reset', {
         body: {
           email: formData.email,
-          redirectUrl: `${window.location.origin}/auth`,
+          redirectUrl: `${getPublicSiteUrl()}/auth`,
         },
       });
 
