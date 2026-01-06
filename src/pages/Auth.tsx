@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Eye, EyeOff, ArrowLeft, Fingerprint } from "lucide-react";
@@ -53,6 +54,10 @@ const Auth = () => {
     confirmPassword: "",
     fullName: "",
     phone: "",
+  });
+  const [rememberMe, setRememberMe] = useState(() => {
+    // Default to true, or use stored preference
+    return localStorage.getItem('remember_me') !== 'false';
   });
   
   // Store credentials temporarily for saving after successful login
@@ -158,7 +163,10 @@ const Auth = () => {
       });
 
       if (error) throw error;
-      
+
+      // Store remember me preference
+      localStorage.setItem('remember_me', rememberMe ? 'true' : 'false');
+
       // On successful login, show biometric opt-in dialog (if available, not already set up, and not dismissed before)
       const biometricDismissed = localStorage.getItem('biometric_opt_in_dismissed');
       if (biometric.isAvailable && !biometric.hasStoredCredentials && pendingCredentials.current && !biometricDismissed) {
@@ -430,15 +438,27 @@ const Auth = () => {
                     </Button>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="link"
-                  className="px-0 text-sm"
-                  onClick={handleForgotPassword}
-                  disabled={isLoading || biometric.isLoading}
-                >
-                  Forgot password?
-                </Button>
+                <div className="flex items-center justify-between">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="px-0 text-sm"
+                    onClick={handleForgotPassword}
+                    disabled={isLoading || biometric.isLoading}
+                  >
+                    Forgot password?
+                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                    />
+                    <Label htmlFor="remember-me" className="text-sm cursor-pointer">
+                      Remember me
+                    </Label>
+                  </div>
+                </div>
                 <Button type="submit" className="w-full" disabled={isLoading || biometric.isLoading}>
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
