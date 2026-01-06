@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Fingerprint } from "lucide-react";
 import { Link } from "react-router-dom";
 import churchLogo from "@/assets/church-logo-gold.png";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -52,6 +53,12 @@ const Auth = () => {
     fullName: "",
     phone: "",
   });
+  
+  // Store credentials temporarily for saving after successful login
+  const pendingCredentials = useRef<{ email: string; password: string } | null>(null);
+  
+  // Biometric authentication hook
+  const biometric = useBiometricAuth();
 
   useEffect(() => {
     // Listen for auth changes
@@ -138,6 +145,9 @@ const Auth = () => {
     try {
       const validated = authSchema.pick({ email: true, password: true }).parse(formData);
       
+      // Store credentials temporarily to save after successful login
+      pendingCredentials.current = { email: validated.email, password: validated.password };
+      
       const { error } = await supabase.auth.signInWithPassword({
         email: validated.email,
         password: validated.password,
@@ -145,8 +155,24 @@ const Auth = () => {
 
       if (error) throw error;
       
-      toast.success("Signed in successfully!");
+      // On successful login, offer to save credentials for biometric (if available)
+      if (biometric.isAvailable && !biometric.hasStoredCredentials && pendingCredentials.current) {
+        const saved = await biometric.saveCredentials(
+          pendingCredentials.current.email, 
+          pendingCredentials.current.password
+        );
+        if (saved) {
+          toast.success(`Signed in! ${biometric.getBiometryName()} enabled for next time.`);
+        } else {
+          toast.success("Signed in successfully!");
+        }
+      } else {
+        toast.success("Signed in successfully!");
+      }
+      
+      pendingCredentials.current = null;
     } catch (error) {
+      pendingCredentials.current = null;
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else if (error instanceof Error) {
@@ -154,6 +180,16 @@ const Auth = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handle biometric login
+  const handleBiometricLogin = async () => {
+    const result = await biometric.authenticateWithBiometric();
+    if (result.success) {
+      toast.success("Signed in successfully!");
+    } else if (result.error) {
+      toast.error(result.error);
     }
   };
 
@@ -374,13 +410,40 @@ const Auth = () => {
                   variant="link"
                   className="px-0 text-sm"
                   onClick={handleForgotPassword}
-                  disabled={isLoading}
+                  disabled={isLoading || biometric.isLoading}
                 >
                   Forgot password?
                 </Button>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading || biometric.isLoading}>
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
+                
+                {/* Biometric login option */}
+                {biometric.isAvailable && biometric.hasStoredCredentials && (
+                  <div className="pt-2">
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">or</span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-3"
+                      onClick={handleBiometricLogin}
+                      disabled={isLoading || biometric.isLoading}
+                    >
+                      <Fingerprint className="h-5 w-5 mr-2" />
+                      {biometric.isLoading 
+                        ? "Verifying..." 
+                        : `Sign in with ${biometric.getBiometryName()}`
+                      }
+                    </Button>
+                  </div>
+                )}
               </form>
             </TabsContent>
             

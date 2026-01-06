@@ -7,9 +7,10 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, ExternalLink } from "lucide-react";
+import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, ExternalLink, Fingerprint } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Link } from "react-router-dom";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 
 interface ProfileSettingsProps {
   user: User;
@@ -17,6 +18,7 @@ interface ProfileSettingsProps {
 
 const ProfileSettings = ({ user }: ProfileSettingsProps) => {
   const { theme, setTheme } = useTheme();
+  const biometric = useBiometricAuth();
   const [phoneVisible, setPhoneVisible] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -364,7 +366,41 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
         </div>
       </div>
 
-      {/* Appearance Settings */}
+      {/* Biometric Authentication - Only show on native platforms */}
+      {biometric.isNative && biometric.isAvailable && (
+        <div>
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+            <Fingerprint className="h-4 w-4 sm:h-5 sm:w-5" />
+            {biometric.getBiometryName()} Login
+          </h3>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+                <Label className="text-sm">{biometric.getBiometryName()} Enabled</Label>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {biometric.hasStoredCredentials 
+                    ? `Use ${biometric.getBiometryName()} to sign in quickly` 
+                    : "Sign in with password to enable biometric login"
+                  }
+                </p>
+              </div>
+              {biometric.hasStoredCredentials && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    await biometric.deleteCredentials();
+                    toast.success(`${biometric.getBiometryName()} login disabled`);
+                  }}
+                >
+                  Disable
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Appearance</h3>
         <div className="space-y-3 sm:space-y-4">
