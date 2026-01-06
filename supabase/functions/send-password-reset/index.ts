@@ -42,9 +42,6 @@ serve(async (req) => {
     const { data, error: resetError } = await supabaseClient.auth.admin.generateLink({
       type: 'recovery',
       email: email,
-      options: {
-        redirectTo: redirectUrl,
-      },
     });
 
     if (resetError) {
@@ -52,12 +49,16 @@ serve(async (req) => {
       throw resetError;
     }
 
-    if (!data?.properties?.action_link) {
+    if (!data?.properties?.hashed_token) {
       throw new Error("Failed to generate reset link");
     }
 
-    const resetLink = data.properties.action_link;
-    logStep("Reset link generated", { email });
+    // Construct the reset link manually with the correct redirect URL
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const hashedToken = data.properties.hashed_token;
+    const resetLink = `${supabaseUrl}/auth/v1/verify?token=${hashedToken}&type=recovery&redirect_to=${encodeURIComponent(redirectUrl)}`;
+    
+    logStep("Reset link generated", { email, redirectUrl });
 
     // Get user profile for personalization
     const { data: profile } = await supabaseClient
