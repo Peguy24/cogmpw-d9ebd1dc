@@ -198,15 +198,23 @@ const CommunityChat = () => {
   }, [isApproved]);
 
   const isInitialLoad = useRef(true);
+  const unreadSeparatorRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Scroll to bottom only on initial load and when sending a new message
+    // Scroll behavior on initial load and when messages change
     if (scrollRef.current && messages.length > 0) {
       const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollElement) {
-        // Always scroll on initial load
         if (isInitialLoad.current) {
-          scrollElement.scrollTop = scrollElement.scrollHeight;
+          // On initial load, scroll to unread separator if it exists, otherwise scroll to bottom
+          if (unreadSeparatorRef.current) {
+            // Small delay to ensure the DOM is ready
+            setTimeout(() => {
+              unreadSeparatorRef.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
+            }, 100);
+          } else {
+            scrollElement.scrollTop = scrollElement.scrollHeight;
+          }
           isInitialLoad.current = false;
         } else {
           // Only auto-scroll if user is near the bottom (within 150px)
@@ -612,7 +620,7 @@ const CommunityChat = () => {
                 return (
                   <React.Fragment key={message.id}>
                     {showUnreadSeparator && (
-                      <div className="flex items-center gap-3 py-2">
+                      <div ref={unreadSeparatorRef} className="flex items-center gap-3 py-2">
                         <div className="flex-1 h-px bg-primary/50" />
                         <span className="text-xs font-medium text-primary px-2">
                           {unreadMessagesCount} new message{unreadMessagesCount > 1 ? 's' : ''}
