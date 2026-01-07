@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ interface TypingUser {
 
 const CommunityChat = () => {
   const navigate = useNavigate();
-  const { markAsRead } = useUnreadMessages();
+  const { markAsRead, initialLastReadAt } = useUnreadMessages();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -570,156 +570,187 @@ const CommunityChat = () => {
           </div>
         ) : (
           <div className="space-y-3 sm:space-y-4 pb-4">
-            {messages.map((message) => {
-              const isOwn = message.user_id === currentUserId;
-              const canDelete = isOwn || isAdmin;
-              const replyMessage = message.reply_to_id ? getReplyMessage(message.reply_to_id) : null;
+            {(() => {
+              // Find the first unread message index (messages from others after lastReadAt)
+              const firstUnreadIndex = initialLastReadAt 
+                ? messages.findIndex(m => 
+                    !m.is_deleted && 
+                    m.user_id !== currentUserId && 
+                    new Date(m.created_at) > new Date(initialLastReadAt)
+                  )
+                : -1;
+              
+              // Count unread messages
+              const unreadMessagesCount = firstUnreadIndex >= 0 
+                ? messages.filter((m, idx) => 
+                    idx >= firstUnreadIndex && 
+                    !m.is_deleted && 
+                    m.user_id !== currentUserId
+                  ).length
+                : 0;
 
-              if (message.is_deleted) {
-                return (
-                  <div
-                    key={message.id}
-                    id={`message-${message.id}`}
-                    className={`flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
-                  >
-                    <p className="text-sm text-muted-foreground italic">
-                      Message deleted
-                    </p>
-                  </div>
-                );
-              }
+              return messages.map((message, index) => {
+                const isOwn = message.user_id === currentUserId;
+                const canDelete = isOwn || isAdmin;
+                const replyMessage = message.reply_to_id ? getReplyMessage(message.reply_to_id) : null;
+                const showUnreadSeparator = index === firstUnreadIndex && unreadMessagesCount > 0;
 
-              return (
-                <div
-                  key={message.id}
-                  id={`message-${message.id}`}
-                  className={`flex items-start gap-1.5 sm:gap-2 transition-colors duration-300 rounded-lg ${isOwn ? "flex-row-reverse" : "flex-row"}`}
-                >
-                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
-                    <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
-                    <AvatarFallback className="text-[10px] sm:text-xs bg-primary/10 text-primary">
-                      {getInitials(message.profiles?.full_name || "?")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div
-                    className={`group max-w-[80%] sm:max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}
-                  >
-                    <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
-                      <span className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate max-w-[120px] sm:max-w-none">
-                        {message.profiles?.full_name || "Unknown"}
-                      </span>
-                      <span className="text-[10px] sm:text-xs text-muted-foreground/60">
-                        {format(new Date(message.created_at), "h:mm a")}
-                      </span>
+                if (message.is_deleted) {
+                  return (
+                    <div
+                      key={message.id}
+                      id={`message-${message.id}`}
+                      className={`flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"}`}
+                    >
+                      <p className="text-sm text-muted-foreground italic">
+                        Message deleted
+                      </p>
                     </div>
-                    
-                    {/* Reply Preview */}
-                    {replyMessage && (
-                      <button
-                        onClick={() => scrollToMessage(replyMessage.id)}
-                        className={`flex items-start gap-1.5 mb-1 px-2 py-1 rounded-lg text-left transition-colors hover:bg-muted/50 active:bg-muted/70 touch-manipulation ${
-                          isOwn ? "bg-primary/20" : "bg-muted/80"
-                        }`}
-                      >
-                        <Reply className="h-2.5 w-2.5 sm:h-3 sm:w-3 mt-0.5 shrink-0 text-muted-foreground" />
-                        <div className="min-w-0">
-                          <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">
-                            {replyMessage.profiles?.full_name || "Unknown"}
-                          </p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground/80 truncate max-w-[150px] sm:max-w-[200px]">
-                            {replyMessage.is_deleted ? "Message deleted" : replyMessage.content}
-                          </p>
-                        </div>
-                      </button>
+                  );
+                }
+
+                return (
+                  <React.Fragment key={message.id}>
+                    {showUnreadSeparator && (
+                      <div className="flex items-center gap-3 py-2">
+                        <div className="flex-1 h-px bg-primary/50" />
+                        <span className="text-xs font-medium text-primary px-2">
+                          {unreadMessagesCount} new message{unreadMessagesCount > 1 ? 's' : ''}
+                        </span>
+                        <div className="flex-1 h-px bg-primary/50" />
+                      </div>
                     )}
-                    
-                    <div className={`flex items-start gap-0.5 sm:gap-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
+                    <div
+                      id={`message-${message.id}`}
+                      className={`flex items-start gap-1.5 sm:gap-2 transition-colors duration-300 rounded-lg ${isOwn ? "flex-row-reverse" : "flex-row"}`}
+                    >
+                      <Avatar className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
+                        <AvatarImage src={message.profiles?.avatar_url || undefined} alt={message.profiles?.full_name} />
+                        <AvatarFallback className="text-[10px] sm:text-xs bg-primary/10 text-primary">
+                          {getInitials(message.profiles?.full_name || "?")}
+                        </AvatarFallback>
+                      </Avatar>
                       <div
-                        className={`rounded-2xl px-3 py-1.5 sm:px-4 sm:py-2 max-w-full ${
-                          isOwn
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
+                        className={`group max-w-[80%] sm:max-w-[75%] ${isOwn ? "items-end" : "items-start"}`}
                       >
-                        {/* Media content */}
-                        {message.media_url && message.media_type === 'image' && (
-                          <a href={message.media_url} target="_blank" rel="noopener noreferrer">
-                            <img 
-                              src={message.media_url} 
-                              alt="Shared image" 
-                              className="max-w-[180px] sm:max-w-[250px] max-h-[150px] sm:max-h-[200px] rounded-lg mb-1.5 sm:mb-2 object-cover cursor-pointer hover:opacity-90 active:opacity-80 transition-opacity"
-                            />
-                          </a>
-                        )}
-                        {message.media_url && message.media_type === 'file' && (
-                          <a 
-                            href={message.media_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className={`flex items-center gap-2 p-1.5 sm:p-2 rounded-lg mb-1.5 sm:mb-2 ${
-                              isOwn ? "bg-primary-foreground/10" : "bg-background/50"
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1 flex-wrap">
+                          <span className="text-[10px] sm:text-xs font-medium text-muted-foreground truncate max-w-[120px] sm:max-w-none">
+                            {message.profiles?.full_name || "Unknown"}
+                          </span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground/60">
+                            {format(new Date(message.created_at), "h:mm a")}
+                          </span>
+                        </div>
+                        
+                        {/* Reply Preview */}
+                        {replyMessage && (
+                          <button
+                            onClick={() => scrollToMessage(replyMessage.id)}
+                            className={`flex items-start gap-1.5 mb-1 px-2 py-1 rounded-lg text-left transition-colors hover:bg-muted/50 active:bg-muted/70 touch-manipulation ${
+                              isOwn ? "bg-primary/20" : "bg-muted/80"
                             }`}
                           >
-                            <FileText className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                            <span className="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-[180px]">
-                              {message.content || "File"}
-                            </span>
-                          </a>
+                            <Reply className="h-2.5 w-2.5 sm:h-3 sm:w-3 mt-0.5 shrink-0 text-muted-foreground" />
+                            <div className="min-w-0">
+                              <p className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+                                {replyMessage.profiles?.full_name || "Unknown"}
+                              </p>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground/80 truncate max-w-[150px] sm:max-w-[200px]">
+                                {replyMessage.is_deleted ? "Message deleted" : replyMessage.content}
+                              </p>
+                            </div>
+                          </button>
                         )}
-                        {/* Text content (only show if no file or has additional text) */}
-                        {(!message.media_url || (message.media_url && message.content && message.content !== message.media_url.split('/').pop())) && (
-                          <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">
-                            {message.content}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-0 sm:gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
-                          onClick={() => handleReply(message)}
-                        >
-                          <Reply className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground" />
-                        </Button>
-                        {isAdmin && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
-                            onClick={() => togglePinMessage(message.id, !!message.is_pinned)}
+                        
+                        <div className={`flex items-start gap-0.5 sm:gap-1 ${isOwn ? "flex-row-reverse" : "flex-row"}`}>
+                          <div
+                            className={`rounded-2xl px-3 py-1.5 sm:px-4 sm:py-2 max-w-full ${
+                              isOwn
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            }`}
                           >
-                            {message.is_pinned ? (
-                              <PinOff className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-amber-500" />
-                            ) : (
-                              <Pin className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground" />
+                            {/* Media content */}
+                            {message.media_url && message.media_type === 'image' && (
+                              <a href={message.media_url} target="_blank" rel="noopener noreferrer">
+                                <img 
+                                  src={message.media_url} 
+                                  alt="Shared image" 
+                                  className="max-w-[180px] sm:max-w-[250px] max-h-[150px] sm:max-h-[200px] rounded-lg mb-1.5 sm:mb-2 object-cover cursor-pointer hover:opacity-90 active:opacity-80 transition-opacity"
+                                />
+                              </a>
                             )}
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
-                            onClick={() => setDeleteMessageId(message.id)}
-                          >
-                            <Trash2 className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-destructive" />
-                          </Button>
+                            {message.media_url && message.media_type === 'file' && (
+                              <a 
+                                href={message.media_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className={`flex items-center gap-2 p-1.5 sm:p-2 rounded-lg mb-1.5 sm:mb-2 ${
+                                  isOwn ? "bg-primary-foreground/10" : "bg-background/50"
+                                }`}
+                              >
+                                <FileText className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                                <span className="text-xs sm:text-sm truncate max-w-[120px] sm:max-w-[180px]">
+                                  {message.content || "File"}
+                                </span>
+                              </a>
+                            )}
+                            {/* Text content (only show if no file or has additional text) */}
+                            {(!message.media_url || (message.media_url && message.content && message.content !== message.media_url.split('/').pop())) && (
+                              <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">
+                                {message.content}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-0 sm:gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
+                              onClick={() => handleReply(message)}
+                            >
+                              <Reply className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground" />
+                            </Button>
+                            {isAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
+                                onClick={() => togglePinMessage(message.id, !!message.is_pinned)}
+                              >
+                                {message.is_pinned ? (
+                                  <PinOff className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-amber-500" />
+                                ) : (
+                                  <Pin className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-muted-foreground" />
+                                )}
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 sm:h-6 sm:w-6 touch-manipulation"
+                                onClick={() => setDeleteMessageId(message.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        {/* Message Reactions */}
+                        {currentUserId && (
+                          <MessageReactions
+                            messageId={message.id}
+                            currentUserId={currentUserId}
+                            isOwnMessage={isOwn}
+                          />
                         )}
                       </div>
                     </div>
-                    {/* Message Reactions */}
-                    {currentUserId && (
-                      <MessageReactions
-                        messageId={message.id}
-                        currentUserId={currentUserId}
-                        isOwnMessage={isOwn}
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                  </React.Fragment>
+                );
+              });
+            })()}
           </div>
         )}
       </ScrollArea>
