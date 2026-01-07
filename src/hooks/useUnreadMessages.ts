@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useUnreadMessages = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [lastReadAt, setLastReadAt] = useState<string | null>(null);
+  // Store the initial lastReadAt before marking as read (for showing the separator)
+  const initialLastReadAt = useRef<string | null>(null);
 
   // Fetch or create read status from database
   const getLastReadTimestamp = useCallback(async (userId: string): Promise<string> => {
@@ -80,6 +82,10 @@ export const useUnreadMessages = () => {
       if (userId) {
         const timestamp = await getLastReadTimestamp(userId);
         setLastReadAt(timestamp);
+        // Store initial timestamp for separator display
+        if (!initialLastReadAt.current) {
+          initialLastReadAt.current = timestamp;
+        }
         fetchUnreadCount(userId, timestamp);
       }
     };
@@ -113,6 +119,8 @@ export const useUnreadMessages = () => {
   return { 
     unreadCount, 
     markAsRead, 
+    lastReadAt,
+    initialLastReadAt: initialLastReadAt.current,
     fetchUnreadCount: () => fetchUnreadCount(currentUserId, lastReadAt) 
   };
 };
