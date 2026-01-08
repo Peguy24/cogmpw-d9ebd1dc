@@ -415,7 +415,7 @@ const Auth = () => {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mt-2 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Continuer en tant qu'invité
+            Continue as a Guest
           </Link>
         </CardHeader>
         <CardContent>
