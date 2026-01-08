@@ -56,6 +56,10 @@ serve(async (req) => {
     // Construct the reset link manually with the correct redirect URL
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const hashedToken = data.properties.hashed_token;
+    
+    // For mobile app users, the redirect URL will be cogmpw.com/reset-password
+    // which has Universal Links / App Links configured to open the native app.
+    // Pass the token so the app can verify directly without going through the browser.
     const resetLink = `${supabaseUrl}/auth/v1/verify?token=${hashedToken}&type=recovery&redirect_to=${encodeURIComponent(redirectUrl)}`;
     
     logStep("Reset link generated", { email, redirectUrl });
