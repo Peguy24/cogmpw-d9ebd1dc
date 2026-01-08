@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { App, URLOpenListenerEvent } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
@@ -8,9 +8,22 @@ import { setPaymentLoading } from "./usePaymentLoading";
 
 export const useDeepLinks = () => {
   const navigate = useNavigate();
+  const lastHandledUrlRef = useRef<string | null>(null);
+  const lastHandledAtRef = useRef<number>(0);
 
   useEffect(() => {
     const handleUrl = async (incomingUrl: string) => {
+      const now = Date.now();
+      // iOS can sometimes re-fire the same launch URL, which can block login by repeatedly signing out.
+      if (
+        lastHandledUrlRef.current === incomingUrl &&
+        now - lastHandledAtRef.current < 3000
+      ) {
+        return;
+      }
+      lastHandledUrlRef.current = incomingUrl;
+      lastHandledAtRef.current = now;
+
       console.log("[DeepLink] Handling URL:", incomingUrl);
 
       try {
@@ -56,14 +69,21 @@ export const useDeepLinks = () => {
         const params = new URLSearchParams(queryString);
 
         // After a password reset, force sign-out so the Auth screen doesn't auto-redirect to /home
+        // and route to /auth (without keeping the query param, to avoid repeated banners/toasts).
         if (params.get("password_reset") === "success") {
           try {
-            // This ensures users land on the login screen on iOS/Android
             const { supabase } = await import("@/integrations/supabase/client");
             await supabase.auth.signOut();
           } catch {
             // ignore
           }
+
+          console.log("[DeepLink] Navigating to: /auth (password reset success)");
+          navigate("/auth", {
+            replace: true,
+            state: { passwordResetSuccess: true },
+          });
+          return;
         }
 
         console.log("[DeepLink] Navigating to:", fullPath);
@@ -86,10 +106,6 @@ export const useDeepLinks = () => {
           toast.info("Subscription setup canceled", {
             description: "No recurring donation was created.",
           });
-        } else if (params.get("password_reset") === "success") {
-          toast.success("Password reset successfully!", {
-            description: "Please sign in with your new password.",
-          });
         }
       } catch (error) {
         console.error("[DeepLink] Error parsing URL:", error);
@@ -111,7 +127,9 @@ export const useDeepLinks = () => {
     })();
 
     // Handle deep links while the app is already running
-    const listener = App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => handleUrl(event.url));
+    const listener = App.addListener("appUrlOpen", (event: URLOpenListenerEvent) =>
+      handleUrl(event.url)
+    );
 
     return () => {
       try {
