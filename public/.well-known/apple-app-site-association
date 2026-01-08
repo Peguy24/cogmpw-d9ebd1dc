@@ -1,0 +1,21 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "YOUR_TEAM_ID.com.peguy24.cogmpw",
+        "paths": [
+          "/home",
+          "/reset-password",
+          "/auth",
+          "/giving/*",
+          "/events/*",
+          "/sermons/*",
+          "/devotionals/*",
+          "/community-chat",
+          "/*"
+        ]
+      }
+    ]
+  }
+}
