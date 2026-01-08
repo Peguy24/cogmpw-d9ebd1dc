@@ -39,6 +39,7 @@ interface BiometricState {
   biometryType: BiometryType;
   hasStoredCredentials: boolean;
   isNative: boolean;
+  diagnostic: string | null;
 }
 
 export const useBiometricAuth = () => {
@@ -47,45 +48,76 @@ export const useBiometricAuth = () => {
     biometryType: BiometryType.NONE,
     hasStoredCredentials: false,
     isNative: false,
+    diagnostic: null,
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  const refresh = useCallback(async () => {
+    const isNative = Capacitor.isNativePlatform();
+
+    if (!isNative) {
+      setState({
+        isAvailable: false,
+        biometryType: BiometryType.NONE,
+        hasStoredCredentials: false,
+        isNative: false,
+        diagnostic: null,
+      });
+      return;
+    }
+
+    // Mark as native early so the UI can show helpful debug text even if checks fail
+    setState((prev) => ({ ...prev, isNative: true, diagnostic: null }));
+
+    const biometric = await loadNativeBiometric();
+    if (!biometric) {
+      setState((prev) => ({
+        ...prev,
+        isNative: true,
+        isAvailable: false,
+        biometryType: BiometryType.NONE,
+        hasStoredCredentials: false,
+        diagnostic: "Biometric module not loaded (did you run cap sync?)",
+      }));
+      return;
+    }
+
+    try {
+      const result = await biometric.isAvailable();
+
+      // Check for stored credentials
+      let hasCredentials = false;
+      try {
+        await biometric.getCredentials({ server: CREDENTIALS_SERVER });
+        hasCredentials = true;
+      } catch {
+        // No credentials stored
+      }
+
+      setState({
+        isAvailable: Boolean(result?.isAvailable),
+        biometryType: result?.biometryType ?? BiometryType.NONE,
+        hasStoredCredentials: hasCredentials,
+        isNative: true,
+        diagnostic: result?.isAvailable ? null : "Biometrics not available (not enrolled/disabled or missing permission)",
+      });
+    } catch (error) {
+      console.log("Biometric not available:", error);
+      setState((prev) => ({
+        ...prev,
+        isNative: true,
+        isAvailable: false,
+        biometryType: BiometryType.NONE,
+        hasStoredCredentials: false,
+        diagnostic: error instanceof Error ? error.message : String(error),
+      }));
+    }
+  }, []);
+
   // Check if biometric is available and if credentials are stored
   useEffect(() => {
-    const checkBiometric = async () => {
-      // Only available on native platforms
-      if (!Capacitor.isNativePlatform()) {
-        return;
-      }
-
-      const biometric = await loadNativeBiometric();
-      if (!biometric) return;
-
-      try {
-        const result = await biometric.isAvailable();
-        
-        // Check for stored credentials
-        let hasCredentials = false;
-        try {
-          await biometric.getCredentials({ server: CREDENTIALS_SERVER });
-          hasCredentials = true;
-        } catch {
-          // No credentials stored
-        }
-
-        setState({
-          isAvailable: result.isAvailable,
-          biometryType: result.biometryType,
-          hasStoredCredentials: hasCredentials,
-          isNative: true,
-        });
-      } catch (error) {
-        console.log("Biometric not available:", error);
-      }
-    };
-
-    checkBiometric();
-  }, []);
+    refresh();
+  }, [refresh]);
 
   // Get human-readable biometry type name
   const getBiometryName = useCallback(() => {
@@ -202,6 +234,7 @@ export const useBiometricAuth = () => {
   return {
     ...state,
     isLoading,
+    refresh,
     getBiometryName,
     saveCredentials,
     authenticateWithBiometric,

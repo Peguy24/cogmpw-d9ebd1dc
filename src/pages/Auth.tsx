@@ -220,7 +220,7 @@ const Auth = () => {
         // Don't navigate yet - wait for user choice
       } else {
         toast.success("Signed in successfully!");
-        // Navigation handled by auth state listener
+        navigate("/home");
       }
     } catch (error) {
       pendingCredentials.current = null;

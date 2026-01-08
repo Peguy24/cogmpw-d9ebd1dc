@@ -368,53 +368,66 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
         </div>
       </div>
 
-      {/* Biometric Authentication - Only show on native platforms */}
-      {biometric.isNative && biometric.isAvailable && (
+      {/* Biometric Authentication - Native only */}
+      {biometric.isNative && (
         <div>
           <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
             <Fingerprint className="h-4 w-4 sm:h-5 sm:w-5" />
             {biometric.getBiometryName()} Login
           </h3>
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
-                <Label className="text-sm">{biometric.getBiometryName()} Enabled</Label>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {biometric.hasStoredCredentials 
-                    ? `Use ${biometric.getBiometryName()} to sign in quickly` 
-                    : "Enable to sign in faster next time"
-                  }
+
+          {!biometric.isAvailable ? (
+            <div className="rounded-lg border bg-muted/50 p-3 sm:p-4 space-y-2">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Biometrics are not available yet on this device.
+                Make sure Face ID / Touch ID is enabled and enrolled in iOS Settings.
+              </p>
+              {biometric.diagnostic && (
+                <p className="text-xs text-muted-foreground break-words">
+                  Debug: {biometric.diagnostic}
                 </p>
-              </div>
-              {biometric.hasStoredCredentials ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    await biometric.deleteCredentials();
-                    toast.success(`${biometric.getBiometryName()} login disabled`);
-                  }}
-                >
-                  Disable
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowBiometricSetup(true)}
-                >
-                  Enable
-                </Button>
               )}
+              <Button variant="outline" size="sm" onClick={biometric.refresh}>
+                Retry
+              </Button>
             </div>
-            <BiometricSetupDialog
-              open={showBiometricSetup}
-              onOpenChange={setShowBiometricSetup}
-              userEmail={user.email || ""}
-              biometryName={biometric.getBiometryName()}
-              onSaveCredentials={biometric.saveCredentials}
-            />
-          </div>
+          ) : (
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
+                  <Label className="text-sm">{biometric.getBiometryName()} Enabled</Label>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    {biometric.hasStoredCredentials
+                      ? `Use ${biometric.getBiometryName()} to sign in quickly`
+                      : "Enable to sign in faster next time"}
+                  </p>
+                </div>
+                {biometric.hasStoredCredentials ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      await biometric.deleteCredentials();
+                      toast.success(`${biometric.getBiometryName()} login disabled`);
+                    }}
+                  >
+                    Disable
+                  </Button>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setShowBiometricSetup(true)}>
+                    Enable
+                  </Button>
+                )}
+              </div>
+              <BiometricSetupDialog
+                open={showBiometricSetup}
+                onOpenChange={setShowBiometricSetup}
+                userEmail={user.email || ""}
+                biometryName={biometric.getBiometryName()}
+                onSaveCredentials={biometric.saveCredentials}
+              />
+            </div>
+          )}
         </div>
       )}
 
