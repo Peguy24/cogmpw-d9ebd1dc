@@ -164,9 +164,30 @@ The app is configured to connect to your Lovable preview URL, which means:
 - Sync again: `npx cap sync`
 - Check Android Studio/Xcode for specific errors
 
+## 🔐 Face ID / Touch ID (Biometric Authentication)
+
+To enable biometric authentication on iOS, you **must** add the following to your `ios/App/App/Info.plist`:
+
+```xml
+<key>NSFaceIDUsageDescription</key>
+<string>We use Face ID to securely sign you in to your COGMPW account.</string>
+```
+
+### Steps:
+1. Open your iOS project in Xcode: `npx cap open ios`
+2. Click on `App` in the project navigator
+3. Select the `Info` tab
+4. Add a new row with:
+   - Key: `Privacy - Face ID Usage Description`
+   - Value: `We use Face ID to securely sign you in to your COGMPW account.`
+5. Save and rebuild
+
+Without this entry, Face ID/Touch ID will not be available and the biometric login button won't appear.
+
 ## 📚 Resources
 
 - [Capacitor Documentation](https://capacitorjs.com/docs)
 - [Capacitor Push Notifications](https://capacitorjs.com/docs/apis/push-notifications)
 - [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)
 - [Lovable Capacitor Guide](https://docs.lovable.dev/)
+- [capacitor-native-biometric](https://github.com/nicedayz/capacitor-native-biometric)
