@@ -181,7 +181,11 @@ const ResetPassword = () => {
     const isMobile = isMobileDevice();
 
     const handleOpenApp = () => {
-      openCogmpwApp("/auth?password_reset=success", `${window.location.origin}/auth?password_reset=success`);
+      // Use the `app/` prefix so Android intent URLs include a real pathname (more reliable parsing on the native side)
+      openCogmpwApp(
+        "app/auth?password_reset=success",
+        `${window.location.origin}/auth?password_reset=success`
+      );
     };
 
     return (
