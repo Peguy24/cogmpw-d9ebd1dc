@@ -65,7 +65,18 @@ const Auth = () => {
   const pendingCredentials = useRef<{ email: string; password: string } | null>(null);
   
   // Check for password reset success
-  const passwordResetSuccess = searchParams.get("password_reset") === "success";
+  const passwordResetParam = searchParams.get("password_reset") === "success";
+  const [showPasswordResetBanner, setShowPasswordResetBanner] = useState(passwordResetParam);
+  
+  // Auto-hide password reset banner after 10 seconds
+  useEffect(() => {
+    if (showPasswordResetBanner) {
+      const timer = setTimeout(() => {
+        setShowPasswordResetBanner(false);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [showPasswordResetBanner]);
   
   // Biometric opt-in dialog state
   const [showBiometricOptIn, setShowBiometricOptIn] = useState(false);
@@ -416,7 +427,7 @@ const Auth = () => {
         </CardHeader>
         <CardContent>
           {/* Password reset success banner */}
-          {passwordResetSuccess && (
+          {showPasswordResetBanner && (
             <div className="mb-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
               <p className="text-sm text-green-700 dark:text-green-300 text-center font-medium">
                 ✓ Password reset successfully! Please sign in with your new password.
