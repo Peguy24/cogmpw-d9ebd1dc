@@ -52,11 +52,24 @@ export const useDeepLinks = () => {
         const queryString = url.search;
         const fullPath = path + queryString;
 
+        // Parse params before navigating so we can apply any required session changes
+        const params = new URLSearchParams(queryString);
+
+        // After a password reset, force sign-out so the Auth screen doesn't auto-redirect to /home
+        if (params.get("password_reset") === "success") {
+          try {
+            // This ensures users land on the login screen on iOS/Android
+            const { supabase } = await import("@/integrations/supabase/client");
+            await supabase.auth.signOut();
+          } catch {
+            // ignore
+          }
+        }
+
         console.log("[DeepLink] Navigating to:", fullPath);
         navigate(fullPath);
 
         // Show appropriate toast based on query params
-        const params = new URLSearchParams(queryString);
         if (params.get("donation") === "success") {
           toast.success("Donation completed successfully!", {
             description: "Thank you for your generous gift.",
