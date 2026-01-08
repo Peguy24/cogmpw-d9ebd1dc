@@ -67,16 +67,27 @@ const Auth = () => {
   // Check for password reset success
   const passwordResetParam = searchParams.get("password_reset") === "success";
   const [showPasswordResetBanner, setShowPasswordResetBanner] = useState(passwordResetParam);
+  const [isBannerFading, setIsBannerFading] = useState(false);
   
-  // Auto-hide password reset banner after 10 seconds
+  // Auto-hide password reset banner after 10 seconds with fade-out
   useEffect(() => {
-    if (showPasswordResetBanner) {
-      const timer = setTimeout(() => {
-        setShowPasswordResetBanner(false);
+    if (showPasswordResetBanner && !isBannerFading) {
+      const fadeTimer = setTimeout(() => {
+        setIsBannerFading(true);
       }, 10000);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(fadeTimer);
     }
-  }, [showPasswordResetBanner]);
+  }, [showPasswordResetBanner, isBannerFading]);
+
+  // Remove banner after fade-out animation completes
+  useEffect(() => {
+    if (isBannerFading) {
+      const removeTimer = setTimeout(() => {
+        setShowPasswordResetBanner(false);
+      }, 300); // Match animation duration
+      return () => clearTimeout(removeTimer);
+    }
+  }, [isBannerFading]);
   
   // Biometric opt-in dialog state
   const [showBiometricOptIn, setShowBiometricOptIn] = useState(false);
@@ -428,7 +439,7 @@ const Auth = () => {
         <CardContent>
           {/* Password reset success banner */}
           {showPasswordResetBanner && (
-            <div className="mb-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
+            <div className={`mb-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 ${isBannerFading ? 'animate-fade-out' : 'animate-fade-in'}`}>
               <p className="text-sm text-green-700 dark:text-green-300 text-center font-medium">
                 ✓ Password reset successfully! Please sign in with your new password.
               </p>
