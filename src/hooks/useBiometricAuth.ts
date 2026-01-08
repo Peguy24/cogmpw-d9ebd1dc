@@ -52,7 +52,7 @@ export const useBiometricAuth = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const refresh = useCallback(async () => {
+  const refresh = async () => {
     const isNative = Capacitor.isNativePlatform();
 
     if (!isNative) {
@@ -99,7 +99,9 @@ export const useBiometricAuth = () => {
         biometryType: result?.biometryType ?? BiometryType.NONE,
         hasStoredCredentials: hasCredentials,
         isNative: true,
-        diagnostic: result?.isAvailable ? null : "Biometrics not available (not enrolled/disabled or missing permission)",
+        diagnostic: result?.isAvailable
+          ? null
+          : "Biometrics not available (not enrolled/disabled or missing permission)",
       });
     } catch (error) {
       console.log("Biometric not available:", error);
@@ -112,12 +114,13 @@ export const useBiometricAuth = () => {
         diagnostic: error instanceof Error ? error.message : String(error),
       }));
     }
-  }, []);
+  };
 
   // Check if biometric is available and if credentials are stored
   useEffect(() => {
     refresh();
-  }, [refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Get human-readable biometry type name
   const getBiometryName = useCallback(() => {
