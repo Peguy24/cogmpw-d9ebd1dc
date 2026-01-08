@@ -73,6 +73,10 @@ export const useDeepLinks = () => {
           toast.info("Subscription setup canceled", {
             description: "No recurring donation was created.",
           });
+        } else if (params.get("password_reset") === "success") {
+          toast.success("Password reset successfully!", {
+            description: "Please sign in with your new password.",
+          });
         }
       } catch (error) {
         console.error("[DeepLink] Error parsing URL:", error);
