@@ -178,7 +178,7 @@ const ResetPassword = () => {
     const isMobile = isMobileDevice();
 
     const handleOpenApp = () => {
-      openCogmpwApp("/home", `${window.location.origin}/home`);
+      openCogmpwApp("/auth", `${window.location.origin}/auth`);
     };
 
     return (
