@@ -44,10 +44,9 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  // State for payment loading overlay
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
-  // All hooks must be called unconditionally and in consistent order
+  // Custom hooks - always called in same order
   usePushNotifications();
   useDeepLinks();
   useClearPaymentLoadingOnResume();
