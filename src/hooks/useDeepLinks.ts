@@ -68,9 +68,9 @@ export const useDeepLinks = () => {
         // Parse params before navigating so we can apply any required session changes
         const params = new URLSearchParams(queryString);
 
-        // After a password reset, force sign-out so the Auth screen doesn't auto-redirect to /home
-        // and route to /auth (without keeping the query param, to avoid repeated banners/toasts).
+        // Check if this is a password reset success callback
         if (params.get("password_reset") === "success") {
+          // Force sign-out so the Auth screen doesn't auto-redirect to /home
           try {
             const { supabase } = await import("@/integrations/supabase/client");
             await supabase.auth.signOut();
@@ -84,6 +84,26 @@ export const useDeepLinks = () => {
             state: { passwordResetSuccess: true },
           });
           return;
+        }
+
+        // Check if this is a recovery link with tokens (from Supabase redirect)
+        // Format: /reset-password#access_token=...&refresh_token=...&type=recovery
+        const hashIndex = incomingUrl.indexOf("#");
+        if (hashIndex !== -1 && path.includes("reset-password")) {
+          const hashParams = new URLSearchParams(incomingUrl.substring(hashIndex + 1));
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+          const type = hashParams.get("type");
+
+          if (accessToken && refreshToken && type === "recovery") {
+            console.log("[DeepLink] Handling recovery token in-app");
+            // Navigate to reset-password and pass tokens via state so the page can verify
+            navigate("/reset-password", {
+              replace: true,
+              state: { accessToken, refreshToken, type },
+            });
+            return;
+          }
         }
 
         console.log("[DeepLink] Navigating to:", fullPath);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +18,15 @@ const isMobileDevice = () => {
   return /android|iphone|ipad|ipod|mobile/i.test(ua);
 };
 
+interface LocationState {
+  accessToken?: string;
+  refreshToken?: string;
+  type?: string;
+}
+
 const ResetPassword = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
   const [resetState, setResetState] = useState<ResetState>("loading");
@@ -33,6 +40,33 @@ const ResetPassword = () => {
 
   useEffect(() => {
     const checkSession = async () => {
+      // First, check if tokens were passed via navigation state (from deep link handler)
+      const state = location.state as LocationState | null;
+      if (state?.accessToken && state?.refreshToken && state?.type === "recovery") {
+        console.log("[ResetPassword] Processing tokens from navigation state");
+        try {
+          const { error } = await supabase.auth.setSession({
+            access_token: state.accessToken,
+            refresh_token: state.refreshToken,
+          });
+
+          if (error) {
+            console.error("Session error from state:", error);
+            setResetState("expired");
+            return;
+          }
+
+          // Clear the state so refreshing won't re-process
+          navigate(location.pathname, { replace: true, state: null });
+          setResetState("ready");
+          return;
+        } catch (err) {
+          console.error("Token processing error from state:", err);
+          setResetState("expired");
+          return;
+        }
+      }
+
       // Check hash fragment for tokens (Supabase redirects with #access_token=...)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get("access_token");
@@ -90,7 +124,7 @@ const ResetPassword = () => {
     checkSession();
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [location.pathname, location.state, navigate]);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
