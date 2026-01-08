@@ -44,12 +44,14 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
+  // State for payment loading overlay
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
+  // All hooks must be called unconditionally and in consistent order
   usePushNotifications();
-  useDeepLinks(); // Handle deep links from Stripe payment redirects
-  useClearPaymentLoadingOnResume(); // Clear overlay when the user returns to the app
-  useSessionPersistence(); // Handle "Remember me" session persistence
+  useDeepLinks();
+  useClearPaymentLoadingOnResume();
+  useSessionPersistence();
 
   useEffect(() => {
     const unsubscribe = subscribePaymentLoading(setIsPaymentLoading);
