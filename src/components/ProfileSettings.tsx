@@ -11,6 +11,7 @@ import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, Externa
 import { useTheme } from "next-themes";
 import { Link } from "react-router-dom";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { BiometricSetupDialog } from "@/components/BiometricSetupDialog";
 
 interface ProfileSettingsProps {
   user: User;
@@ -43,6 +44,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
   const [eventsEnabled, setEventsEnabled] = useState(true);
   const [sermonsEnabled, setSermonsEnabled] = useState(true);
   const [devotionalsEnabled, setDevotionalsEnabled] = useState(true);
+  const [showBiometricSetup, setShowBiometricSetup] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -399,16 +401,19 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    // Clear the dismissed flag and prompt user to re-login to enable
-                    localStorage.removeItem('biometric_opt_in_dismissed');
-                    toast.info("Sign out and sign in again to enable biometric login");
-                  }}
+                  onClick={() => setShowBiometricSetup(true)}
                 >
                   Enable
                 </Button>
               )}
             </div>
+            <BiometricSetupDialog
+              open={showBiometricSetup}
+              onOpenChange={setShowBiometricSetup}
+              userEmail={user.email || ""}
+              biometryName={biometric.getBiometryName()}
+              onSaveCredentials={biometric.saveCredentials}
+            />
           </div>
         </div>
       )}
