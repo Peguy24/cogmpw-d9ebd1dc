@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ const getPublicSiteUrl = () => {
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
@@ -62,6 +63,9 @@ const Auth = () => {
   
   // Store credentials temporarily for saving after successful login
   const pendingCredentials = useRef<{ email: string; password: string } | null>(null);
+  
+  // Check for password reset success
+  const passwordResetSuccess = searchParams.get("password_reset") === "success";
   
   // Biometric opt-in dialog state
   const [showBiometricOptIn, setShowBiometricOptIn] = useState(false);
@@ -411,6 +415,15 @@ const Auth = () => {
           </Link>
         </CardHeader>
         <CardContent>
+          {/* Password reset success banner */}
+          {passwordResetSuccess && (
+            <div className="mb-4 p-3 rounded-lg bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800">
+              <p className="text-sm text-green-700 dark:text-green-300 text-center font-medium">
+                ✓ Password reset successfully! Please sign in with your new password.
+              </p>
+            </div>
+          )}
+          
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>

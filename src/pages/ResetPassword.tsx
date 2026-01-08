@@ -122,7 +122,7 @@ const ResetPassword = () => {
       // Auto-redirect only on desktop; mobile users will use the "Open App" button
       if (!isMobileDevice()) {
         setTimeout(() => {
-          navigate("/auth");
+          navigate("/auth?password_reset=success");
         }, 2000);
       }
     } catch (error) {
@@ -181,7 +181,7 @@ const ResetPassword = () => {
     const isMobile = isMobileDevice();
 
     const handleOpenApp = () => {
-      openCogmpwApp("/auth", `${window.location.origin}/auth`);
+      openCogmpwApp("/auth?password_reset=success", `${window.location.origin}/auth?password_reset=success`);
     };
 
     return (
