@@ -113,13 +113,16 @@ const ResetPassword = () => {
 
       if (error) throw error;
 
+      // Sign out the user so they must log in with their new password
+      await supabase.auth.signOut();
+
       setResetState("success");
-      toast.success("Password updated successfully!");
+      toast.success("Password updated successfully! Please sign in with your new password.");
 
       // Auto-redirect only on desktop; mobile users will use the "Open App" button
       if (!isMobileDevice()) {
         setTimeout(() => {
-          navigate("/home");
+          navigate("/auth");
         }, 2000);
       }
     } catch (error) {
