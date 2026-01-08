@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ const getPublicSiteUrl = () => {
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -58,17 +59,36 @@ const Auth = () => {
   });
   const [rememberMe, setRememberMe] = useState(() => {
     // Default to true, or use stored preference
-    return localStorage.getItem('remember_me') !== 'false';
+    return localStorage.getItem("remember_me") !== "false";
   });
-  
+
   // Store credentials temporarily for saving after successful login
   const pendingCredentials = useRef<{ email: string; password: string } | null>(null);
-  
-  // Check for password reset success
+
+  // Password reset success (from deep link state or query param)
   const passwordResetParam = searchParams.get("password_reset") === "success";
-  const [showPasswordResetBanner, setShowPasswordResetBanner] = useState(passwordResetParam);
+  const passwordResetState =
+    (location.state as { passwordResetSuccess?: boolean } | null)?.passwordResetSuccess === true;
+  const didHandlePasswordResetRef = useRef(false);
+
+  const [showPasswordResetBanner, setShowPasswordResetBanner] = useState(false);
   const [isBannerFading, setIsBannerFading] = useState(false);
-  
+
+  useEffect(() => {
+    if (didHandlePasswordResetRef.current) return;
+    if (!passwordResetParam && !passwordResetState) return;
+
+    didHandlePasswordResetRef.current = true;
+    setShowPasswordResetBanner(true);
+
+    toast.success("Password reset successfully!", {
+      description: "Please sign in with your new password.",
+    });
+
+    // Clear query/state so it doesn't show again on every interaction
+    navigate("/auth", { replace: true });
+  }, [navigate, passwordResetParam, passwordResetState]);
+
   // Auto-hide password reset banner after 10 seconds with fade-out
   useEffect(() => {
     if (showPasswordResetBanner && !isBannerFading) {
@@ -88,7 +108,7 @@ const Auth = () => {
       return () => clearTimeout(removeTimer);
     }
   }, [isBannerFading]);
-  
+
   // Biometric opt-in dialog state
   const [showBiometricOptIn, setShowBiometricOptIn] = useState(false);
   
