@@ -100,10 +100,19 @@ export const useBiometricAuth = () => {
       return;
     }
 
-    console.log("[Biometric] Module loaded, calling isAvailable...");
+    console.log("[Biometric] Module loaded, calling isAvailable with timeout...");
+
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Biometric check timed out after 5s")), 5000)
+    );
 
     try {
-      const result = await biometric.isAvailable();
+      // Race between actual check and timeout
+      const result = await Promise.race([
+        biometric.isAvailable(),
+        timeoutPromise
+      ]) as { isAvailable: boolean; biometryType: BiometryType; errorCode?: number };
       
       console.log("[Biometric] isAvailable result:", JSON.stringify(result, null, 2));
 
@@ -128,8 +137,8 @@ export const useBiometricAuth = () => {
         }
         
         // Add helpful hints based on common issues
-        if (result?.biometryType === BiometryType.NONE || result?.biometryType === 0) {
-          diagnosticMsg += ". Check: 1) Device passcode set? 2) Face ID enrolled in Settings > Face ID & Passcode?";
+        if (result?.biometryType === BiometryType.NONE) {
+          diagnosticMsg += ". Hint: Go to iOS Settings > COGMPW and enable Face ID permission.";
         }
       }
 
@@ -146,13 +155,19 @@ export const useBiometricAuth = () => {
     } catch (error) {
       console.error("[Biometric] isAvailable threw error:", error);
       const errMsg = error instanceof Error ? error.message : String(error);
+      
+      // If timed out, suggest checking app permissions
+      const hint = errMsg.includes("timed out") 
+        ? ". The biometric check hung - try going to iOS Settings > COGMPW and enable Face ID, then restart the app."
+        : "";
+      
       setState((prev) => ({
         ...prev,
         isNative: true,
         isAvailable: false,
         biometryType: BiometryType.NONE,
         hasStoredCredentials: false,
-        diagnostic: `Check error: ${errMsg}`,
+        diagnostic: `Check error: ${errMsg}${hint}`,
       }));
     }
   };
