@@ -199,6 +199,8 @@ export const useBiometricAuth = () => {
   }, [state.biometryType]);
 
   // Save credentials after successful login
+  // Also triggers the biometric permission prompt on first enable (iOS will not show a Face ID prompt
+  // until we actually attempt a biometric verification).
   const saveCredentials = useCallback(async (email: string, password: string) => {
     if (!Capacitor.isNativePlatform()) return false;
 
@@ -206,13 +208,22 @@ export const useBiometricAuth = () => {
     if (!biometric) return false;
 
     try {
+      // IMPORTANT: This is what makes iOS show the "Allow Face ID" prompt the first time.
+      // Without calling verifyIdentity, the app may never appear in Face ID settings.
+      await biometric.verifyIdentity({
+        reason: `Enable biometric sign-in for COGMPW`,
+        title: "Enable Biometric Login",
+        subtitle: "Confirm with Face ID / Touch ID",
+        description: "This will let you sign in faster next time.",
+      });
+
       await biometric.setCredentials({
         username: email,
         password: password,
         server: CREDENTIALS_SERVER,
       });
 
-      setState(prev => ({ ...prev, hasStoredCredentials: true }));
+      setState((prev) => ({ ...prev, hasStoredCredentials: true }));
       return true;
     } catch (error) {
       console.error("Failed to save credentials:", error);
