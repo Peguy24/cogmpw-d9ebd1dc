@@ -402,22 +402,45 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                       : "Enable to sign in faster next time"}
                   </p>
                 </div>
-                {biometric.hasStoredCredentials ? (
+          <div className="flex gap-2 flex-shrink-0">
+                  {biometric.hasStoredCredentials ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        await biometric.deleteCredentials();
+                        toast.success(`${biometric.getBiometryName()} login disabled`);
+                      }}
+                    >
+                      Disable
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => setShowBiometricSetup(true)}>
+                      Enable
+                    </Button>
+                  )}
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={async () => {
-                      await biometric.deleteCredentials();
-                      toast.success(`${biometric.getBiometryName()} login disabled`);
+                      try {
+                        const { NativeBiometric } = await import("capacitor-native-biometric");
+                        await NativeBiometric.verifyIdentity({
+                          reason: "Testing Face ID / Touch ID",
+                          title: "Biometric Test",
+                          subtitle: "Verify your identity",
+                          description: "This is a test to confirm biometrics work on your device.",
+                        });
+                        toast.success(`✅ ${biometric.getBiometryName()} is working correctly!`);
+                      } catch (error: any) {
+                        console.error("Biometric test failed:", error);
+                        toast.error(`❌ ${biometric.getBiometryName()} failed: ${error?.message || "Unknown error"}`);
+                      }
                     }}
                   >
-                    Disable
+                    Test
                   </Button>
-                ) : (
-                  <Button variant="outline" size="sm" onClick={() => setShowBiometricSetup(true)}>
-                    Enable
-                  </Button>
-                )}
+                </div>
               </div>
               <BiometricSetupDialog
                 open={showBiometricSetup}
