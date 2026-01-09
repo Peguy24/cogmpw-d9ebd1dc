@@ -266,25 +266,18 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
     }
   };
 
-  const openAppSettings = async () => {
+  const openFaceIdSettings = () => {
+    // iOS doesn't allow deep-linking to Face ID settings, so we show instructions
     if (Capacitor.getPlatform() === "ios") {
-      // On iOS, we can open the app's settings page directly
-      try {
-        const { App } = await import("@capacitor/app");
-        // This opens the app's settings in iOS Settings app
-        window.location.href = "app-settings:";
-      } catch (e) {
-        // Fallback: just inform the user
-        toast.info("Open Settings → Face ID & Passcode to enable Face ID for this app.");
-      }
+      toast.info(
+        "Go to Settings → Face ID & Passcode → Other Apps, then enable COGMPW.",
+        { duration: 6000 }
+      );
     } else if (Capacitor.getPlatform() === "android") {
-      try {
-        const { App } = await import("@capacitor/app");
-        // Android: open app settings
-        window.location.href = "package:com.peguy24.cogmpw";
-      } catch (e) {
-        toast.info("Open Settings → Apps → COGMPW to enable biometric permissions.");
-      }
+      toast.info(
+        "Go to Settings → Security → Fingerprint to set up biometrics.",
+        { duration: 6000 }
+      );
     }
   };
 
@@ -411,14 +404,22 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
           </h3>
 
           {!biometric.isAvailable ? (
-            <div className="rounded-lg border bg-muted/50 p-3 sm:p-4 space-y-2">
+            <div className="rounded-lg border bg-muted/50 p-3 sm:p-4 space-y-3">
               <p className="text-xs sm:text-sm text-muted-foreground">
                 Biometrics are not available yet on this device.
-                Make sure Face ID / Touch ID is enabled and enrolled in iOS Settings.
               </p>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p className="font-medium">To enable Face ID:</p>
+                <ol className="list-decimal list-inside space-y-0.5 pl-1">
+                  <li>Open <strong>Settings</strong> on your iPhone</li>
+                  <li>Go to <strong>Face ID & Passcode</strong></li>
+                  <li>Scroll to <strong>Other Apps</strong></li>
+                  <li>Enable <strong>COGMPW</strong></li>
+                </ol>
+              </div>
               {biometric.diagnostic && (
-                <p className="text-xs text-muted-foreground break-words">
-                  Debug: {biometric.diagnostic}
+                <p className="text-xs text-muted-foreground/70 break-words font-mono bg-muted/50 p-2 rounded">
+                  {biometric.diagnostic}
                 </p>
               )}
               <div className="flex flex-wrap gap-2">
@@ -429,9 +430,9 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 <Button variant="secondary" size="sm" onClick={runBiometricTest} disabled={biometric.isRefreshing}>
                   Test
                 </Button>
-                <Button variant="outline" size="sm" onClick={openAppSettings} className="gap-1">
+                <Button variant="ghost" size="sm" onClick={openFaceIdSettings} className="gap-1 text-xs">
                   <Settings className="h-3 w-3" />
-                  Open Settings
+                  How to Enable
                 </Button>
               </div>
             </div>
