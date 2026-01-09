@@ -266,19 +266,25 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
     }
   };
 
-  const openFaceIdSettings = () => {
-    // iOS doesn't allow deep-linking to Face ID settings, so we show instructions
+  const openAppSettings = () => {
+    // iOS deep-linking only reliably supports the app's Settings screen (not Face ID directly)
     if (Capacitor.getPlatform() === "ios") {
-      toast.info(
-        "Go to Settings → Face ID & Passcode → Other Apps, then enable COGMPW.",
-        { duration: 6000 }
-      );
-    } else if (Capacitor.getPlatform() === "android") {
-      toast.info(
-        "Go to Settings → Security → Fingerprint to set up biometrics.",
-        { duration: 6000 }
-      );
+      try {
+        window.location.href = "app-settings:";
+      } catch {
+        toast.info("Open Settings and find COGMPW in the apps list.", { duration: 6000 });
+      }
+      return;
     }
+
+    toast.info("Open your phone Settings and find COGMPW in the apps list.", { duration: 6000 });
+  };
+
+  const showFaceIdNotListedHelp = () => {
+    toast.info(
+      "iOS only shows apps under Face ID → Other Apps AFTER the app requests Face ID. Tap Test in COGMPW and allow Face ID; then it will appear in the list.",
+      { duration: 8000 }
+    );
   };
 
   if (loading) {
@@ -430,9 +436,9 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 <Button variant="secondary" size="sm" onClick={runBiometricTest} disabled={biometric.isRefreshing}>
                   Test
                 </Button>
-                <Button variant="ghost" size="sm" onClick={openFaceIdSettings} className="gap-1 text-xs">
+                <Button variant="ghost" size="sm" onClick={openAppSettings} className="gap-1 text-xs">
                   <Settings className="h-3 w-3" />
-                  How to Enable
+                  App Settings
                 </Button>
               </div>
             </div>
@@ -491,11 +497,11 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 Choose your preferred color scheme
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 flex-shrink-0">
+            <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:flex-nowrap flex-shrink-0">
               <Button
                 variant={theme === "light" ? "default" : "outline"}
                 size="icon"
-                className="h-10 w-10"
+                className="h-10 w-full sm:w-10"
                 onClick={() => setTheme("light")}
                 aria-label="Light mode"
                 title="Light mode"
@@ -505,7 +511,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               <Button
                 variant={theme === "dark" ? "default" : "outline"}
                 size="icon"
-                className="h-10 w-10"
+                className="h-10 w-full sm:w-10"
                 onClick={() => setTheme("dark")}
                 aria-label="Dark mode"
                 title="Dark mode"
@@ -515,7 +521,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               <Button
                 variant={theme === "system" ? "default" : "outline"}
                 size="icon"
-                className="h-10 w-10"
+                className="h-10 w-full sm:w-10"
                 onClick={() => setTheme("system")}
                 aria-label="System default"
                 title="System default"
