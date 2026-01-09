@@ -80,15 +80,13 @@ const Auth = () => {
 
     didHandlePasswordResetRef.current = true;
     setShowPasswordResetBanner(true);
+    setIsBannerFading(false);
+
     // Ensure password recovery mode is off so auth listener works correctly
     setIsPasswordRecovery(false);
 
-    toast.success("Password reset successfully!", {
-      description: "Please sign in with your new password.",
-    });
-
     // Clear query/state so it doesn't show again on every interaction
-    navigate("/auth", { replace: true });
+    navigate("/auth", { replace: true, state: null });
   }, [navigate, passwordResetParam, passwordResetState]);
 
   // Auto-hide password reset banner after 10 seconds with fade-out
@@ -197,6 +195,12 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If the user is actively signing in, hide the password reset banner so it
+    // doesn't feel like the app is "stuck" on that message.
+    setShowPasswordResetBanner(false);
+    setIsBannerFading(false);
+
     setIsLoading(true);
 
     try {

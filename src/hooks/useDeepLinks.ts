@@ -70,6 +70,20 @@ export const useDeepLinks = () => {
 
         // Check if this is a password reset success callback
         if (params.get("password_reset") === "success") {
+          // iOS can sometimes re-fire the same launch URL even minutes later.
+          // If we keep handling it, we can repeatedly sign out + re-show the banner,
+          // making it feel like the user can never finish signing in.
+          const handledKey = "password_reset_success_handled_at";
+          const handledAt = Number(localStorage.getItem(handledKey) || 0);
+          const alreadyHandledRecently = handledAt && now - handledAt < 10 * 60 * 1000; // 10 minutes
+
+          if (alreadyHandledRecently) {
+            console.log("[DeepLink] Ignoring repeated password reset success URL");
+            return;
+          }
+
+          localStorage.setItem(handledKey, String(now));
+
           // Force sign-out so the Auth screen doesn't auto-redirect to /home
           try {
             const { supabase } = await import("@/integrations/supabase/client");
