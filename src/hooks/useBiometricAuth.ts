@@ -266,6 +266,23 @@ export const useBiometricAuth = () => {
     }
   }, []);
 
+  // Delete stored credentials
+  const deleteCredentials = useCallback(async () => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const biometric = await loadNativeBiometric();
+    if (!biometric) return;
+
+    try {
+      await biometric.deleteCredentials({
+        server: CREDENTIALS_SERVER,
+      });
+      setState((prev) => ({ ...prev, hasStoredCredentials: false }));
+    } catch (error) {
+      console.error("Failed to delete credentials:", error);
+    }
+  }, []);
+
   // Authenticate with biometric and login
   const authenticateWithBiometric = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     if (!Capacitor.isNativePlatform() || !state.isAvailable || !state.hasStoredCredentials) {
@@ -318,24 +335,6 @@ export const useBiometricAuth = () => {
       setIsLoading(false);
     }
   }, [state.isAvailable, state.hasStoredCredentials, deleteCredentials]);
-
-  // Delete stored credentials
-  const deleteCredentials = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    const biometric = await loadNativeBiometric();
-    if (!biometric) return;
-
-    try {
-      await biometric.deleteCredentials({
-        server: CREDENTIALS_SERVER,
-      });
-      setState((prev) => ({ ...prev, hasStoredCredentials: false }));
-    } catch (error) {
-      console.error("Failed to delete credentials:", error);
-    }
-  }, []);
-
   return {
     ...state,
     isLoading,
