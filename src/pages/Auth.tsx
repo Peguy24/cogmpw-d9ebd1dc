@@ -80,6 +80,8 @@ const Auth = () => {
 
     didHandlePasswordResetRef.current = true;
     setShowPasswordResetBanner(true);
+    // Ensure password recovery mode is off so auth listener works correctly
+    setIsPasswordRecovery(false);
 
     toast.success("Password reset successfully!", {
       description: "Please sign in with your new password.",
@@ -215,9 +217,31 @@ const Auth = () => {
 
       // On successful login, show biometric opt-in dialog (if available, not already set up, and not dismissed before)
       const biometricDismissed = localStorage.getItem('biometric_opt_in_dismissed');
-      if (biometric.isAvailable && !biometric.hasStoredCredentials && pendingCredentials.current && !biometricDismissed) {
+      const shouldShowBiometricOptIn = biometric.isAvailable && !biometric.hasStoredCredentials && pendingCredentials.current && !biometricDismissed;
+      
+      console.log("[Auth] Sign-in success, biometric check:", {
+        isAvailable: biometric.isAvailable,
+        hasStoredCredentials: biometric.hasStoredCredentials,
+        biometricDismissed: !!biometricDismissed,
+        willShowOptIn: shouldShowBiometricOptIn
+      });
+      
+      if (shouldShowBiometricOptIn) {
         setShowBiometricOptIn(true);
-        // Don't navigate yet - wait for user choice
+        // Safety timeout: if dialog doesn't complete in 5 seconds, navigate anyway
+        setTimeout(() => {
+          console.log("[Auth] Biometric dialog timeout check");
+          // Only navigate if we're still showing the opt-in (hasn't been handled)
+          setShowBiometricOptIn((current) => {
+            if (current) {
+              console.log("[Auth] Biometric dialog timeout, navigating to home");
+              toast.success("Signed in successfully!");
+              navigate("/home");
+              return false;
+            }
+            return current;
+          });
+        }, 5000);
       } else {
         toast.success("Signed in successfully!");
         navigate("/home");
