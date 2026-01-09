@@ -18,8 +18,12 @@ import PrayerRequestForm from "@/components/PrayerRequestForm";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { useBiometricAuth } from "@/hooks/useBiometricAuth";
+import { BiometricOnboardingDialog } from "@/components/BiometricOnboardingDialog";
 import churchLogo from "@/assets/church-logo-gold.png";
 import pastorPhoto from "@/assets/pastor-photo.jpg";
+
+const BIOMETRIC_ONBOARDING_KEY = "cogmpw_biometric_onboarding_dismissed";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -31,6 +35,35 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState("news");
   const isMobile = useIsMobile();
   const { unreadCount } = useUnreadMessages();
+  const biometric = useBiometricAuth();
+  const [showBiometricOnboarding, setShowBiometricOnboarding] = useState(false);
+
+  // Show biometric onboarding after login for native users who haven't set it up
+  useEffect(() => {
+    if (!loading && user && biometric.isNative && biometric.isAvailable && !biometric.hasStoredCredentials) {
+      const dismissed = localStorage.getItem(BIOMETRIC_ONBOARDING_KEY);
+      if (!dismissed) {
+        // Small delay to let the page load first
+        const timer = setTimeout(() => {
+          setShowBiometricOnboarding(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [loading, user, biometric.isNative, biometric.isAvailable, biometric.hasStoredCredentials]);
+
+  const handleBiometricOnboardingSkip = () => {
+    localStorage.setItem(BIOMETRIC_ONBOARDING_KEY, "true");
+    setShowBiometricOnboarding(false);
+  };
+
+  const handleBiometricOnboardingClose = (open: boolean) => {
+    if (!open) {
+      // If they close the dialog without explicitly skipping, still mark as dismissed
+      localStorage.setItem(BIOMETRIC_ONBOARDING_KEY, "true");
+    }
+    setShowBiometricOnboarding(open);
+  };
 
   useEffect(() => {
     const checkAuthAndApproval = async () => {
@@ -406,6 +439,18 @@ const Home = () => {
             </Link>
           </div>
         </nav>
+      )}
+
+      {/* Biometric Onboarding Dialog */}
+      {user && (
+        <BiometricOnboardingDialog
+          open={showBiometricOnboarding}
+          onOpenChange={handleBiometricOnboardingClose}
+          userEmail={user.email || ""}
+          biometryName={biometric.getBiometryName()}
+          onSaveCredentials={biometric.saveCredentials}
+          onSkip={handleBiometricOnboardingSkip}
+        />
       )}
     </div>
   );
