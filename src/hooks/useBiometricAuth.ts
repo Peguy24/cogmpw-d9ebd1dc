@@ -1,11 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
-import { NativeBiometric as NativeBiometricPlugin } from "capacitor-native-biometric";
+import {
+  AndroidBiometryStrength,
+  BiometricAuth,
+  BiometryError,
+  BiometryErrorType,
+} from "@aparajita/capacitor-biometric-auth";
+import { SecureStorage } from "@aparajita/capacitor-secure-storage";
 import { supabase } from "@/integrations/supabase/client";
 
 const CREDENTIALS_SERVER = "cogmpw.com";
+const STORAGE_KEY = `biometric_credentials:${CREDENTIALS_SERVER}`;
 
-// Biometry types matching capacitor-native-biometric
+// Internal biometry types used by our UI.
 enum BiometryType {
   NONE = 0,
   TOUCH_ID = 1,
@@ -16,33 +23,85 @@ enum BiometryType {
   MULTIPLE = 6,
 }
 
-// NOTE:
-// We intentionally avoid dynamic importing the plugin.
-// In some Capacitor iOS builds, dynamic imports can become separate chunks and fail to load,
-// leaving the UI stuck on "Loading biometric plugin...".
-let loadAttempted = false;
-let loadError: string | null = null;
-
-const loadNativeBiometric = async (): Promise<any> => {
-  if (!Capacitor.isNativePlatform()) {
-    console.log("[Biometric] Not native platform, skipping load");
-    return null;
+const mapBiometryType = (raw: unknown): BiometryType => {
+  if (typeof raw === "number") {
+    // If any plugin ever returns numeric types, map a safe subset.
+    if (raw in BiometryType) return raw as BiometryType;
+    return BiometryType.NONE;
   }
 
-  loadAttempted = true;
+  const v = String(raw ?? "");
+  switch (v) {
+    case "faceId":
+      return BiometryType.FACE_ID;
+    case "touchId":
+      return BiometryType.TOUCH_ID;
+    case "fingerprintAuthentication":
+      return BiometryType.FINGERPRINT;
+    case "faceAuthentication":
+      return BiometryType.FACE_AUTHENTICATION;
+    case "irisAuthentication":
+      return BiometryType.IRIS_AUTHENTICATION;
+    case "multiple":
+      return BiometryType.MULTIPLE;
+    default:
+      return BiometryType.NONE;
+  }
+};
+
+const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+  const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error(message)), ms));
+  return (await Promise.race([promise, timeout])) as T;
+};
+
+type StoredCredentials = { username: string; password: string };
+
+const readStoredCredentials = async (): Promise<StoredCredentials | null> => {
+  if (!Capacitor.isNativePlatform()) return null;
 
   try {
-    if (!NativeBiometricPlugin) {
-      loadError = "NativeBiometric not found in module exports";
-      console.error("[Biometric] " + loadError);
-      return null;
+    const stored = (await SecureStorage.get(STORAGE_KEY)) as unknown;
+    if (!stored) return null;
+
+    if (typeof stored === "string") {
+      const parsed = JSON.parse(stored) as Partial<StoredCredentials>;
+      if (!parsed.username || !parsed.password) return null;
+      return { username: parsed.username, password: parsed.password };
     }
 
-    return NativeBiometricPlugin;
-  } catch (error) {
-    loadError = error instanceof Error ? error.message : String(error);
-    console.error("[Biometric] Failed to access native biometric module:", loadError);
+    if (typeof stored === "object" && stored !== null) {
+      const obj = stored as Partial<StoredCredentials>;
+      if (!obj.username || !obj.password) return null;
+      return { username: obj.username, password: obj.password };
+    }
+
     return null;
+  } catch (e) {
+    console.warn("[Biometric] Failed reading secure credentials:", e);
+    return null;
+  }
+};
+
+const writeStoredCredentials = async (creds: StoredCredentials): Promise<boolean> => {
+  if (!Capacitor.isNativePlatform()) return false;
+
+  try {
+    // SecureStorage can store JSON-compatible objects directly.
+    await SecureStorage.set(STORAGE_KEY, creds);
+    return true;
+  } catch (e) {
+    console.error("[Biometric] Failed saving secure credentials:", e);
+    return false;
+  }
+};
+
+const removeStoredCredentials = async (): Promise<void> => {
+  if (!Capacitor.isNativePlatform()) return;
+
+  try {
+    await SecureStorage.remove(STORAGE_KEY);
+  } catch (e) {
+    console.warn("[Biometric] Failed deleting secure credentials:", e);
   }
 };
 
@@ -62,25 +121,15 @@ export const useBiometricAuth = () => {
     isNative: false,
     diagnostic: null,
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const withTimeout = async <T,>(
-    promise: Promise<T>,
-    ms: number,
-    message: string
-  ): Promise<T> => {
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(message)), ms)
-    );
-    return (await Promise.race([promise, timeout])) as T;
-  };
-
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     const isNative = Capacitor.isNativePlatform();
     const platform = Capacitor.getPlatform();
 
-    console.log("[Biometric] Starting refresh. isNative:", isNative, "platform:", platform);
+    console.log("[Biometric] Refresh. isNative:", isNative, "platform:", platform);
 
     if (!isNative) {
       setState({
@@ -96,84 +145,49 @@ export const useBiometricAuth = () => {
     setIsRefreshing(true);
 
     try {
-      // Mark as native early so the UI can show helpful debug text even if checks fail
-      setState((prev) => ({ ...prev, isNative: true, diagnostic: "Loading biometric plugin..." }));
+      setState((prev) => ({ ...prev, isNative: true, diagnostic: "Checking biometric availability..." }));
 
-      // Load the biometric module (guarded with a timeout so we never get stuck)
-      const biometric = await withTimeout(
-        loadNativeBiometric(),
-        3000,
-        "Biometric plugin load timed out after 3s (do a clean build + npx cap sync)"
-      );
-
-      if (!biometric) {
-        const errorMsg = loadError || (loadAttempted ? "Biometric plugin not available" : "Biometric load not attempted");
-        console.error("[Biometric] Plugin not available:", errorMsg);
-        setState((prev) => ({
-          ...prev,
-          isNative: true,
-          isAvailable: false,
-          biometryType: BiometryType.NONE,
-          hasStoredCredentials: false,
-          diagnostic: `${errorMsg}. Ensure you ran: npm run build && npx cap sync ios && rebuild in Xcode.`,
-        }));
-        return;
-      }
-
-      setState((prev) => ({ ...prev, diagnostic: "Checking biometric availability..." }));
-
-      console.log("[Biometric] Module loaded, calling isAvailable with timeout...");
-
+      // Check biometry (Capacitor 7 compatible)
       const result = await withTimeout(
-        biometric.isAvailable() as Promise<{ isAvailable: boolean; biometryType: BiometryType; errorCode?: number }>,
+        BiometricAuth.checkBiometry(),
         5000,
         "Biometric check timed out after 5s"
       );
 
-      console.log("[Biometric] isAvailable result:", JSON.stringify(result, null, 2));
+      console.log("[Biometric] checkBiometry result:", JSON.stringify(result, null, 2));
 
-      // Check for stored credentials
-      let hasCredentials = false;
-      try {
-        await withTimeout(biometric.getCredentials({ server: CREDENTIALS_SERVER }), 2500, "getCredentials timed out");
-        hasCredentials = true;
-        console.log("[Biometric] Stored credentials found");
-      } catch (credError) {
-        console.log("[Biometric] No stored credentials:", credError);
-      }
+      const creds = await withTimeout(readStoredCredentials(), 2500, "Reading credentials timed out");
 
-      // Build detailed diagnostic
-      let diagnosticMsg: string | null = null;
+      let diagnostic: string | null = null;
       if (!result?.isAvailable) {
-        const biometryTypeName = BiometryType[result?.biometryType] || `Unknown(${result?.biometryType})`;
-        diagnosticMsg = `isAvailable=false, type=${biometryTypeName}`;
+        const type = mapBiometryType(result?.biometryType);
+        const typeName = BiometryType[type] || "NONE";
+        diagnostic = `isAvailable=false, type=${typeName}`;
 
-        if (result?.errorCode) {
-          diagnosticMsg += `, errorCode=${result.errorCode}`;
+        if (result?.deviceIsSecure === false) {
+          diagnostic += ", deviceIsSecure=false (set a passcode/PIN)";
         }
 
-        if (result?.biometryType === BiometryType.NONE) {
-          diagnosticMsg += ". Hint: ensure Face ID/Touch ID is enrolled on the device and the app has permission.";
+        // If plugin includes a richer reason, show it
+        if (typeof result?.reason === "string" && result.reason.trim()) {
+          diagnostic += `, reason=${result.reason}`;
         }
       }
 
-      const finalState = {
+      setState({
         isAvailable: Boolean(result?.isAvailable),
-        biometryType: result?.biometryType ?? BiometryType.NONE,
-        hasStoredCredentials: hasCredentials,
+        biometryType: mapBiometryType(result?.biometryType),
+        hasStoredCredentials: Boolean(creds),
         isNative: true,
-        diagnostic: diagnosticMsg,
-      };
-
-      console.log("[Biometric] Final state:", JSON.stringify(finalState, null, 2));
-      setState(finalState);
+        diagnostic,
+      });
     } catch (error) {
-      console.error("[Biometric] refresh threw error:", error);
-      const errMsg = error instanceof Error ? error.message : String(error);
+      console.error("[Biometric] refresh error:", error);
 
-      const hint = errMsg.includes("timed out")
-        ? ". If this is iOS, check Face ID permission for the app and restart the app."
-        : "";
+      let msg = error instanceof Error ? error.message : String(error);
+      if (error instanceof BiometryError) {
+        msg = `${error.code}: ${error.message}`;
+      }
 
       setState((prev) => ({
         ...prev,
@@ -181,20 +195,17 @@ export const useBiometricAuth = () => {
         isAvailable: false,
         biometryType: BiometryType.NONE,
         hasStoredCredentials: false,
-        diagnostic: `Check error: ${errMsg}${hint}`,
+        diagnostic: `Check error: ${msg}`,
       }));
     } finally {
       setIsRefreshing(false);
     }
-  };
-
-  // Check if biometric is available and if credentials are stored
-  useEffect(() => {
-    refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Get human-readable biometry type name
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
   const getBiometryName = useCallback(() => {
     switch (state.biometryType) {
       case BiometryType.FACE_ID:
@@ -214,114 +225,92 @@ export const useBiometricAuth = () => {
     }
   }, [state.biometryType]);
 
-  // Save credentials after successful login
-  // Also triggers the biometric permission prompt on first enable (iOS will not show a Face ID prompt
-  // until we actually attempt a biometric verification).
+  const testBiometricPrompt = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    if (!Capacitor.isNativePlatform()) return { success: false, error: "Not running on a native build" };
+
+    try {
+      await BiometricAuth.authenticate({
+        reason: "Testing biometrics",
+        cancelTitle: "Cancel",
+        allowDeviceCredential: true,
+        iosFallbackTitle: "Use Passcode",
+        androidTitle: "Biometric Test",
+        androidSubtitle: "Verify your identity",
+        androidBiometryStrength: AndroidBiometryStrength.weak,
+      });
+
+      return { success: true };
+    } catch (error) {
+      if (error instanceof BiometryError) {
+        if (error.code === BiometryErrorType.userCancel) return { success: false, error: "Cancelled" };
+        return { success: false, error: error.message };
+      }
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }, []);
+
   const saveCredentials = useCallback(async (email: string, password: string) => {
     if (!Capacitor.isNativePlatform()) return false;
 
-    const biometric = await loadNativeBiometric();
-    if (!biometric) return false;
-
     try {
-      // IMPORTANT: This is what makes iOS show the "Allow Face ID" prompt the first time.
-      // Without calling verifyIdentity, the app may never appear in Face ID settings.
-      await biometric.verifyIdentity({
-        reason: `Enable biometric sign-in for COGMPW`,
-        title: "Enable Biometric Login",
-        subtitle: "Confirm with Face ID / Touch ID",
-        description: "This will let you sign in faster next time.",
+      // This triggers the actual Face ID/Touch ID system prompt (and permission).
+      await BiometricAuth.authenticate({
+        reason: "Enable biometric sign-in for COGMPW",
+        cancelTitle: "Cancel",
+        allowDeviceCredential: true,
+        iosFallbackTitle: "Use Passcode",
+        androidTitle: "Enable Biometric Login",
+        androidSubtitle: "Sign in faster next time",
+        androidConfirmationRequired: false,
+        androidBiometryStrength: AndroidBiometryStrength.weak,
       });
 
-      await biometric.setCredentials({
-        username: email,
-        password: password,
-        server: CREDENTIALS_SERVER,
-      });
+      const saved = await writeStoredCredentials({ username: email, password });
+      if (saved) {
+        setState((prev) => ({ ...prev, hasStoredCredentials: true }));
+      }
 
-      setState((prev) => ({ ...prev, hasStoredCredentials: true }));
-      return true;
+      return saved;
     } catch (error) {
-      console.error("Failed to save credentials:", error);
+      console.error("[Biometric] saveCredentials error:", error);
       return false;
     }
   }, []);
 
-  const testBiometricPrompt = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
-    if (!Capacitor.isNativePlatform()) {
-      return { success: false, error: "Not running on a native build" };
-    }
-
-    try {
-      const biometric = await loadNativeBiometric();
-      if (!biometric) return { success: false, error: "Biometric plugin not available" };
-
-      await biometric.verifyIdentity({
-        reason: "Testing Face ID / Touch ID",
-        title: "Biometric Test",
-        subtitle: "Verify your identity",
-        description: "This is a test to confirm biometrics work on your device.",
-      });
-
-      return { success: true };
-    } catch (error: any) {
-      const msg = error?.message || (error instanceof Error ? error.message : String(error));
-      return { success: false, error: msg };
-    }
-  }, []);
-
-  // Delete stored credentials
   const deleteCredentials = useCallback(async () => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    const biometric = await loadNativeBiometric();
-    if (!biometric) return;
-
-    try {
-      await biometric.deleteCredentials({
-        server: CREDENTIALS_SERVER,
-      });
-      setState((prev) => ({ ...prev, hasStoredCredentials: false }));
-    } catch (error) {
-      console.error("Failed to delete credentials:", error);
-    }
+    await removeStoredCredentials();
+    setState((prev) => ({ ...prev, hasStoredCredentials: false }));
   }, []);
 
-  // Authenticate with biometric and login
   const authenticateWithBiometric = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     if (!Capacitor.isNativePlatform() || !state.isAvailable || !state.hasStoredCredentials) {
       return { success: false, error: "Biometric not available" };
     }
 
-    const biometric = await loadNativeBiometric();
-    if (!biometric) {
-      return { success: false, error: "Biometric module not available" };
-    }
-
     setIsLoading(true);
 
     try {
-      // Verify biometric first
-      await biometric.verifyIdentity({
+      await BiometricAuth.authenticate({
         reason: "Sign in to COGMPW",
-        title: "Biometric Login",
-        subtitle: "Use your biometric to sign in",
-        description: "Place your finger on the sensor or look at the camera",
+        cancelTitle: "Cancel",
+        allowDeviceCredential: true,
+        iosFallbackTitle: "Use Passcode",
+        androidTitle: "Biometric Login",
+        androidSubtitle: "Sign in",
+        androidBiometryStrength: AndroidBiometryStrength.weak,
       });
 
-      // Get stored credentials
-      const credentials = await biometric.getCredentials({
-        server: CREDENTIALS_SERVER,
-      });
+      const creds = await readStoredCredentials();
+      if (!creds) {
+        return { success: false, error: "No stored credentials. Please enable biometric login again." };
+      }
 
-      // Sign in with Supabase
       const { error } = await supabase.auth.signInWithPassword({
-        email: credentials.username,
-        password: credentials.password,
+        email: creds.username,
+        password: creds.password,
       });
 
       if (error) {
-        // If credentials are invalid, delete them
         if (error.message.includes("Invalid login credentials")) {
           await deleteCredentials();
         }
@@ -330,15 +319,17 @@ export const useBiometricAuth = () => {
 
       return { success: true };
     } catch (error) {
-      console.error("Biometric auth error:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Authentication failed",
-      };
+      if (error instanceof BiometryError) {
+        if (error.code === BiometryErrorType.userCancel) return { success: false, error: "Cancelled" };
+        return { success: false, error: error.message };
+      }
+
+      return { success: false, error: error instanceof Error ? error.message : "Authentication failed" };
     } finally {
       setIsLoading(false);
     }
-  }, [state.isAvailable, state.hasStoredCredentials, deleteCredentials]);
+  }, [deleteCredentials, state.hasStoredCredentials, state.isAvailable]);
+
   return {
     ...state,
     isLoading,
