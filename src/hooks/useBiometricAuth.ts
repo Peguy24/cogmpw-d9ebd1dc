@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Capacitor } from "@capacitor/core";
+import { NativeBiometric as NativeBiometricPlugin } from "capacitor-native-biometric";
 import { supabase } from "@/integrations/supabase/client";
 
 const CREDENTIALS_SERVER = "cogmpw.com";
@@ -15,46 +16,32 @@ enum BiometryType {
   MULTIPLE = 6,
 }
 
-// Cache the native biometric module
-let NativeBiometric: any = null;
+// NOTE:
+// We intentionally avoid dynamic importing the plugin.
+// In some Capacitor iOS builds, dynamic imports can become separate chunks and fail to load,
+// leaving the UI stuck on "Loading biometric plugin...".
 let loadAttempted = false;
 let loadError: string | null = null;
 
-// Load the native biometric module - no timeout on the import itself
 const loadNativeBiometric = async (): Promise<any> => {
-  // Return cached module if already loaded
-  if (NativeBiometric) return NativeBiometric;
-  
-  // If we already tried and failed, return null immediately
-  if (loadAttempted && !NativeBiometric) {
-    console.log("[Biometric] Previous load attempt failed, skipping");
-    return null;
-  }
-  
   if (!Capacitor.isNativePlatform()) {
     console.log("[Biometric] Not native platform, skipping load");
     return null;
   }
 
   loadAttempted = true;
-  
+
   try {
-    console.log("[Biometric] Attempting dynamic import of capacitor-native-biometric...");
-    const module = await import("capacitor-native-biometric");
-    console.log("[Biometric] Module imported:", Object.keys(module));
-    NativeBiometric = module.NativeBiometric;
-    
-    if (!NativeBiometric) {
+    if (!NativeBiometricPlugin) {
       loadError = "NativeBiometric not found in module exports";
       console.error("[Biometric] " + loadError);
       return null;
     }
-    
-    console.log("[Biometric] NativeBiometric loaded successfully");
-    return NativeBiometric;
+
+    return NativeBiometricPlugin;
   } catch (error) {
     loadError = error instanceof Error ? error.message : String(error);
-    console.error("[Biometric] Failed to load native biometric module:", loadError);
+    console.error("[Biometric] Failed to access native biometric module:", loadError);
     return null;
   }
 };
@@ -112,11 +99,15 @@ export const useBiometricAuth = () => {
       // Mark as native early so the UI can show helpful debug text even if checks fail
       setState((prev) => ({ ...prev, isNative: true, diagnostic: "Loading biometric plugin..." }));
 
-      // Load the biometric module (no timeout - it either works or fails quickly)
-      const biometric = await loadNativeBiometric();
-      
+      // Load the biometric module (guarded with a timeout so we never get stuck)
+      const biometric = await withTimeout(
+        loadNativeBiometric(),
+        3000,
+        "Biometric plugin load timed out after 3s (do a clean build + npx cap sync)"
+      );
+
       if (!biometric) {
-        const errorMsg = loadError || "Biometric plugin not available";
+        const errorMsg = loadError || (loadAttempted ? "Biometric plugin not available" : "Biometric load not attempted");
         console.error("[Biometric] Plugin not available:", errorMsg);
         setState((prev) => ({
           ...prev,
