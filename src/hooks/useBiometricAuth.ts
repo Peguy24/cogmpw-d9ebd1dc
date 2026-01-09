@@ -84,25 +84,31 @@ export const useBiometricAuth = () => {
 
     try {
       const result = await biometric.isAvailable();
+      
+      console.log("[Biometric] isAvailable result:", JSON.stringify(result, null, 2));
 
       // Check for stored credentials
       let hasCredentials = false;
       try {
         await biometric.getCredentials({ server: CREDENTIALS_SERVER });
         hasCredentials = true;
-      } catch {
-        // No credentials stored
+        console.log("[Biometric] Stored credentials found");
+      } catch (credError) {
+        console.log("[Biometric] No stored credentials:", credError);
       }
 
-      setState({
+      const finalState = {
         isAvailable: Boolean(result?.isAvailable),
         biometryType: result?.biometryType ?? BiometryType.NONE,
         hasStoredCredentials: hasCredentials,
         isNative: true,
         diagnostic: result?.isAvailable
           ? null
-          : "Biometrics not available (not enrolled/disabled or missing permission)",
-      });
+          : `Biometrics not available. isAvailable=${result?.isAvailable}, biometryType=${result?.biometryType}, errorCode=${result?.errorCode || 'none'}`,
+      };
+      
+      console.log("[Biometric] Final state:", JSON.stringify(finalState, null, 2));
+      setState(finalState);
     } catch (error) {
       console.log("Biometric not available:", error);
       setState((prev) => ({
