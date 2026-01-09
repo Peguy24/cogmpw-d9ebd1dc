@@ -54,6 +54,9 @@ export const useBiometricAuth = () => {
 
   const refresh = async () => {
     const isNative = Capacitor.isNativePlatform();
+    const platform = Capacitor.getPlatform();
+
+    console.log("[Biometric] Starting refresh. isNative:", isNative, "platform:", platform);
 
     if (!isNative) {
       setState({
@@ -61,15 +64,30 @@ export const useBiometricAuth = () => {
         biometryType: BiometryType.NONE,
         hasStoredCredentials: false,
         isNative: false,
-        diagnostic: null,
+        diagnostic: `Not running on native (platform: ${platform})`,
       });
       return;
     }
 
     // Mark as native early so the UI can show helpful debug text even if checks fail
-    setState((prev) => ({ ...prev, isNative: true, diagnostic: null }));
+    setState((prev) => ({ ...prev, isNative: true, diagnostic: "Checking biometrics..." }));
 
-    const biometric = await loadNativeBiometric();
+    let biometric: any;
+    try {
+      biometric = await loadNativeBiometric();
+    } catch (loadErr) {
+      console.error("[Biometric] Failed to load module:", loadErr);
+      setState((prev) => ({
+        ...prev,
+        isNative: true,
+        isAvailable: false,
+        biometryType: BiometryType.NONE,
+        hasStoredCredentials: false,
+        diagnostic: `Module load error: ${loadErr instanceof Error ? loadErr.message : String(loadErr)}`,
+      }));
+      return;
+    }
+
     if (!biometric) {
       setState((prev) => ({
         ...prev,
@@ -77,10 +95,12 @@ export const useBiometricAuth = () => {
         isAvailable: false,
         biometryType: BiometryType.NONE,
         hasStoredCredentials: false,
-        diagnostic: "Biometric module not loaded (did you run cap sync?)",
+        diagnostic: "Biometric module not loaded. Run: npx cap sync ios",
       }));
       return;
     }
+
+    console.log("[Biometric] Module loaded, calling isAvailable...");
 
     try {
       const result = await biometric.isAvailable();
@@ -97,27 +117,42 @@ export const useBiometricAuth = () => {
         console.log("[Biometric] No stored credentials:", credError);
       }
 
+      // Build detailed diagnostic
+      let diagnosticMsg: string | null = null;
+      if (!result?.isAvailable) {
+        const biometryTypeName = BiometryType[result?.biometryType] || `Unknown(${result?.biometryType})`;
+        diagnosticMsg = `isAvailable=false, type=${biometryTypeName}`;
+        
+        if (result?.errorCode) {
+          diagnosticMsg += `, errorCode=${result.errorCode}`;
+        }
+        
+        // Add helpful hints based on common issues
+        if (result?.biometryType === BiometryType.NONE || result?.biometryType === 0) {
+          diagnosticMsg += ". Check: 1) Device passcode set? 2) Face ID enrolled in Settings > Face ID & Passcode?";
+        }
+      }
+
       const finalState = {
         isAvailable: Boolean(result?.isAvailable),
         biometryType: result?.biometryType ?? BiometryType.NONE,
         hasStoredCredentials: hasCredentials,
         isNative: true,
-        diagnostic: result?.isAvailable
-          ? null
-          : `Biometrics not available. isAvailable=${result?.isAvailable}, biometryType=${result?.biometryType}, errorCode=${result?.errorCode || 'none'}`,
+        diagnostic: diagnosticMsg,
       };
       
       console.log("[Biometric] Final state:", JSON.stringify(finalState, null, 2));
       setState(finalState);
     } catch (error) {
-      console.log("Biometric not available:", error);
+      console.error("[Biometric] isAvailable threw error:", error);
+      const errMsg = error instanceof Error ? error.message : String(error);
       setState((prev) => ({
         ...prev,
         isNative: true,
         isAvailable: false,
         biometryType: BiometryType.NONE,
         hasStoredCredentials: false,
-        diagnostic: error instanceof Error ? error.message : String(error),
+        diagnostic: `Check error: ${errMsg}`,
       }));
     }
   };
