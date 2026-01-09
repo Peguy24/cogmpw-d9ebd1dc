@@ -254,6 +254,17 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
       .slice(0, 2);
   };
 
+  const runBiometricTest = async () => {
+    const result = await biometric.testBiometricPrompt();
+
+    if (result.success) {
+      toast.success(`${biometric.getBiometryName()} is working.`);
+    } else {
+      console.error("Biometric test failed:", result.error);
+      toast.error(`${biometric.getBiometryName()} failed: ${result.error || "Unknown error"}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -351,8 +362,8 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               </button>
             </div>
           </div>
-          <Button 
-            onClick={handlePasswordChange} 
+          <Button
+            onClick={handlePasswordChange}
             disabled={changingPassword || !newPassword || !confirmPassword}
             className="w-full sm:w-auto h-10 sm:h-11"
           >
@@ -387,9 +398,14 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                   Debug: {biometric.diagnostic}
                 </p>
               )}
-              <Button variant="outline" size="sm" onClick={biometric.refresh}>
-                Retry
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={biometric.refresh} disabled={biometric.isRefreshing}>
+                  Retry
+                </Button>
+                <Button variant="secondary" size="sm" onClick={runBiometricTest} disabled={biometric.isRefreshing}>
+                  Test
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
@@ -402,7 +418,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                       : "Enable to sign in faster next time"}
                   </p>
                 </div>
-          <div className="flex gap-2 flex-shrink-0">
+                <div className="flex gap-2 flex-shrink-0">
                   {biometric.hasStoredCredentials ? (
                     <Button
                       variant="outline"
@@ -419,25 +435,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                       Enable
                     </Button>
                   )}
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        const { NativeBiometric } = await import("capacitor-native-biometric");
-                        await NativeBiometric.verifyIdentity({
-                          reason: "Testing Face ID / Touch ID",
-                          title: "Biometric Test",
-                          subtitle: "Verify your identity",
-                          description: "This is a test to confirm biometrics work on your device.",
-                        });
-                        toast.success(`✅ ${biometric.getBiometryName()} is working correctly!`);
-                      } catch (error: any) {
-                        console.error("Biometric test failed:", error);
-                        toast.error(`❌ ${biometric.getBiometryName()} failed: ${error?.message || "Unknown error"}`);
-                      }
-                    }}
-                  >
+                  <Button variant="secondary" size="sm" onClick={runBiometricTest}>
                     Test
                   </Button>
                 </div>
@@ -474,6 +472,9 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               >
                 <Sun className="h-4 w-4" />
               </Button>
+
+// ... keep existing code (rest of settings UI)
+
               <Button
                 variant={theme === "dark" ? "default" : "outline"}
                 size="icon"
