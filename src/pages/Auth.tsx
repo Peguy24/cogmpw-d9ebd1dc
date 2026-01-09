@@ -564,16 +564,6 @@ const Auth = () => {
                   </Button>
                 )}
                 
-                {/* Debug: Show biometric state on native */}
-                {biometric.isNative && (
-                  <div className="mt-2 p-2 bg-muted/50 rounded text-xs text-muted-foreground">
-                    <p>Biometric Debug:</p>
-                    <p>Available: {biometric.isAvailable ? "Yes" : "No"}</p>
-                    <p>Type: {biometric.getBiometryName()}</p>
-                    <p>Stored Creds: {biometric.hasStoredCredentials ? "Yes" : "No"}</p>
-                    {biometric.diagnostic && <p>Info: {biometric.diagnostic}</p>}
-                  </div>
-                )}
               </form>
             </TabsContent>
             

@@ -255,16 +255,6 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
       .slice(0, 2);
   };
 
-  const runBiometricTest = async () => {
-    const result = await biometric.testBiometricPrompt();
-
-    if (result.success) {
-      toast.success(`${biometric.getBiometryName()} is working.`);
-    } else {
-      console.error("Biometric test failed:", result.error);
-      toast.error(`${biometric.getBiometryName()} failed: ${result.error || "Unknown error"}`);
-    }
-  };
 
   const openAppSettings = () => {
     // iOS deep-linking only reliably supports the app's Settings screen (not Face ID directly)
@@ -280,12 +270,6 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
     toast.info("Open your phone Settings and find COGMPW in the apps list.", { duration: 6000 });
   };
 
-  const showFaceIdNotListedHelp = () => {
-    toast.info(
-      "iOS only shows apps under Face ID → Other Apps AFTER the app requests Face ID. Tap Test in COGMPW and allow Face ID; then it will appear in the list.",
-      { duration: 8000 }
-    );
-  };
 
   if (loading) {
     return (
@@ -423,18 +407,10 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                   <li>Enable <strong>COGMPW</strong></li>
                 </ol>
               </div>
-              {biometric.diagnostic && (
-                <p className="text-xs text-muted-foreground/70 break-words font-mono bg-muted/50 p-2 rounded">
-                  {biometric.diagnostic}
-                </p>
-              )}
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={biometric.refresh} disabled={biometric.isRefreshing}>
                   {biometric.isRefreshing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
                   Retry
-                </Button>
-                <Button variant="secondary" size="sm" onClick={runBiometricTest} disabled={biometric.isRefreshing}>
-                  Test
                 </Button>
                 <Button variant="ghost" size="sm" onClick={openAppSettings} className="gap-1 text-xs">
                   <Settings className="h-3 w-3" />
@@ -466,13 +442,10 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                       Disable
                     </Button>
                   ) : (
-                    <Button variant="outline" size="sm" onClick={() => setShowBiometricSetup(true)}>
+                  <Button variant="outline" size="sm" onClick={() => setShowBiometricSetup(true)}>
                       Enable
                     </Button>
                   )}
-                  <Button variant="secondary" size="sm" onClick={runBiometricTest}>
-                    Test
-                  </Button>
                 </div>
               </div>
               <BiometricSetupDialog
