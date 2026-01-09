@@ -483,31 +483,30 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
       <div>
         <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Appearance</h3>
         <div className="space-y-3 sm:space-y-4">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div className="flex-1 min-w-0 space-y-0.5 sm:space-y-1">
               <Label className="text-sm">Theme</Label>
               <p className="text-xs sm:text-sm text-muted-foreground">
                 Choose your preferred color scheme
               </p>
             </div>
-            <div className="flex gap-1 flex-shrink-0">
+            <div className="flex flex-wrap gap-2 flex-shrink-0">
               <Button
                 variant={theme === "light" ? "default" : "outline"}
                 size="icon"
-                className="h-8 w-8"
+                className="h-10 w-10"
                 onClick={() => setTheme("light")}
+                aria-label="Light mode"
                 title="Light mode"
               >
                 <Sun className="h-4 w-4" />
               </Button>
-
-// ... keep existing code (rest of settings UI)
-
               <Button
                 variant={theme === "dark" ? "default" : "outline"}
                 size="icon"
-                className="h-8 w-8"
+                className="h-10 w-10"
                 onClick={() => setTheme("dark")}
+                aria-label="Dark mode"
                 title="Dark mode"
               >
                 <Moon className="h-4 w-4" />
@@ -515,8 +514,9 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               <Button
                 variant={theme === "system" ? "default" : "outline"}
                 size="icon"
-                className="h-8 w-8"
+                className="h-10 w-10"
                 onClick={() => setTheme("system")}
+                aria-label="System default"
                 title="System default"
               >
                 <Monitor className="h-4 w-4" />
