@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, ExternalLink, Fingerprint } from "lucide-react";
+import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, ExternalLink, Fingerprint, Settings } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { useTheme } from "next-themes";
 import { Link } from "react-router-dom";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
@@ -265,6 +266,28 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
     }
   };
 
+  const openAppSettings = async () => {
+    if (Capacitor.getPlatform() === "ios") {
+      // On iOS, we can open the app's settings page directly
+      try {
+        const { App } = await import("@capacitor/app");
+        // This opens the app's settings in iOS Settings app
+        window.location.href = "app-settings:";
+      } catch (e) {
+        // Fallback: just inform the user
+        toast.info("Open Settings → Face ID & Passcode to enable Face ID for this app.");
+      }
+    } else if (Capacitor.getPlatform() === "android") {
+      try {
+        const { App } = await import("@capacitor/app");
+        // Android: open app settings
+        window.location.href = "package:com.peguy24.cogmpw";
+      } catch (e) {
+        toast.info("Open Settings → Apps → COGMPW to enable biometric permissions.");
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -398,12 +421,17 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                   Debug: {biometric.diagnostic}
                 </p>
               )}
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={biometric.refresh} disabled={biometric.isRefreshing}>
+                  {biometric.isRefreshing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
                   Retry
                 </Button>
                 <Button variant="secondary" size="sm" onClick={runBiometricTest} disabled={biometric.isRefreshing}>
                   Test
+                </Button>
+                <Button variant="outline" size="sm" onClick={openAppSettings} className="gap-1">
+                  <Settings className="h-3 w-3" />
+                  Open Settings
                 </Button>
               </div>
             </div>
