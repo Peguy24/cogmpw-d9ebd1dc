@@ -10,9 +10,14 @@ const config: CapacitorConfig = {
       overlaysWebView: false,
     },
   },
+  ios: {
+    allowsLinkPreview: false,
+    scrollEnabled: true,
+    contentInset: 'automatic',
+  },
   server: {
-    // Allow navigation to Stripe for payments
-    allowNavigation: ["checkout.stripe.com"],
+    // Allow navigation to Stripe for payments and YouTube embeds
+    allowNavigation: ["checkout.stripe.com", "www.youtube.com", "youtube.com"],
   },
 };
 
