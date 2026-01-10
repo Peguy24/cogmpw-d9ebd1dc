@@ -222,7 +222,8 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
       }
 
       if (videoId) {
-        return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0`;
+        // Include playsinline=1 for iOS inline playback support
+        return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0&playsinline=1`;
       }
     } catch (error) {
       console.error("Invalid URL:", error);
@@ -269,6 +270,7 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
               referrerPolicy="no-referrer-when-downgrade"
               loading="lazy"
               style={{ border: 0 }}
+              {...{ 'webkit-playsinline': 'true', playsinline: 'true' } as React.IframeHTMLAttributes<HTMLIFrameElement>}
             />
           </div>
         );
@@ -291,6 +293,7 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
               scrolling="no"
               loading="lazy"
               style={{ border: 0, overflow: 'hidden' }}
+              {...{ 'webkit-playsinline': 'true', playsinline: 'true' } as React.IframeHTMLAttributes<HTMLIFrameElement>}
             />
           </div>
         );
