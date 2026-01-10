@@ -222,8 +222,8 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
       }
 
       if (videoId) {
-        // Include playsinline=1 for iOS inline playback support
-        return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0&playsinline=1`;
+        // Include playsinline=1 for iOS inline playback, origin param to fix Error 153 on iOS WebView
+        return `https://www.youtube.com/embed/${videoId}?autoplay=0&playsinline=1&origin=https://www.youtube.com`;
       }
     } catch (error) {
       console.error("Invalid URL:", error);
@@ -267,7 +267,7 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
               allowFullScreen
               title="YouTube Livestream"
               frameBorder="0"
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerPolicy="strict-origin-when-cross-origin"
               loading="lazy"
               style={{ border: 0 }}
               {...{ 'webkit-playsinline': 'true', playsinline: 'true' } as React.IframeHTMLAttributes<HTMLIFrameElement>}
