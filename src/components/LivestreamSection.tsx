@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,6 +45,21 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.7);
   const [isMuted, setIsMuted] = useState(false);
+
+  const isNativeIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
+
+  const openExternal = async (url: string) => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Browser.open({ url });
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    } catch (error) {
+      console.error("Failed to open external link:", error);
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
 
   useEffect(() => {
     checkRole();
@@ -256,6 +273,26 @@ const LivestreamSection = ({ isGuestView = false }: LivestreamSectionProps) => {
 
     // YouTube embed
     if (activeLivestream.platform === "youtube") {
+      // iOS native apps (WKWebView/Capacitor) can show YouTube "Error 153" inside iframes.
+      // To avoid showing the error, we open the livestream externally instead of embedding.
+      if (isNativeIOS) {
+        return (
+          <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center gap-3 p-4 text-center">
+            <div className="text-sm text-muted-foreground">
+              Open the livestream in YouTube to watch on iPhone.
+            </div>
+            <Button
+              size="lg"
+              onClick={() => void openExternal(activeLivestream.url)}
+              className="gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Watch on YouTube
+            </Button>
+          </div>
+        );
+      }
+
       const embedUrl = getYouTubeEmbedUrl(activeLivestream.url);
       if (embedUrl) {
         return (
