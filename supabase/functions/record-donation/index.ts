@@ -13,6 +13,17 @@ const logStep = (step: string, details?: any) => {
   console.log(`[RECORD-DONATION] ${step}${detailsStr}`);
 };
 
+// HTML sanitization function to prevent XSS attacks
+const escapeHtml = (str: string): string => {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 const generateReceiptHtml = ({
   donorName,
   amount,
@@ -40,7 +51,7 @@ const generateReceiptHtml = ({
   <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px;">
     <h1 style="color: #333; font-size: 28px; font-weight: bold; margin: 40px 0; text-align: center;">Donation Receipt</h1>
     
-    <p style="color: #333; font-size: 16px; line-height: 26px; margin: 16px 0;">Dear ${donorName},</p>
+    <p style="color: #333; font-size: 16px; line-height: 26px; margin: 16px 0;">Dear ${escapeHtml(donorName)},</p>
     
     <p style="color: #333; font-size: 16px; line-height: 26px; margin: 16px 0;">
       Thank you for your generous donation to COGMPW. Your support helps us continue our mission and ministry.
@@ -57,7 +68,7 @@ const generateReceiptHtml = ({
         </tr>
         <tr>
           <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Category:</td>
-          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">${category}</td>
+          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">${escapeHtml(category)}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Date:</td>
@@ -70,7 +81,7 @@ const generateReceiptHtml = ({
         ${notes ? `
         <tr>
           <td style="padding: 12px 0; color: #6b7280; font-size: 14px; font-weight: 600;">Notes:</td>
-          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">${notes}</td>
+          <td style="padding: 12px 0; color: #333; font-size: 14px; text-align: right;">${escapeHtml(notes)}</td>
         </tr>
         ` : ''}
       </table>
