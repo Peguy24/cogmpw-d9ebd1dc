@@ -2,6 +2,16 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
+// Escape HTML to prevent XSS in email templates
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -57,7 +67,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <h2 style="color: #1a1a2e; margin: 0 0 20px; font-size: 24px;">You're Registered! 🎉</h2>
                 
                 <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                  Dear ${guestName},
+                  Dear ${escapeHtml(guestName)},
                 </p>
                 
                 <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 25px;">
@@ -66,14 +76,14 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <!-- Event Details Card -->
                 <div style="background-color: #f8f9fa; border-left: 4px solid #d4af37; padding: 20px; margin: 0 0 25px; border-radius: 0 8px 8px 0;">
-                  <h3 style="color: #1a1a2e; margin: 0 0 15px; font-size: 18px;">${eventTitle}</h3>
+                  <h3 style="color: #1a1a2e; margin: 0 0 15px; font-size: 18px;">${escapeHtml(eventTitle)}</h3>
                   <p style="color: #555555; margin: 0 0 10px; font-size: 14px;">
                     <strong>Date & Time:</strong><br>
-                    ${eventDate}
+                    ${escapeHtml(eventDate)}
                   </p>
                   <p style="color: #555555; margin: 0; font-size: 14px;">
                     <strong>Location:</strong><br>
-                    ${eventLocation}
+                    ${escapeHtml(eventLocation)}
                   </p>
                 </div>
                 

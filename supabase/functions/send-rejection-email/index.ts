@@ -12,6 +12,16 @@ const logStep = (step: string, details?: any) => {
   console.log(`[SEND-REJECTION-EMAIL] ${step}${detailsStr}`);
 };
 
+// Escape HTML to prevent XSS in email templates
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 interface RejectionEmailRequest {
   userId: string;
 }
@@ -108,7 +118,7 @@ serve(async (req) => {
             
             <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
               <p style="color: #e2e8f0; font-size: 16px; line-height: 26px; margin: 0 0 16px 0;">
-                Dear <strong style="color: #60a5fa;">${profile?.full_name || "Applicant"}</strong>,
+                Dear <strong style="color: #60a5fa;">${escapeHtml(profile?.full_name || "Applicant")}</strong>,
               </p>
               
               <p style="color: #cbd5e1; font-size: 15px; line-height: 24px; margin: 0;">
