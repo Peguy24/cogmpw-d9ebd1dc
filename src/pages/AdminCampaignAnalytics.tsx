@@ -6,7 +6,7 @@ import { ArrowLeft, TrendingUp, DollarSign, Users, Target, Download, FileText, R
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import { useEffect, useState } from "react";
 import {
   LineChart,
