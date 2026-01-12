@@ -193,9 +193,11 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
+    // Use BCC to protect recipient privacy
     const emailResponse = await resend.emails.send({
       from: "COGMPW Prayer Requests <hello@noreply.cogmpw.com>",
-      to: uniqueEmails,
+      to: ["hello@noreply.cogmpw.com"],
+      bcc: uniqueEmails,
       subject: `🙏 URGENT Prayer Request from ${safeMemberName}`,
       html: emailHtml,
     });

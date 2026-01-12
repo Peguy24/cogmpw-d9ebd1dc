@@ -140,10 +140,11 @@ const handler = async (req: Request): Promise<Response> => {
       minute: '2-digit'
     });
 
-    // Send emails in batches (Resend allows multiple recipients)
+    // Send emails using BCC to protect recipient privacy
     const emailResponse = await resend.emails.send({
       from: "COGMPW Church <hello@noreply.cogmpw.com>",
-      to: recipientEmails,
+      to: ["hello@noreply.cogmpw.com"],
+      bcc: recipientEmails,
       subject: `New Event: ${escapeHtml(eventTitle)}`,
       html: `
         <!DOCTYPE html>
