@@ -236,10 +236,11 @@ serve(async (req) => {
               </html>
             `;
 
-            // Send email to all admins/super_leaders
+            // Send email to all admins/super_leaders using BCC for privacy
             const { error: adminEmailError } = await resend.emails.send({
               from: "COGMPW <hello@noreply.cogmpw.com>",
-              to: adminEmails,
+              to: ["hello@noreply.cogmpw.com"],
+              bcc: adminEmails,
               subject: `🔔 New Member Awaiting Approval: ${fullName || email}`,
               html: adminEmailHtml,
             });

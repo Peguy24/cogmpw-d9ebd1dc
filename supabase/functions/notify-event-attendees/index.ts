@@ -189,10 +189,11 @@ serve(async (req: Request) => {
           for (let i = 0; i < allEmails.length; i += batchSize) {
             const batch = allEmails.slice(i, i + batchSize);
 
-            // Use a verified sender domain (this must match what you've verified in Resend)
+            // Use BCC to protect recipient privacy - they won't see each other's emails
             const emailResponse = await resend.emails.send({
               from: "COGMPW Events <hello@noreply.cogmpw.com>",
-              to: batch,
+              to: ["hello@noreply.cogmpw.com"],
+              bcc: batch,
               subject: `${subject} - ${eventTitle}`,
               html: htmlContent,
             });

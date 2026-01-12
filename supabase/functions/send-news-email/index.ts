@@ -138,10 +138,11 @@ const handler = async (req: Request): Promise<Response> => {
       ? '<div style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 16px;">📌 PINNED ANNOUNCEMENT</div>' 
       : '';
 
-    // Send emails in batches
+    // Send emails using BCC to protect recipient privacy
     const emailResponse = await resend.emails.send({
       from: "COGMPW Church <hello@noreply.cogmpw.com>",
-      to: recipientEmails,
+      to: ["hello@noreply.cogmpw.com"],
+      bcc: recipientEmails,
       subject: `${isPinned ? '📌 IMPORTANT: ' : '📢 '}${escapeHtml(newsTitle)}`,
       html: `
         <!DOCTYPE html>
