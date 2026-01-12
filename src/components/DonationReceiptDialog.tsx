@@ -4,7 +4,7 @@ import { Printer, Share2 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 
 interface DonationReceiptDialogProps {
