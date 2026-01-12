@@ -11,6 +11,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Escape HTML to prevent XSS in email templates
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 interface PrayerAnsweredRequest {
   prayerRequestId: string;
   prayerTitle: string;
@@ -71,7 +81,7 @@ const handler = async (req: Request): Promise<Response> => {
         
         <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
           <p style="font-size: 16px; margin-bottom: 20px;">
-            Cher(e) <strong>${memberName}</strong>,
+            Cher(e) <strong>${escapeHtml(memberName)}</strong>,
           </p>
           
           <p style="font-size: 16px; margin-bottom: 20px;">
@@ -80,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <div style="background-color: #f5f0e6; border-left: 4px solid #D4AF37; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
             <p style="font-style: italic; margin: 0; color: #5a4a3a;">
-              "${prayerTitle}"
+              "${escapeHtml(prayerTitle)}"
             </p>
           </div>
           

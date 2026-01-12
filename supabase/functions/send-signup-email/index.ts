@@ -12,6 +12,16 @@ const logStep = (step: string, details?: any) => {
   console.log(`[SEND-SIGNUP-EMAIL] ${step}${detailsStr}`);
 };
 
+// Escape HTML to prevent XSS in email templates
+const escapeHtml = (str: string): string => {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 interface SignupEmailRequest {
   email: string;
   fullName: string;
@@ -64,7 +74,7 @@ serve(async (req) => {
             
             <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 24px;">
               <p style="color: #e2e8f0; font-size: 16px; line-height: 26px; margin: 0 0 16px 0;">
-                Dear <strong style="color: #60a5fa;">${fullName || "New Member"}</strong>,
+                Dear <strong style="color: #60a5fa;">${escapeHtml(fullName || "New Member")}</strong>,
               </p>
               
               <p style="color: #cbd5e1; font-size: 15px; line-height: 24px; margin: 0;">
@@ -210,10 +220,10 @@ serve(async (req) => {
                     
                     <div style="background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 24px; border-left: 4px solid #f59e0b;">
                       <p style="color: #e2e8f0; font-size: 16px; margin: 0 0 12px 0;">
-                        <strong style="color: #fbbf24;">Name:</strong> ${fullName || "Not provided"}
+                        <strong style="color: #fbbf24;">Name:</strong> ${escapeHtml(fullName || "Not provided")}
                       </p>
                       <p style="color: #e2e8f0; font-size: 16px; margin: 0;">
-                        <strong style="color: #fbbf24;">Email:</strong> ${email}
+                        <strong style="color: #fbbf24;">Email:</strong> ${escapeHtml(email)}
                       </p>
                     </div>
                     
