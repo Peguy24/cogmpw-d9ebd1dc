@@ -164,7 +164,13 @@ const Home = () => {
 <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-8">
 
         <div className="container flex h-14 items-center justify-between px-4">
-          <img src={churchLogo} alt="COGMPW Church Logo" className="h-10 w-10 object-contain" />
+          <button 
+            onClick={() => setActiveTab("news")}
+            className="focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-lg"
+            aria-label="Go to News"
+          >
+            <img src={churchLogo} alt="COGMPW Church Logo" className="h-10 w-10 object-contain cursor-pointer" />
+          </button>
           
           <div className="flex items-center gap-1">
             <Link to="/community-chat">
