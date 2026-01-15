@@ -62,6 +62,12 @@ export const useDeepLinks = () => {
           }
         }
 
+        // For https App Links, strip /app prefix if present
+        // Format: https://cogmpw.com/app/home -> /home
+        if (url.protocol === "https:" && path.startsWith("/app")) {
+          path = path.replace(/^\/app/, "") || "/";
+        }
+
         const queryString = url.search;
         const fullPath = path + queryString;
 
