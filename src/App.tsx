@@ -40,6 +40,7 @@ import ReturnToApp from "./pages/ReturnToApp";
 import CommunityChat from "./pages/CommunityChat";
 import PermissionsSummary from "./pages/PermissionsSummary";
 import NotFound from "./pages/NotFound";
+import AppRedirect from "./components/AppRedirect";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,8 @@ const AppContent = () => {
         <Route path="/support" element={<Support />} />
         <Route path="/donation-success" element={<DonationSuccess />} />
         <Route path="/return-to-app" element={<ReturnToApp />} />
+        {/* Handle /app/* routes for Android App Links - redirects to actual route */}
+        <Route path="/app/*" element={<AppRedirect />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
