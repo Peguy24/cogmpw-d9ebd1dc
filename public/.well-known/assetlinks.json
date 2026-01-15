@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.peguy24.cogmpw",
+      "sha256_cert_fingerprints": [
+        "4D:A9:D9:B5:69:F6:66:B2:89:EE:C5:3E:80:1D:66:6E:96:46:20:00:B5:DF:2D:4E:45:4E:03:A8:C6:10:1D:67"
+      ]
+    }
+  }
+]
