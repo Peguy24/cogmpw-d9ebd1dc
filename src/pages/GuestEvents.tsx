@@ -55,7 +55,7 @@ const GuestEvents = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
-      <div className="container py-8 space-y-8">
+      <div className="container px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -65,12 +65,12 @@ const GuestEvents = () => {
                 size="sm"
                 onClick={() => navigate("/guest")}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
             </div>
-            <h1 className="text-3xl font-bold">Upcoming Events</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">Upcoming Events</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Join us for worship, fellowship, and community
             </p>
           </div>
@@ -122,37 +122,37 @@ const GuestEvents = () => {
                     )}
                   </div>
                 )}
-                <CardHeader>
-                  <CardTitle className="text-2xl">{event.title}</CardTitle>
-                  <CardDescription className="space-y-2 text-base">
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="text-xl sm:text-2xl">{event.title}</CardTitle>
+                  <CardDescription className="space-y-2 text-sm sm:text-base">
                     <div className="flex items-center gap-2 text-foreground">
-                      <Calendar className="h-4 w-4 text-primary" />
+                      <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
                       <span className="font-medium">
                         {format(new Date(event.event_date), "EEEE, MMMM d, yyyy")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-foreground">
-                      <Clock className="h-4 w-4 text-primary" />
+                      <Clock className="h-4 w-4 text-primary flex-shrink-0" />
                       <span className="font-medium">
                         {format(new Date(event.event_date), "h:mm a")}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-foreground">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="font-medium">{event.location}</span>
+                      <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="font-medium break-words">{event.location}</span>
                     </div>
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground whitespace-pre-wrap">
+                <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+                  <p className="text-sm sm:text-base text-muted-foreground whitespace-pre-wrap">
                     {event.description}
                   </p>
-                  <div className="mt-6 pt-6 border-t">
-                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
+                  <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Register to receive event reminders
                       </p>
-                      <Button onClick={() => handleRSVPClick(event)}>
+                      <Button size="sm" className="w-full sm:w-auto sm:size-default" onClick={() => handleRSVPClick(event)}>
                         <UserPlus className="mr-2 h-4 w-4" />
                         Register for Event
                       </Button>
@@ -166,12 +166,12 @@ const GuestEvents = () => {
 
         {/* CTA Section */}
         <Card className="bg-primary text-primary-foreground">
-          <CardContent className="py-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Already a Member?</h2>
-            <p className="text-lg mb-6 opacity-90">
+          <CardContent className="py-6 sm:py-8 px-4 sm:px-6 text-center">
+            <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Already a Member?</h2>
+            <p className="text-sm sm:text-lg mb-4 sm:mb-6 opacity-90">
               Sign in to access exclusive member content and features
             </p>
-            <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
+            <Button size="default" className="sm:size-lg" variant="secondary" onClick={() => navigate("/auth")}>
               Sign In
             </Button>
           </CardContent>
