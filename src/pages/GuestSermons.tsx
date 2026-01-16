@@ -60,26 +60,28 @@ const GuestSermons = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10">
-      <div className="container py-8 space-y-8">
+      <div className="container px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold">Sermons</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">Sermons</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Watch and listen to our latest messages
             </p>
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
+              size="sm"
+              className="sm:size-default"
               onClick={() => navigate("/")}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Button>
-            <Button onClick={() => navigate("/auth")}>
-              <LogIn className="h-4 w-4 mr-2" />
-              Sign In
+            <Button size="sm" className="sm:size-default" onClick={() => navigate("/auth")}>
+              <LogIn className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sign In</span>
             </Button>
           </div>
         </div>
