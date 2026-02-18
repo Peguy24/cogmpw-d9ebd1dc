@@ -184,9 +184,23 @@ To enable biometric authentication on iOS, you **must** add the following to you
 
 Without this entry, Face ID/Touch ID will not be available and the biometric login button won't appear.
 
+## 📷 Camera & Photo Library (Required for Profile Photo)
+
+To allow users to take or choose a profile photo, you **must** add these entries to `ios/App/App/Info.plist`:
+
+```xml
+<key>NSCameraUsageDescription</key>
+<string>COGMPW needs camera access to let you take a profile photo.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>COGMPW needs photo library access to let you choose a profile photo.</string>
+```
+
+Without these entries, **iOS will crash the app** when a user tries to take a photo (Apple Guideline 2.1).
+
 ## 📚 Resources
 
 - [Capacitor Documentation](https://capacitorjs.com/docs)
+- [Capacitor Camera Plugin](https://capacitorjs.com/docs/apis/camera)
 - [Capacitor Push Notifications](https://capacitorjs.com/docs/apis/push-notifications)
 - [Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging)
 - [Lovable Capacitor Guide](https://docs.lovable.dev/)
