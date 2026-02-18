@@ -7,8 +7,9 @@ import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
-import { Loader2, Camera, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, ExternalLink, Fingerprint, Settings } from "lucide-react";
+import { Loader2, Camera as CameraIcon, Lock, Eye, EyeOff, Sun, Moon, Monitor, Trash2, ExternalLink, Fingerprint, Settings } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { useTheme } from "next-themes";
 import { Link } from "react-router-dom";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
@@ -96,8 +97,70 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
     loadProfile();
   }, [user.id]);
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
+  const handleAvatarClick = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const photo = await Camera.getPhoto({
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Prompt,
+          quality: 80,
+          width: 512,
+          height: 512,
+        });
+
+        if (photo.dataUrl) {
+          setUploadingAvatar(true);
+          try {
+            // Convert data URL to Blob
+            const response = await fetch(photo.dataUrl);
+            const blob = await response.blob();
+            const ext = photo.format || 'jpeg';
+            const fileName = `${user.id}/avatar.${ext}`;
+
+            // Delete old avatar if exists
+            if (avatarUrl) {
+              const oldPath = avatarUrl.split('/avatars/')[1];
+              if (oldPath) {
+                await supabase.storage.from('avatars').remove([oldPath]);
+              }
+            }
+
+            // Upload new avatar
+            const { error: uploadError } = await supabase.storage
+              .from('avatars')
+              .upload(fileName, blob, { upsert: true, contentType: `image/${ext}` });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(fileName);
+
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ avatar_url: publicUrl })
+              .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            setAvatarUrl(publicUrl);
+            toast.success('Profile photo updated');
+          } catch (error) {
+            console.error('Error uploading avatar:', error);
+            toast.error('Failed to upload photo');
+          } finally {
+            setUploadingAvatar(false);
+          }
+        }
+      } catch (error: any) {
+        // User cancelled or permission denied
+        if (error?.message?.includes('User cancelled')) return;
+        console.error('Camera error:', error);
+        toast.error('Unable to access camera. Please check app permissions in Settings.');
+      }
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -300,7 +363,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               {uploadingAvatar ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Camera className="h-4 w-4" />
+                <CameraIcon className="h-4 w-4" />
               )}
             </button>
             <input
