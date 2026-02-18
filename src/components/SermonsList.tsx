@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import SermonPostForm from "./SermonPostForm";
 import SermonEditDialog from "./SermonEditDialog";
 import PullToRefresh from "react-simple-pull-to-refresh";
+import VideoPlayer from "./VideoPlayer";
 
 interface Sermon {
   id: string;
@@ -205,10 +206,7 @@ const SermonsList = () => {
                   {sermon.media_url && (
                     <div className="space-y-2">
                       {sermon.media_type === "video" && (
-                        <video controls className="w-full rounded-lg">
-                          <source src={sermon.media_url} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
+                        <VideoPlayer src={sermon.media_url!} className="w-full rounded-lg" />
                       )}
                       {sermon.media_type === "audio" && (
                         <audio controls className="w-full">

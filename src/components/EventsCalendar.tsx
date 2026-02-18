@@ -13,6 +13,7 @@ import EventAttendeesDialog from "./EventAttendeesDialog";
 import GuestRSVPDialog from "./GuestRSVPDialog";
 import EventCheckinDialog from "./EventCheckinDialog";
 import PullToRefresh from "react-simple-pull-to-refresh";
+import VideoPlayer from "./VideoPlayer";
 
 interface EventItem {
   id: string;
@@ -308,11 +309,7 @@ const EventsCalendar = () => {
               {event.media_url && (
                 <div>
                   {event.media_type === 'video' ? (
-                    <video 
-                      src={event.media_url} 
-                      controls 
-                      className="w-full rounded-lg max-h-64 md:max-h-96 object-cover"
-                    />
+                    <VideoPlayer src={event.media_url} className="w-full rounded-lg max-h-64 md:max-h-96 object-cover" />
                   ) : (
                     <img 
                       src={event.media_url} 
