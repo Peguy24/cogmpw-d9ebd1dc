@@ -158,12 +158,8 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
         // User cancelled or permission denied
         if (error?.message?.includes('User cancelled')) return;
         console.error('Camera error:', error);
-        const msg = error?.message?.toLowerCase() || '';
-        if (msg.includes('permission') || msg.includes('denied') || msg.includes('access')) {
-          setShowCameraPermissionDialog(true);
-        } else {
-          toast.error('Impossible d\'accéder à la caméra.');
-        }
+        // Always show the permission dialog on native — most camera errors are permission-related
+        setShowCameraPermissionDialog(true);
       }
     } else {
       fileInputRef.current?.click();
