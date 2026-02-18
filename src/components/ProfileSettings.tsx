@@ -14,6 +14,7 @@ import { useTheme } from "next-themes";
 import { Link } from "react-router-dom";
 import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { BiometricSetupDialog } from "@/components/BiometricSetupDialog";
+import { CameraPermissionDialog } from "@/components/CameraPermissionDialog";
 
 interface ProfileSettingsProps {
   user: User;
@@ -31,6 +32,7 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCameraPermissionDialog, setShowCameraPermissionDialog] = useState(false);
   
   // Password change
   const [currentPassword, setCurrentPassword] = useState("");
@@ -156,7 +158,12 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
         // User cancelled or permission denied
         if (error?.message?.includes('User cancelled')) return;
         console.error('Camera error:', error);
-        toast.error('Unable to access camera. Please check app permissions in Settings.');
+        const msg = error?.message?.toLowerCase() || '';
+        if (msg.includes('permission') || msg.includes('denied') || msg.includes('access')) {
+          setShowCameraPermissionDialog(true);
+        } else {
+          toast.error('Impossible d\'accéder à la caméra.');
+        }
       }
     } else {
       fileInputRef.current?.click();
@@ -517,6 +524,10 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
                 userEmail={user.email || ""}
                 biometryName={biometric.getBiometryName()}
                 onSaveCredentials={biometric.saveCredentials}
+              />
+              <CameraPermissionDialog
+                open={showCameraPermissionDialog}
+                onOpenChange={setShowCameraPermissionDialog}
               />
             </div>
           )}
