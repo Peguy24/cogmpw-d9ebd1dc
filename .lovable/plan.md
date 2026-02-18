@@ -1,29 +1,32 @@
 
 
-## Fix: Camera Package Version Conflict
+## Fix: Excessive Top Spacing on iOS
 
 ### Problem
-The `@capacitor/camera` package was installed at version 8.0.1, which requires `@capacitor/core` version 8+. Your project uses Capacitor 7 (`@capacitor/core@7.4.4`), causing the `npm install` failure.
+Three separate layers are all adding safe-area top padding, stacking on top of each other:
+1. The `html` element in CSS has `padding: env(safe-area-inset-top)`
+2. The `.app-safe-area` wrapper div adds another `padding-top: env(safe-area-inset-top)`
+3. Capacitor's `contentInset: 'automatic'` setting adds its own native inset
 
 ### Solution
-Downgrade `@capacitor/camera` from `^8.0.1` to `^7.0.1` in `package.json` to match the rest of your Capacitor 7 packages.
+Keep only ONE source of safe-area padding -- the `.app-safe-area` CSS class -- and remove the other two.
 
-### What Changes
-- **package.json**: Change `"@capacitor/camera": "^8.0.1"` to `"@capacitor/camera": "^7.0.1"`
+### Changes
 
-The Camera plugin API is the same between v7 and v8, so no code changes are needed in `ProfileSettings.tsx`.
+**1. `src/index.css`** -- Remove the `html` safe-area padding (lines ~128-131)
+- Delete the `html { padding: env(safe-area-inset-top) ... }` rule since `.app-safe-area` already handles this
 
-### After I Make This Change
-Run these commands in your terminal:
+**2. `capacitor.config.ts`** -- Change `contentInset` from `'automatic'` to `'never'`
+- This stops Capacitor from natively adding its own top inset, letting the CSS handle it
+
+### After the Change
+Run these commands in your terminal to apply:
 
 ```text
-git stash
-git pull
-npm install
 npm run build
 npx cap sync ios
 npx cap open ios
 ```
 
-Then archive and submit in Xcode as before.
+Then rebuild and test on your device. The excessive top space should be gone, with just the correct amount of padding below the status bar / notch.
 
