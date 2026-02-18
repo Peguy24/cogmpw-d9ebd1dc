@@ -88,14 +88,23 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
 
       // Upload media if present
       if (mediaFile) {
-        const fileExt = mediaFile.name.split('.').pop();
+        const fileExt = mediaFile.name.split('.').pop() || 'mp4';
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const contentType = mediaFile.type || (fileExt === 'mp4' ? 'video/mp4' : `image/${fileExt}`);
+        
+        console.log('Uploading media:', { name: fileName, size: mediaFile.size, type: contentType });
         
         const { error: uploadError } = await supabase.storage
           .from('news-media')
-          .upload(fileName, mediaFile);
+          .upload(fileName, mediaFile, {
+            contentType,
+            upsert: false,
+          });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Upload error details:', uploadError);
+          throw new Error(`Upload failed: ${uploadError.message}`);
+        }
 
         const { data: { publicUrl } } = supabase.storage
           .from('news-media')
@@ -192,11 +201,11 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
       setMediaFile(null);
       setMediaPreview(null);
       onSuccess();
-    } catch (error) {
-      console.error("Error creating news post:", error);
+    } catch (error: any) {
+      console.error("Error creating news post:", error?.message || error);
       toast({
         title: "Error",
-        description: "Failed to create news post. Please try again.",
+        description: error?.message || "Failed to create news post. Please try again.",
         variant: "destructive",
       });
     } finally {
