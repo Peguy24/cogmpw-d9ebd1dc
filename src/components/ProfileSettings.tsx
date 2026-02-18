@@ -102,6 +102,21 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
   const handleAvatarClick = async () => {
     if (Capacitor.isNativePlatform()) {
       try {
+        // Check and request permissions first
+        let perms = await Camera.checkPermissions();
+        console.log('Camera permissions:', JSON.stringify(perms));
+        
+        if (perms.camera !== 'granted' || perms.photos !== 'granted') {
+          perms = await Camera.requestPermissions({ permissions: ['camera', 'photos'] });
+          console.log('Camera permissions after request:', JSON.stringify(perms));
+        }
+
+        if (perms.camera === 'denied' && perms.photos === 'denied') {
+          // Both denied — show settings dialog
+          setShowCameraPermissionDialog(true);
+          return;
+        }
+
         const photo = await Camera.getPhoto({
           resultType: CameraResultType.DataUrl,
           source: CameraSource.Prompt,
@@ -113,13 +128,11 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
         if (photo.dataUrl) {
           setUploadingAvatar(true);
           try {
-            // Convert data URL to Blob
             const response = await fetch(photo.dataUrl);
             const blob = await response.blob();
             const ext = photo.format || 'jpeg';
             const fileName = `${user.id}/avatar.${ext}`;
 
-            // Delete old avatar if exists
             if (avatarUrl) {
               const oldPath = avatarUrl.split('/avatars/')[1];
               if (oldPath) {
@@ -127,7 +140,6 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
               }
             }
 
-            // Upload new avatar
             const { error: uploadError } = await supabase.storage
               .from('avatars')
               .upload(fileName, blob, { upsert: true, contentType: `image/${ext}` });
@@ -155,10 +167,8 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
           }
         }
       } catch (error: any) {
-        // User cancelled or permission denied
         if (error?.message?.includes('User cancelled')) return;
         console.error('Camera error:', error);
-        // Always show the permission dialog on native — most camera errors are permission-related
         setShowCameraPermissionDialog(true);
       }
     } else {
