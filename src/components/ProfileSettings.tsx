@@ -106,13 +106,18 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
         let perms = await Camera.checkPermissions();
         console.log('Camera permissions:', JSON.stringify(perms));
         
-        if (perms.camera !== 'granted' || perms.photos !== 'granted') {
+        const cameraOk = perms.camera === 'granted' || perms.camera === 'limited' || perms.camera === 'prompt';
+        const photosOk = perms.photos === 'granted' || perms.photos === 'limited' || perms.photos === 'prompt';
+
+        if (!cameraOk || !photosOk) {
           perms = await Camera.requestPermissions({ permissions: ['camera', 'photos'] });
           console.log('Camera permissions after request:', JSON.stringify(perms));
         }
 
-        if (perms.camera === 'denied' && perms.photos === 'denied') {
-          // Both denied — show settings dialog
+        const cameraDenied = perms.camera === 'denied';
+        const photosDenied = perms.photos === 'denied';
+
+        if (cameraDenied && photosDenied) {
           setShowCameraPermissionDialog(true);
           return;
         }
