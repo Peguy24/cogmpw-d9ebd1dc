@@ -13,10 +13,13 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2, ImagePlus, Video } from "lucide-react";
 
 const getContentType = (file: File): string => {
-  if (file.type) return file.type;
+  const type = file.type?.toLowerCase() || '';
+  // Always treat QuickTime (.mov) as mp4 — storage and browsers don't support video/quicktime
+  if (type === 'video/quicktime') return 'video/mp4';
+  if (type) return type;
   const ext = file.name.split('.').pop()?.toLowerCase();
   const mimeMap: Record<string, string> = {
-    'mov': 'video/quicktime', 'mp4': 'video/mp4', 'webm': 'video/webm',
+    'mov': 'video/mp4', 'mp4': 'video/mp4', 'webm': 'video/webm',
     'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
     'webp': 'image/webp', 'gif': 'image/gif',
   };
