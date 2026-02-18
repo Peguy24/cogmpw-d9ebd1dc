@@ -16,6 +16,23 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+const getContentType = (file: File): string => {
+  if (file.type) return file.type;
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  const mimeMap: Record<string, string> = {
+    'mov': 'video/quicktime', 'mp4': 'video/mp4', 'webm': 'video/webm',
+    'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png',
+    'webp': 'image/webp', 'gif': 'image/gif',
+  };
+  return mimeMap[ext || ''] || 'application/octet-stream';
+};
+
+const isVideoFile = (file: File): boolean => {
+  if (file.type.startsWith('video/')) return true;
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  return ['mov', 'mp4', 'webm'].includes(ext || '');
+};
+
 const eventSchema = z.object({
   title: z.string()
     .trim()
@@ -109,9 +126,9 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
       let mediaType: string | null = null;
 
       if (mediaFile) {
-        const fileExt = mediaFile.name.split('.').pop() || 'mp4';
+        const fileExt = mediaFile.name.split('.').pop()?.toLowerCase() || 'mp4';
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const contentType = mediaFile.type || (fileExt === 'mp4' ? 'video/mp4' : `image/${fileExt}`);
+        const contentType = getContentType(mediaFile);
         
         console.log('Uploading media:', { name: fileName, size: mediaFile.size, type: contentType });
         
@@ -132,7 +149,7 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
           .getPublicUrl(fileName);
 
         mediaUrl = publicUrl;
-        mediaType = mediaFile.type.startsWith('video/') ? 'video' : 'image';
+        mediaType = isVideoFile(mediaFile) ? 'video' : 'image';
       }
 
       const { error } = await supabase.from("events").insert({
@@ -384,13 +401,13 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
                 <div className="space-y-4">
                   <Input
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*,video/mp4,video/webm,video/quicktime,.mov,.mp4,.webm"
                     onChange={handleMediaChange}
                     disabled={isSubmitting}
                   />
                   {mediaPreview && (
                     <div className="relative">
-                      {mediaFile?.type.startsWith('video/') ? (
+                      {mediaFile && isVideoFile(mediaFile) ? (
                         <video 
                           src={mediaPreview} 
                           controls 
@@ -420,7 +437,7 @@ const EventPostForm = ({ onSuccess }: EventPostFormProps) => {
                 </div>
               </FormControl>
               <FormDescription>
-                Upload an image or video (max 50MB). Supported formats: JPG, PNG, WEBP, GIF, MP4, WEBM
+                Upload an image or video (max 50MB). Supported formats: JPG, PNG, WEBP, GIF, MP4, WEBM, MOV. MP4 is recommended for best compatibility.
               </FormDescription>
             </FormItem>
 
