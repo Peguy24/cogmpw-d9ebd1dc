@@ -213,10 +213,7 @@ All colors MUST be HSL.
 }
 
 /* iOS Safe Area Support */
-html {
-  /* Ensure safe area insets are properly applied */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
+/* html safe-area padding removed — handled by .app-safe-area only */
 
 /* Push app content below the camera / status bar */
 .app-safe-area {
