@@ -126,40 +126,58 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
         if (photo.dataUrl) {
           setUploadingAvatar(true);
           try {
-            const response = await fetch(photo.dataUrl);
-            const blob = await response.blob();
-            const ext = photo.format || 'jpeg';
-            const fileName = `${user.id}/avatar.${ext}`;
+            console.log('Photo captured, format:', photo.format, 'dataUrl length:', photo.dataUrl.length);
+            
+            // Convert data URL to Blob
+            const base64Data = photo.dataUrl.split(',')[1];
+            const mimeType = `image/${photo.format || 'jpeg'}`;
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: mimeType });
+            
+            console.log('Blob created, size:', blob.size, 'type:', blob.type);
 
+            const ext = photo.format || 'jpeg';
+            const fileName = `${user.id}/avatar_${Date.now()}.${ext}`;
+
+            // Delete old avatar if exists
             if (avatarUrl) {
-              const oldPath = avatarUrl.split('/avatars/')[1];
+              const oldPath = avatarUrl.split('/avatars/')[1]?.split('?')[0];
               if (oldPath) {
                 await supabase.storage.from('avatars').remove([oldPath]);
               }
             }
 
-            const { error: uploadError } = await supabase.storage
+            // Upload new avatar
+            const { error: uploadError, data: uploadData } = await supabase.storage
               .from('avatars')
-              .upload(fileName, blob, { upsert: true, contentType: `image/${ext}` });
+              .upload(fileName, blob, { upsert: true, contentType: mimeType });
 
+            console.log('Upload result:', uploadError ? uploadError.message : 'success', uploadData);
             if (uploadError) throw uploadError;
 
             const { data: { publicUrl } } = supabase.storage
               .from('avatars')
               .getPublicUrl(fileName);
 
+            const urlWithCache = `${publicUrl}?t=${Date.now()}`;
+
             const { error: updateError } = await supabase
               .from('profiles')
-              .update({ avatar_url: publicUrl })
+              .update({ avatar_url: urlWithCache })
               .eq('id', user.id);
 
             if (updateError) throw updateError;
 
-            setAvatarUrl(publicUrl);
+            setAvatarUrl(urlWithCache);
             toast.success('Profile photo updated');
-          } catch (error) {
-            console.error('Error uploading avatar:', error);
-            toast.error('Failed to upload photo');
+          } catch (error: any) {
+            console.error('Error uploading avatar:', error?.message || error);
+            toast.error(`Failed to upload photo: ${error?.message || 'Unknown error'}`);
           } finally {
             setUploadingAvatar(false);
           }
