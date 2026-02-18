@@ -108,7 +108,9 @@ const NewsPostForm = ({ onSuccess }: NewsPostFormProps) => {
 
       // Upload media if present
       if (mediaFile) {
-        const fileExt = mediaFile.name.split('.').pop()?.toLowerCase() || 'mp4';
+        let fileExt = mediaFile.name.split('.').pop()?.toLowerCase() || 'mp4';
+        // Rename .mov to .mp4 so storage accepts it
+        if (fileExt === 'mov') fileExt = 'mp4';
         const fileName = `${user.id}-${Date.now()}.${fileExt}`;
         const contentType = getContentType(mediaFile);
         
