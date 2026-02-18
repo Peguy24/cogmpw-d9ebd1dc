@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Settings, Camera } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 interface CameraPermissionDialogProps {
   open: boolean;
@@ -9,12 +10,12 @@ interface CameraPermissionDialogProps {
 }
 
 export const CameraPermissionDialog = ({ open, onOpenChange }: CameraPermissionDialogProps) => {
-  const handleOpenSettings = () => {
+  const handleOpenSettings = async () => {
     if (Capacitor.isNativePlatform()) {
-      if (Capacitor.getPlatform() === 'ios') {
-        window.open('app-settings:', '_system');
-      } else {
-        window.open('intent:#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;data=package:com.peguy24.cogmpw;end', '_system');
+      try {
+        await Browser.open({ url: 'app-settings:' });
+      } catch (e) {
+        console.error('Failed to open settings:', e);
       }
     }
     onOpenChange(false);
@@ -37,10 +38,13 @@ export const CameraPermissionDialog = ({ open, onOpenChange }: CameraPermissionD
           <p className="font-medium text-foreground">How to enable:</p>
           <ol className="list-decimal list-inside space-y-1">
             <li>Open <strong>Settings</strong> on your device</li>
-            <li>Find <strong>COGMPW</strong></li>
+            <li>Scroll down and find <strong>COGMPW</strong></li>
             <li>Turn on <strong>Camera</strong> and <strong>Photos</strong></li>
-            <li>Come back to the app</li>
+            <li>Come back to the app and try again</li>
           </ol>
+          <p className="text-xs mt-2 italic">
+            If you don't see Camera listed, please delete the app, reinstall it, and try again. The permission will be requested on first use.
+          </p>
         </div>
 
         <DialogFooter className="flex flex-col gap-2 sm:flex-col">
