@@ -102,24 +102,18 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
   const handleAvatarClick = async () => {
     if (Capacitor.isNativePlatform()) {
       try {
-        // Check and request permissions first
-        let perms = await Camera.checkPermissions();
+        // Request permissions if not already granted/limited
+        const perms = await Camera.checkPermissions();
         console.log('Camera permissions:', JSON.stringify(perms));
         
-        // Only skip requesting if already granted or limited
         const cameraReady = perms.camera === 'granted' || perms.camera === 'limited';
         const photosReady = perms.photos === 'granted' || perms.photos === 'limited';
 
         if (!cameraReady || !photosReady) {
-          perms = await Camera.requestPermissions({ permissions: ['camera', 'photos'] });
-          console.log('Camera permissions after request:', JSON.stringify(perms));
+          await Camera.requestPermissions({ permissions: ['camera', 'photos'] });
         }
 
-        // After requesting, check if both are denied
-        if (perms.camera === 'denied' && perms.photos === 'denied') {
-          setShowCameraPermissionDialog(true);
-          return;
-        }
+        // Always attempt getPhoto — it will fail if truly denied
 
         const photo = await Camera.getPhoto({
           resultType: CameraResultType.DataUrl,
