@@ -8,6 +8,7 @@ import { Pin, Pencil, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import NewsPostForm from "./NewsPostForm";
 import NewsEditDialog from "./NewsEditDialog";
+import VideoPlayer from "./VideoPlayer";
 import { toast } from "@/hooks/use-toast";
 import PullToRefresh from "react-simple-pull-to-refresh";
 
@@ -238,11 +239,7 @@ const NewsFeed = () => {
               {item.media_url && (
                 <div className="mb-3 md:mb-4">
                   {item.media_type === 'video' ? (
-                    <video 
-                      src={item.media_url} 
-                      controls 
-                      className="w-full rounded-lg max-h-64 md:max-h-96 object-cover"
-                    />
+                    <VideoPlayer src={item.media_url} className="w-full rounded-lg max-h-64 md:max-h-96 object-cover" />
                   ) : (
                     <img 
                       src={item.media_url} 

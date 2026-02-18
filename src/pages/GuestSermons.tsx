@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Video, Music, FileText, ArrowLeft, LogIn } from "lucide-react";
 import { format } from "date-fns";
+import VideoPlayer from "@/components/VideoPlayer";
 
 interface Sermon {
   id: string;
@@ -137,10 +138,7 @@ const GuestSermons = () => {
                   {sermon.media_url && (
                     <div className="space-y-2">
                       {sermon.media_type === "video" && (
-                        <video controls className="w-full rounded-lg">
-                          <source src={sermon.media_url} type="video/mp4" />
-                          Your browser does not support the video tag.
-                        </video>
+                        <VideoPlayer src={sermon.media_url!} className="w-full rounded-lg" />
                       )}
                       {sermon.media_type === "audio" && (
                         <audio controls className="w-full">

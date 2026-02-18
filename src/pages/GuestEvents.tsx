@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, MapPin, Clock, ArrowLeft, UserPlus } from "lucide-react";
 import { format } from "date-fns";
 import GuestRSVPDialog from "@/components/GuestRSVPDialog";
+import VideoPlayer from "@/components/VideoPlayer";
 
 interface Event {
   id: string;
@@ -108,11 +109,7 @@ const GuestEvents = () => {
                 {event.media_url && (
                   <div className="relative h-48 sm:h-64 overflow-hidden">
                     {event.media_type === "video" ? (
-                      <video
-                        src={event.media_url}
-                        controls
-                        className="w-full h-full object-cover"
-                      />
+                      <VideoPlayer src={event.media_url!} className="w-full h-full object-cover" />
                     ) : (
                       <img
                         src={event.media_url}
