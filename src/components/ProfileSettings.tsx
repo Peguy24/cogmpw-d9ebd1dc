@@ -165,9 +165,18 @@ const ProfileSettings = ({ user }: ProfileSettingsProps) => {
           }
         }
       } catch (error: any) {
-        if (error?.message?.includes('User cancelled')) return;
-        console.error('Camera error:', error);
-        setShowCameraPermissionDialog(true);
+        const msg = error?.message || '';
+        console.error('Camera error details:', msg, JSON.stringify(error));
+        
+        if (msg.includes('User cancelled') || msg.includes('cancelled')) return;
+        
+        // Only show permission dialog for actual permission errors
+        if (msg.includes('permission') || msg.includes('denied') || msg.includes('access')) {
+          setShowCameraPermissionDialog(true);
+        } else {
+          // For other errors, show a toast with the actual error
+          toast.error(`Camera error: ${msg || 'Unknown error. Please try again.'}`);
+        }
       }
     } else {
       fileInputRef.current?.click();
