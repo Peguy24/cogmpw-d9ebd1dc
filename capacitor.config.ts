@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
   ios: {
     allowsLinkPreview: false,
     scrollEnabled: true,
-    contentInset: 'automatic',
+    contentInset: 'never',
   },
   server: {
     // Allow navigation to Stripe for payments and YouTube embeds
