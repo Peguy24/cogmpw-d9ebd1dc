@@ -11,11 +11,9 @@ interface CameraPermissionDialogProps {
 export const CameraPermissionDialog = ({ open, onOpenChange }: CameraPermissionDialogProps) => {
   const handleOpenSettings = () => {
     if (Capacitor.isNativePlatform()) {
-      // On iOS/Android, this opens the app's settings page
       if (Capacitor.getPlatform() === 'ios') {
         window.open('app-settings:', '_system');
       } else {
-        // Android - open app settings via intent
         window.open('intent:#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;data=package:com.peguy24.cogmpw;end', '_system');
       }
     }
@@ -29,29 +27,29 @@ export const CameraPermissionDialog = ({ open, onOpenChange }: CameraPermissionD
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
             <Camera className="h-7 w-7 text-primary" />
           </div>
-          <DialogTitle className="text-center">Accès à la caméra requis</DialogTitle>
+          <DialogTitle className="text-center">Camera Access Required</DialogTitle>
           <DialogDescription className="text-center">
-            COGMPW a besoin d'accéder à votre caméra et à votre galerie photo pour mettre à jour votre photo de profil. Veuillez autoriser l'accès dans les réglages de votre appareil.
+            COGMPW needs access to your camera and photo library to update your profile photo. Please enable access in your device settings.
           </DialogDescription>
         </DialogHeader>
 
         <div className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground space-y-2">
-          <p className="font-medium text-foreground">Comment faire :</p>
+          <p className="font-medium text-foreground">How to enable:</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li>Ouvrez <strong>Réglages</strong> sur votre appareil</li>
-            <li>Recherchez <strong>COGMPW</strong></li>
-            <li>Activez <strong>Caméra</strong> et <strong>Photos</strong></li>
-            <li>Revenez dans l'application</li>
+            <li>Open <strong>Settings</strong> on your device</li>
+            <li>Find <strong>COGMPW</strong></li>
+            <li>Turn on <strong>Camera</strong> and <strong>Photos</strong></li>
+            <li>Come back to the app</li>
           </ol>
         </div>
 
         <DialogFooter className="flex flex-col gap-2 sm:flex-col">
           <Button onClick={handleOpenSettings} className="w-full gap-2">
             <Settings className="h-4 w-4" />
-            Ouvrir les Réglages
+            Open Settings
           </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full">
-            Plus tard
+            Later
           </Button>
         </DialogFooter>
       </DialogContent>
