@@ -156,7 +156,10 @@ serve(async (req) => {
       cancel_url: `${redirectBaseUrl}/giving?donation=canceled`,
 
       metadata: {
-        user_id: user?.id || 'guest',
+        // Only set user_id when we truly have an authenticated user.
+        // Empty string means "no logged-in user at checkout time" — record-donation
+        // will then try to recover the donor by Stripe customer email.
+        user_id: user?.id || '',
         category: category,
         notes: notes || '',
         campaign_id: campaign_id || '',
