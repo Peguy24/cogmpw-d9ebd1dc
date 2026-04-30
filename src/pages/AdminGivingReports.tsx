@@ -694,8 +694,23 @@ const AdminGivingReports = () => {
               {/* Top Donors */}
               <Card>
                 <CardHeader className="pb-3 md:pb-6">
-                  <CardTitle className="text-base md:text-lg">Top Donors</CardTitle>
-                  <CardDescription className="text-xs md:text-sm">Most generous givers for selected period</CardDescription>
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="space-y-1">
+                      <CardTitle className="text-base md:text-lg">Top Donors</CardTitle>
+                      <CardDescription className="text-xs md:text-sm">Most generous givers for selected period</CardDescription>
+                    </div>
+                    {topDonors.some((d) => d.user_id === "anonymous") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleBackfillGuestDonations}
+                        disabled={isBackfilling}
+                        className="text-xs"
+                      >
+                        {isBackfilling ? "Recovering…" : "Recover guest donations"}
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {topDonors.length === 0 ? (
