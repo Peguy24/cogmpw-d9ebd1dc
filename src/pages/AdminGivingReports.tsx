@@ -65,6 +65,34 @@ const AdminGivingReports = () => {
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
   const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
+  const [isBackfilling, setIsBackfilling] = useState(false);
+
+  const handleBackfillGuestDonations = async () => {
+    if (isBackfilling) return;
+    const confirmed = window.confirm(
+      "This will scan all donations currently shown as Guest Donors, look up the email Stripe collected, and re-link any donation whose email matches a registered member. Continue?"
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsBackfilling(true);
+      const { data, error } = await supabase.functions.invoke("backfill-anonymous-donations");
+      if (error) throw error;
+      const recovered = data?.recovered ?? 0;
+      const scanned = data?.scanned ?? 0;
+      const keptAsGuest = data?.kept_as_guest ?? 0;
+      toast.success(
+        `Scanned ${scanned} guest donations. Recovered ${recovered} to members. ${keptAsGuest} kept as guest.`
+      );
+      // Reload reports to reflect changes
+      await loadAllData();
+    } catch (err: any) {
+      console.error("Backfill failed", err);
+      toast.error(err?.message || "Failed to recover guest donations");
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
 
   useEffect(() => {
     checkAdminAndLoadData();
