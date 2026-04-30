@@ -237,12 +237,37 @@ serve(async (req) => {
     // Determine the user_id to use:
     // 1. If authenticated user, use their ID
     // 2. If metadata has user_id (and it's not 'guest'), use that
-    // 3. Otherwise, it's a guest donation (user_id = null)
+    // 3. If we have an email from Stripe, try to match it to a registered member
+    // 4. Otherwise, it's a true guest donation (user_id = null)
     let effectiveUserId: string | null = null;
     if (user) {
       effectiveUserId = user.id;
-    } else if (user_id && user_id !== 'guest') {
+    } else if (user_id && user_id !== 'guest' && user_id.length > 0) {
       effectiveUserId = user_id;
+    } else {
+      // Recovery path: try to find a member account by the email Stripe collected.
+      // This catches cases where the user was logged in when starting checkout but
+      // the success page loaded in an external browser without their session, OR
+      // where the metadata.user_id was lost for any reason.
+      const recoveryEmail =
+        session.customer_details?.email ||
+        session.customer_email ||
+        guest_email ||
+        null;
+
+      if (recoveryEmail) {
+        try {
+          const { data: foundUser, error: lookupError } = await supabaseClient.auth.admin.getUserByEmail(recoveryEmail);
+          if (!lookupError && foundUser?.user?.id) {
+            effectiveUserId = foundUser.user.id;
+            logStep("Recovered donor by email", { recoveryEmail, userId: effectiveUserId });
+          } else {
+            logStep("No member found for email — recording as guest", { recoveryEmail });
+          }
+        } catch (lookupErr) {
+          logStep("Email lookup failed — recording as guest", { error: lookupErr instanceof Error ? lookupErr.message : String(lookupErr) });
+        }
+      }
     }
 
     logStep("Determined user ID", { effectiveUserId, isGuest: !effectiveUserId });
