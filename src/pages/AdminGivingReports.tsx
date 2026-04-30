@@ -246,7 +246,7 @@ const AdminGivingReports = () => {
         if (userId === "anonymous") {
           return {
             user_id: "anonymous",
-            full_name: "Anonymous Donors",
+            full_name: "Guest Donors",
             total: donorMap[userId].total,
             donation_count: donorMap[userId].count,
           };
