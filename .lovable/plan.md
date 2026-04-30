@@ -1,58 +1,69 @@
+## Why donations show as "Anonymous Donors"
 
+The Admin Giving Reports page labels any donation row whose `user_id` is `NULL` as **"Anonymous Donors"**. So the real question is: why is `user_id` ending up NULL when a logged-in member donates?
 
-## Fix: "QuickTime is not supported" error when recording video on iPhone
+After tracing the full flow, here is what is happening:
 
-### Problem
-iPhones record video in `.MOV` (QuickTime) format by default. When you try to upload this video to a post, web browsers cannot play `.mov` files, causing the "QuickTime is not supported" error.
+1. The member taps **Donate** in the app.
+2. `create-donation-checkout` is called. The user's auth token IS forwarded, so the function captures `user.id` and stores it in Stripe's session metadata as `metadata.user_id`.
+3. Stripe Checkout opens **in the system browser** (not inside the app on mobile, and a new tab on web).
+4. After payment, Stripe redirects to `/donation-success?session_id=...` — **but in that external browser the user has no Supabase session**, so `auth.getSession()` returns null and no `Authorization` header is sent.
+5. `record-donation` therefore sees `user = null` and falls back to `metadata.user_id` from the Stripe session.
+6. **The bug**: in some flows (campaign donations from `Giving.tsx`, native-app checkouts that lose state, or older sessions where the user wasn't fully loaded yet), `metadata.user_id` is written as the literal string `'guest'` even though the donor was logged in. The function then treats it as a guest and inserts `user_id = NULL`.
 
-### Solution
-Update the News and Event post forms to:
+Database confirms it: 3 donations have `user_id = NULL`, including two created at the exact same second as a successful authenticated donation — a strong signal the user was logged in but the ID was lost in metadata.
 
-1. **Accept `.mov` files** but set a compatible content type for upload
-2. **Convert the file input accept attribute** to explicitly include `video/mp4,video/webm,video/quicktime` so iOS offers the right recording options
-3. **Map `.mov` files to `video/quicktime` content type** during upload so they store correctly
-4. **Use the HTML5 `<video>` tag** which can play `.mov` on iOS Safari but show a fallback message on other browsers
+## The fix
 
-Alternatively (and more robustly), we can add a note guiding users to record in `.mp4` format, and ensure the video preview and playback handle `.mov` gracefully.
+### 1. Recover the donor in `record-donation` (edge function)
 
-### Files to change
+When `metadata.user_id` is missing or `'guest'`, do NOT immediately assume guest. Instead, try to recover the donor in this order:
 
-**1. `src/components/NewsPostForm.tsx`**
-- Update the file input `accept` attribute to be more specific: `image/*,video/mp4,video/webm,video/quicktime,.mov,.mp4,.webm`
-- In `handleMediaChange`, if the file is `.mov`, explicitly set the content type to `video/quicktime`
-- In the upload logic, ensure `.mov` files get the correct MIME type mapping
-- Add a helper note in the form description mentioning that `.mp4` format is recommended for best compatibility
+- **a.** Use the authenticated `user` from the request (already done).
+- **b.** Use `metadata.user_id` if it's a real UUID (already done).
+- **c.** **NEW** — Look up the user by the Stripe customer's email:
+  - Read `session.customer_details.email` (or `session.customer_email`).
+  - If it matches a row in `auth.users` (via the service-role client), use that user's ID.
+- **d.** Only if none of the above succeed, record as a true guest (`user_id = NULL`).
 
-**2. `src/components/EventPostForm.tsx`**
-- Apply the same changes as above for consistency
+This guarantees that if a logged-in member's email is on the Stripe receipt, the donation is attributed to them — even if the metadata was lost.
 
-### Technical details
+### 2. Stop writing `'guest'` into metadata for logged-in users (edge function)
 
-The key change in the upload logic for both forms:
-
-```typescript
-// Better content type detection for iOS .mov files
-const getContentType = (file: File): string => {
-  if (file.type) return file.type;
-  const ext = file.name.split('.').pop()?.toLowerCase();
-  const mimeMap: Record<string, string> = {
-    'mov': 'video/quicktime',
-    'mp4': 'video/mp4',
-    'webm': 'video/webm',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'png': 'image/png',
-    'webp': 'image/webp',
-    'gif': 'image/gif',
-  };
-  return mimeMap[ext || ''] || 'application/octet-stream';
-};
+In `create-donation-checkout`, change:
+```ts
+metadata: { user_id: user?.id || 'guest', ... }
 ```
-
-The file input accept attribute will be updated to:
+to:
+```ts
+metadata: { user_id: user?.id || '', ... }
 ```
-accept="image/*,video/mp4,video/webm,video/quicktime,.mov,.mp4,.webm"
-```
+and in `record-donation` treat empty/missing `user_id` the same as guest. This removes the ambiguity where `'guest'` could be written even when a user object existed earlier in the request lifecycle on a retry.
 
-The form description will be updated to note that `.mp4` is recommended for widest compatibility, while `.mov` (iPhone default) is also supported.
+### 3. Always forward the auth header from `DonationForm` and `Giving.tsx`
 
+Both call sites already do this, but add a small guard: if `supabase.auth.getSession()` returns no session AND the donor did not provide a `guest_email`, refuse to start checkout. This prevents the rare case where a session expired mid-flow and the donation silently becomes a guest one.
+
+### 4. Backfill the existing 3 NULL donations (one-time data fix)
+
+For the three historical NULL donations, look up their Stripe payment intents, get the email Stripe collected, match it against the `profiles` table, and update `donations.user_id` for any matches. Donations with no matching member email stay NULL (true guests). I'll do this via a short edge-function script and an `UPDATE` migration after the user approves.
+
+### 5. Improve the Admin label (small UX fix)
+
+In `AdminGivingReports.tsx`, change the label `"Anonymous Donors"` to **"Guest Donors"** so it correctly reflects what the bucket actually represents (people who donated without an account), instead of suggesting members are intentionally hiding their identity.
+
+## Files that will change
+
+- `supabase/functions/record-donation/index.ts` — recovery logic (steps 1 & 2)
+- `supabase/functions/create-donation-checkout/index.ts` — stop writing `'guest'` (step 2)
+- `supabase/functions/create-recurring-donation/index.ts` — same fix as #2 (for consistency)
+- `src/components/DonationForm.tsx` — guard against expired session (step 3)
+- `src/pages/Giving.tsx` — same guard for campaign checkout (step 3)
+- `src/pages/AdminGivingReports.tsx` — rename "Anonymous Donors" → "Guest Donors" (step 5)
+- One-time SQL update to backfill the 3 existing NULL donations where the Stripe email matches a member (step 4)
+
+## What the user will see after the fix
+
+- New donations made by logged-in members will always be attributed to them in the admin report, even if the user closes the Stripe tab and reopens the app.
+- True guest donations (someone who donated without signing in) will appear under **"Guest Donors"** instead of "Anonymous Donors".
+- Past donations from members that were misclassified will be re-linked to the correct member name where the email matches.
