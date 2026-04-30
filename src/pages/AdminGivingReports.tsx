@@ -65,6 +65,34 @@ const AdminGivingReports = () => {
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdown[]>([]);
   const [topDonors, setTopDonors] = useState<TopDonor[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
+  const [isBackfilling, setIsBackfilling] = useState(false);
+
+  const handleBackfillGuestDonations = async () => {
+    if (isBackfilling) return;
+    const confirmed = window.confirm(
+      "This will scan all donations currently shown as Guest Donors, look up the email Stripe collected, and re-link any donation whose email matches a registered member. Continue?"
+    );
+    if (!confirmed) return;
+
+    try {
+      setIsBackfilling(true);
+      const { data, error } = await supabase.functions.invoke("backfill-anonymous-donations");
+      if (error) throw error;
+      const recovered = data?.recovered ?? 0;
+      const scanned = data?.scanned ?? 0;
+      const keptAsGuest = data?.kept_as_guest ?? 0;
+      toast.success(
+        `Scanned ${scanned} guest donations. Recovered ${recovered} to members. ${keptAsGuest} kept as guest.`
+      );
+      // Reload reports to reflect changes
+      await loadTopDonors();
+    } catch (err: any) {
+      console.error("Backfill failed", err);
+      toast.error(err?.message || "Failed to recover guest donations");
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
 
   useEffect(() => {
     checkAdminAndLoadData();
@@ -246,7 +274,7 @@ const AdminGivingReports = () => {
         if (userId === "anonymous") {
           return {
             user_id: "anonymous",
-            full_name: "Anonymous Donors",
+            full_name: "Guest Donors",
             total: donorMap[userId].total,
             donation_count: donorMap[userId].count,
           };
@@ -666,8 +694,23 @@ const AdminGivingReports = () => {
               {/* Top Donors */}
               <Card>
                 <CardHeader className="pb-3 md:pb-6">
-                  <CardTitle className="text-base md:text-lg">Top Donors</CardTitle>
-                  <CardDescription className="text-xs md:text-sm">Most generous givers for selected period</CardDescription>
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div className="space-y-1">
+                      <CardTitle className="text-base md:text-lg">Top Donors</CardTitle>
+                      <CardDescription className="text-xs md:text-sm">Most generous givers for selected period</CardDescription>
+                    </div>
+                    {topDonors.some((d) => d.user_id === "anonymous") && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleBackfillGuestDonations}
+                        disabled={isBackfilling}
+                        className="text-xs"
+                      >
+                        {isBackfilling ? "Recovering…" : "Recover guest donations"}
+                      </Button>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {topDonors.length === 0 ? (
