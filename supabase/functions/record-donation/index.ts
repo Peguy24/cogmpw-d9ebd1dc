@@ -257,12 +257,25 @@ serve(async (req) => {
 
       if (recoveryEmail) {
         try {
-          const { data: foundUser, error: lookupError } = await supabaseClient.auth.admin.getUserByEmail(recoveryEmail);
-          if (!lookupError && foundUser?.user?.id) {
-            effectiveUserId = foundUser.user.id;
-            logStep("Recovered donor by email", { recoveryEmail, userId: effectiveUserId });
-          } else {
-            logStep("No member found for email — recording as guest", { recoveryEmail });
+          // Use auth.admin.listUsers with email filter (filtering supported in newer SDKs;
+          // we also check the returned users' email to be safe).
+          const normalizedEmail = recoveryEmail.toLowerCase();
+          const { data: usersList, error: lookupError } = await supabaseClient.auth.admin.listUsers({
+            page: 1,
+            perPage: 200,
+          });
+          if (!lookupError && usersList?.users) {
+            const match = usersList.users.find(
+              (u: any) => (u.email || '').toLowerCase() === normalizedEmail
+            );
+            if (match?.id) {
+              effectiveUserId = match.id;
+              logStep("Recovered donor by email", { recoveryEmail, userId: effectiveUserId });
+            } else {
+              logStep("No member found for email — recording as guest", { recoveryEmail });
+            }
+          } else if (lookupError) {
+            logStep("Email lookup error — recording as guest", { error: lookupError.message });
           }
         } catch (lookupErr) {
           logStep("Email lookup failed — recording as guest", { error: lookupErr instanceof Error ? lookupErr.message : String(lookupErr) });
