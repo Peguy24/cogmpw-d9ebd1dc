@@ -85,7 +85,7 @@ const AdminGivingReports = () => {
         `Scanned ${scanned} guest donations. Recovered ${recovered} to members. ${keptAsGuest} kept as guest.`
       );
       // Reload reports to reflect changes
-      await loadAllData();
+      await loadTopDonors();
     } catch (err: any) {
       console.error("Backfill failed", err);
       toast.error(err?.message || "Failed to recover guest donations");
